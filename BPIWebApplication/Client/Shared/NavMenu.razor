@@ -1,0 +1,92 @@
+﻿@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
+@inject Blazored.SessionStorage.ISyncSessionStorageService syncSessionStorage
+@inject NavigationManager navigate
+@inject ILoginService LoginService
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="Index">BPIWebApplication <span class="version-number" aria-hidden="true">v1.0</span></a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="(() => ToggleNavMenu(new()))">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass sidebar main-sidebar">
+    <nav class="flex-column wrapper">
+        <div id="OtherMenu" class="nav-item px-2" @onclick="(() => ToggleNavMenu(new()))">
+            <NavLink class="nav-link" href="index">
+                <span class="oi oi-home" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+
+        <hr class="w-100" />
+
+        <div class="sidebarContentWrap">
+
+            @if (childApplications != null)
+            {
+                @foreach (var ca in childApplications.OrderBy(order => order.ChildApplicationId))
+                {
+                    @*<li class="nav-header text-white my-2">@ca.ChildApplicationName</li>*@
+                    <div id="MainModuleMenu" class="nav-item px-2 trigger-button" @onclick="(() => toggleCaMenu(ca))">
+                        <a class="nav-link @((ca.ChildApplicationId.Equals(clickedCaId) && expandCaMenu) ? "active" : null)">
+                            <span class="oi oi-layers" aria-hidden="true"></span> <b>@ca.ChildApplicationName Menu</b>
+                        </a>
+                    </div>
+                    @if (userModuleCategories != null)
+                    {
+                        @* Mod *@
+                        var mCatID = userModuleCategories.Where(x => x.ChildApplicationId == ca.ChildApplicationId).GroupBy(x => x.moduleCategoryId).Select(x => x.FirstOrDefault()).OrderBy(x => x.moduleCategoryId).ToList();
+
+                        @if (mCatID != null)
+                        {
+                            if (expandCaMenu && ca.ChildApplicationId == clickedCaId)
+                            {
+                                @foreach (var mc in mCatID)
+                                {
+                                    var mID = module.Where(x => x.childApplicationId == ca.ChildApplicationId && x.moduleCategoryId == mc.moduleCategoryId).OrderBy(x => x.moduleId).ToList();
+
+                                    <div id="CategoryModuleMenu" class="nav-item px-2 py-1 trigger-button">
+                                        <a class="nav-link dropdown-toggle @((mc.moduleCategoryId.Equals(clickedMainMenuId) && expandMainMenu) ? "active" : null)" @onclick="(() => toggleMainMenu(mc))">
+                                            <span class="oi oi-file" aria-hidden="true"></span> @mc.moduleCategoryName
+                                        </a>
+                                    </div>
+
+                                    if (expandMainMenu && mc.moduleCategoryId == clickedMainMenuId)
+                                    {
+                                        @foreach (var um in mID)
+                                        {
+                                            <div id="ModuleItem" class="nav-item px-2" @onclick="(() => ToggleNavMenu(um))">
+                                                <NavLink class="nav-link" href="@um.url">
+                                                    <span class="@um.icon" aria-hidden="true"></span> @um.moduleName
+                                                </NavLink>
+                                            </div>
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                <div id="CategoryModuleMenu" class="nav-item px-2 py-1">
+                    <a class="nav-link">
+                        <span class="oi oi-reload" aria-hidden="true"></span> Reload Page
+                    </a>
+                </div>
+            }
+            
+        </div>
+
+        <hr class="w-100" />
+
+        <div id="OtherMenu" class="nav-item px-2 logoutlink trigger-button">
+            <NavLink class="nav-link" @onclick="confirmLogout">
+                <span class="oi oi-account-logout" aria-hidden="true"></span> Logout
+            </NavLink>
+        </div>
+    </nav>
+</div>

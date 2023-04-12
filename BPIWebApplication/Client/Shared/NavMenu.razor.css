@@ -1,0 +1,190 @@
+hr {
+    margin: 0px;
+    padding: 0px;
+    border-top: 2px solid white;
+}
+
+.version-number {
+    color: white;
+    font-size: 11px;
+}
+
+.trigger-button {
+    cursor: pointer;
+}
+
+.logoutlink {
+    padding-top: 0.5rem;
+}
+
+.sidebarContentWrap {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+.navbar-toggler {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.top-row {
+    height: 3.5rem;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.navbar-brand {
+    font-size: 1.1rem;
+    user-select: none;
+}
+
+.oi {
+    width: 2rem;
+    font-size: 1.1rem;
+    vertical-align: text-top;
+    top: -2px;
+}
+
+#OtherMenu {
+    font-size: 0.9rem;
+    padding-bottom: 0.3rem;
+    user-select: none;
+}
+
+    #OtherMenu:first-of-type {
+        padding-top: 0.5rem;
+    }
+
+    #OtherMenu:last-of-type {
+        padding-bottom: 0.5rem;
+    }
+
+    #OtherMenu ::deep a {
+        color: #ffffff;
+        border-radius: 2px;
+        height: 2.8rem;
+        display: flex;
+        align-items: center;
+        line-height: 3rem;
+    }
+
+        #OtherMenu ::deep a.active {
+            background-color: rgba(255,255,255,0.25);
+            color: white;
+        }
+
+        #OtherMenu ::deep a:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+#MainModuleMenu {
+    font-size: 0.9rem;
+    padding-bottom: 0.3rem;
+    user-select: none;
+    background-color: rgba(0,0,0,0.1);
+}
+
+    #MainModuleMenu:first-of-type {
+    padding-top: 0.5rem;
+}
+
+    #MainModuleMenu:last-of-type {
+        padding-bottom: 0.5rem;
+    }
+
+    #MainModuleMenu ::deep a {
+    color: #ffffff;
+    border-radius: 2px;
+    height: 2.8rem;
+    display: flex;
+    align-items: center;
+    line-height: 3rem;
+}
+
+    #MainModuleMenu ::deep a.active {
+        background-color: rgba(255,255,255,0.25);
+        color: white;
+    }
+
+    #MainModuleMenu ::deep a:hover {
+        background-color: rgba(255,255,255,0.1);
+        color: white;
+    }
+
+#CategoryModuleMenu {
+    font-size: 0.8rem;
+    padding-bottom: 0.1rem;
+    user-select: none;
+    background-color: rgba(0,0,0,0.25);
+}
+
+    #CategoryModuleMenu:first-of-type {
+        padding-top: 0.5rem;
+    }
+
+    #CategoryModuleMenu:last-of-type {
+        padding-bottom: 0.5rem;
+    }
+
+    #CategoryModuleMenu ::deep a {
+        color: #ffffff;
+        border-radius: 2px;
+        height: 2.5rem;
+        display: flex;
+        align-items: center;
+        line-height: 3rem;
+    }
+
+        #CategoryModuleMenu ::deep a.active {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        #CategoryModuleMenu ::deep a:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+#ModuleItem {
+    font-size: 0.8rem;
+    padding-bottom: 0.1rem;
+    user-select: none;
+    background-color: rgba(0,0,0,0.50);
+}
+
+    #ModuleItem:first-of-type {
+        padding-top: 0.5rem;
+    }
+
+    #ModuleItem:last-of-type {
+        padding-bottom: 0.5rem;
+    }
+
+    #ModuleItem ::deep a {
+        color: #ffffff;
+        border-radius: 2px;
+        height: 2.5rem;
+        display: flex;
+        align-items: center;
+        line-height: 3rem;
+    }
+
+        #ModuleItem ::deep a.active {
+            /*background-color: rgba(255,255,255,0.25);*/
+            color: white;
+        }
+
+        #ModuleItem ::deep a:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+@media (min-width: 641px) {
+    .navbar-toggler {
+        display: none;
+    }
+
+    .collapse {
+        /* Never collapse the sidebar for wide screens */
+        display: block;
+    }
+}
