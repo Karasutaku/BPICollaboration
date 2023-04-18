@@ -57,17 +57,43 @@ else
 
                 <div class="d-flex flex-column align-items-center">
 
+                    @if (param == null)
+                    {
+                        <div class="row my-2">
+                            <div class="col">
+                                <label for="log_type">Log Type :</label>
+                                <select id="log_type" @onchange="checkOngoingDocument" class="form-select">
+                                    <option hidden value="BLANK">Choose Type</option>
+                                    <option value="UTAMA">UTAMA</option>
+                                    <option value="TRANSIT">TRANSIT</option>
+                                </select>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="row my-2">
+                            <div class="col">
+                                <label for="log_type">Log Type :</label>
+                                <select id="log_type" @bind="logbook.LogType" class="form-select" disabled>
+                                    <option value="UTAMA">UTAMA</option>
+                                    <option value="TRANSIT">TRANSIT</option>
+                                </select>
+                            </div>
+                        </div>
+                    }
+
                     @if (isActiveDocumentExist && param == null)
                     {
                         <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
-                            <strong>Please Proceed with Ongoing Document !</strong>
+                            <strong>Please Select Document Type Above !</strong> Finish Ongoing Document if View Restricted
                         </div>
                     }
                     else
                     {
                         <EditForm Model="logbook">
 
-                            <div class="row my-2">
+                            @*<div class="row my-2">
                                 <div class="col">
                                     <label for="log_type">Log Type :</label>
                                     <InputSelect id="log_type" @bind-Value="logbook.LogType" class="form-select" disabled="@((isSuccessUpload.Equals(true) || param != null) ? "disabled" : null)">
@@ -75,17 +101,27 @@ else
                                         <option value="TRANSIT">TRANSIT</option>
                                     </InputSelect>
                                 </div>
-                            </div>
+                            </div>*@
 
                             <div class="row my-2">
                                 <div class="col">
                                     <label for="log_id">Log ID :</label>
                                     <InputText id="log_id" @bind-Value="logbook.LogID" class="form-control" readonly></InputText>
                                 </div>
-                                <div class="col">
-                                    <label for="log_date">Log Date :</label>
-                                    <InputDate id="log_date" @bind-Value="logbook.LogDate" class="form-control" readonly="@((param != null) ? "readonly" : null)"></InputDate>
-                                </div>
+                                @if (param == null)
+                                {
+                                    <div class="col">
+                                        <label for="log_date">Log Date :</label>
+                                        <input type="date" id="log_date" @onchange="checkOngoingDocumentonDateSelect" class="form-control" readonly="@((param != null) ? "readonly" : null)"></input>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="col">
+                                        <label for="log_statdate">Log Status Date :</label>
+                                        <InputDate id="log_date" @bind-Value="logbook.LogDate" class="form-control" readonly></InputDate>
+                                    </div>
+                                }
                             </div>
 
                             <div class="row my-2">

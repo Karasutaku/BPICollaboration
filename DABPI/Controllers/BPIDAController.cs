@@ -19,6 +19,7 @@ using BPIDA.Models.MainModel.Standarizations;
 using BPILibrary;
 using BPIDA.Models.MainModel.EPKRS;
 using System.Drawing;
+using System.Collections.Immutable;
 
 namespace BPIDA.Controllers
 {
@@ -8949,6 +8950,230 @@ namespace BPIDA.Controllers
             return flag;
         }
 
+        internal DataTable getEPKRSReportingTypeData()
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPRKSReportingType]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getEPKRSRiskTypeData()
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPRKSRiskType]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getEPKRSItemCaseData(string location, string conditions, int pageNo, int rowPerPage)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSItemCasebyFilter]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@LocationID", location);
+                    command.Parameters.AddWithValue("@Conditions", conditions);
+                    command.Parameters.AddWithValue("@PageNo", pageNo);
+                    command.Parameters.AddWithValue("@RowPerPage", rowPerPage);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getEPKRSItemLineData(DataTable itemCaseData)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSItemCasebyFilter]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@ItemCases", itemCaseData);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getEPKRSAttachmentData(DataTable itemCaseData)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSCaseAttachments]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@ItemCases", itemCaseData);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getEPKRSDiscussionData(string location, string documentId)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSDocumentDiscussions]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@LocationID", location);
+                    command.Parameters.AddWithValue("@DocumentID", documentId);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
         [HttpPost("createEPKRSItemCaseDocument")]
         public async Task<IActionResult> createEPKRSItemCaseDocumentData(QueryModel<EPKRSUploadItemCase> data)
         {
@@ -9139,6 +9364,281 @@ namespace BPIDA.Controllers
 
                 actionResult = BadRequest(res);
             }
+            return actionResult;
+        }
+
+        [HttpGet("getEPRKSReportingType")]
+        public async Task<IActionResult> getEPRKSReportingType()
+        {
+            ResultModel<List<ReportingType>> res = new ResultModel<List<ReportingType>>();
+            List<ReportingType> reportingTypeLines = new List<ReportingType>();
+            DataTable dtReportingType = new DataTable("ReportingType");
+            IActionResult actionResult = null;
+
+            try
+            {
+                dtReportingType = getEPKRSReportingTypeData();
+
+                if (dtReportingType.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtReportingType.Rows)
+                    {
+                        ReportingType temp = new ReportingType();
+
+                        temp.ReportingID = dt["ReportingID"].ToString();
+                        temp.ReportingDescription = dt["ReportingDescription"].ToString();
+
+                        reportingTypeLines.Add(temp);
+                    }
+
+                    res.Data = reportingTypeLines;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSRiskType")]
+        public async Task<IActionResult> getEPKRSRiskType()
+        {
+            ResultModel<List<RiskType>> res = new ResultModel<List<RiskType>>();
+            List<RiskType> riskTypeLines = new List<RiskType>();
+            DataTable dtRiskType = new DataTable("RiskType");
+            IActionResult actionResult = null;
+
+            try
+            {
+                dtRiskType = getEPKRSRiskTypeData();
+
+                if (dtRiskType.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtRiskType.Rows)
+                    {
+                        RiskType temp = new RiskType();
+
+                        temp.RiskID = dt["RiskID"].ToString();
+                        temp.RiskDescription = dt["RiskDescription"].ToString();
+                        temp.ReportingID = dt["ReportingID"].ToString();
+
+                        riskTypeLines.Add(temp);
+                    }
+
+                    res.Data = riskTypeLines;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSItemCase/{param}")]
+        public async Task<IActionResult> getEPKRSDocuments(string param)
+        {
+            ResultModel<List<EPKRSUploadItemCase>> res = new ResultModel<List<EPKRSUploadItemCase>>();
+            List<EPKRSUploadItemCase> itemCaseLines = new List<EPKRSUploadItemCase>();
+            DataTable dtItemCase = new DataTable("EPKRSUploadItemCase");
+            DataTable dtItemLine = new DataTable("ItemLine");
+            DataTable dtCaseAttachment = new DataTable("CaseAttachment");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+
+                dtItemCase = getEPKRSItemCaseData(temp[0], temp[1], Convert.ToInt32(temp[2]), _rowPerPage);
+
+                if (dtItemCase.Rows.Count <= 0)
+                    throw new Exception("Fail Fetch Item Case Data");
+
+                dtItemLine = getEPKRSItemLineData(dtItemCase);
+
+                if (dtItemLine.Rows.Count <= 0)
+                    throw new Exception("Fail Fetch Item Line Data");
+
+                dtCaseAttachment = getEPKRSAttachmentData(dtItemCase);
+
+                if (dtCaseAttachment.Rows.Count <= 0)
+                    throw new Exception("Fail Fetch Attachment Data");
+
+                if (dtItemCase.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtItemCase.Rows)
+                    {
+                        EPKRSUploadItemCase temp1 = new EPKRSUploadItemCase();
+
+                        temp1.itemCase.RiskID = dt["RiskID"].ToString();
+                        temp1.itemCase.DocumentID = dt["DocumentID"].ToString();
+                        temp1.itemCase.SiteReporter = dt["SiteReporter"].ToString();
+                        temp1.itemCase.SiteSender = dt["SiteSender"].ToString();
+                        temp1.itemCase.ReportDate = Convert.ToDateTime(dt["ReportDate"]);
+                        temp1.itemCase.ItemPickupDate = Convert.ToDateTime(dt["ItemPickupDate"]);
+                        temp1.itemCase.LoadingDocumentID = dt["LoadingDocumentID"].ToString();
+                        temp1.itemCase.LoadingDocumentDate = Convert.ToDateTime(dt["LoadingDocumentDate"]);
+                        temp1.itemCase.VarianceDate = Convert.ToInt32(dt["VarianceDate"]);
+                        temp1.itemCase.isLate = Convert.ToBoolean(dt["isLate"]);
+                        temp1.itemCase.isCCTVCoverable = Convert.ToBoolean(dt["isCCTVCoverable"]);
+                        temp1.itemCase.isReportedtoSender = Convert.ToBoolean(dt["isReportedtoSender"]);
+                        temp1.itemCase.DocumentStatus = dt["DocumentStatus"].ToString();
+
+                        temp1.itemLine = dtItemLine.AsEnumerable().Where(y => y["DocumentID"].ToString().Equals(dt["DocumentID"].ToString())).Select(x => new ItemLine
+                        {
+                            DocumentID = x["DocumentID"].ToString(),
+                            LineNum = Convert.ToInt32(x["LineNum"]),
+                            TRID = x["TRID"].ToString(),
+                            TRDate = Convert.ToDateTime(x["TRDate"]),
+                            ItemCode = x["ItemCode"].ToString(),
+                            ItemDescription = x["ItemDescription"].ToString(),
+                            ItemRiskCategoryID = x["ItemRiskCategoryID"].ToString(),
+                            CategoryID = x["CategoryID"].ToString(),
+                            ItemQuantity = Convert.ToInt32(x["ItemQuantity"]),
+                            UOM = x["UOM"].ToString(),
+                            ItemValue = Convert.ToDecimal(x["ItemValue"]),
+                            ItemStock = Convert.ToInt32(x["ItemStock"].ToString())
+                        }).ToList();
+
+                        temp1.attachment = dtCaseAttachment.AsEnumerable().Where(y => y["DocumentID"].ToString().Equals(dt["DocumentID"].ToString())).Select(x => new CaseAttachment
+                        {
+                            DocumentID = x["DocumentID"].ToString(),
+                            LineNum = Convert.ToInt32(x["LineNum"]),
+                            UploadDate = Convert.ToDateTime(x["UploadDate"]),
+                            FileExtension = x["FileExtension"].ToString(),
+                            FilePath = x["FilePath"].ToString()
+                        }).ToList();
+
+                        itemCaseLines.Add(temp1);
+                    }
+
+                    res.Data = itemCaseLines;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSDocumentDiscussion/{param}")]
+        public async Task<IActionResult> getEPKRSDocumentDiscussion(string param)
+        {
+            ResultModel<List<DocumentDiscussion>> res = new ResultModel<List<DocumentDiscussion>>();
+            List<DocumentDiscussion> documentDiscussions = new List<DocumentDiscussion>();
+            DataTable dtDocumentDiscussion = new DataTable("DocumentDiscussion");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+
+                dtDocumentDiscussion = getEPKRSDiscussionData(temp[0], temp[1]);
+
+                if (dtDocumentDiscussion.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtDocumentDiscussion.Rows)
+                    {
+                        DocumentDiscussion temp1 = new DocumentDiscussion();
+
+                        temp1.DocumentID = dt["RiskID"].ToString();
+                        temp1.UserName = dt["RiskDescription"].ToString();
+                        temp1.CommentDate = Convert.ToDateTime(dt["ReportingID"]);
+                        temp1.Comment = dt["ReportingID"].ToString();
+                        temp1.isEdited = Convert.ToBoolean(dt["isEdited"]);
+
+                        documentDiscussions.Add(temp1);
+                    }
+
+                    res.Data = documentDiscussions;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
             return actionResult;
         }
 

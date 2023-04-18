@@ -19,6 +19,7 @@ namespace BPIWebApplication.Client.Pages.LoginPages
         private Location location = new();
 
         //private FacadeUserModule moduleData = new();
+        private bool triggerShowPassword { get; set; } = false;
 
         private bool isLoginProgress = false;
         private bool isFetchLocationProgress = false;
@@ -29,6 +30,7 @@ namespace BPIWebApplication.Client.Pages.LoginPages
         protected override async Task OnInitializedAsync()
         {
             isLoginProgress = false;
+            triggerShowPassword = false;
 
 
             _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/LoginPages/Login.razor.js");

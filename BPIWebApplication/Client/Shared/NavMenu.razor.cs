@@ -118,6 +118,8 @@ namespace BPIWebApplication.Client.Shared
                             icon = b.icon
                         });
                     }
+
+                    LoginService.moduleList = module;
                 }
                 else
                 {

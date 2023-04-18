@@ -4,6 +4,7 @@ global using BPIWebApplication.Shared;
 using Blazored.SessionStorage;
 using BPIWebApplication.Client;
 using BPIWebApplication.Client.Services.CashierLogbookServices;
+using BPIWebApplication.Client.Services.EPKRSServices;
 using BPIWebApplication.Client.Services.ManagementServices;
 using BPIWebApplication.Client.Services.PettyCashServices;
 using BPIWebApplication.Client.Services.StandarizationServices;
@@ -23,6 +24,7 @@ builder.Services.AddScoped<IManagementService, ManagementService>();
 builder.Services.AddScoped<IPettyCashService, PettyCashService>();
 builder.Services.AddScoped<ICashierLogbookService, CashierLogbookService>();
 builder.Services.AddScoped<IStandarizationService, StandarizationService>();
+builder.Services.AddScoped<IEPKRSSevice, EPKRSService>();
 
 builder.Services.AddBlazoredSessionStorage();
 

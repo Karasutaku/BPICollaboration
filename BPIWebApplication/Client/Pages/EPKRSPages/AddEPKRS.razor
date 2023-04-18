@@ -1,0 +1,592 @@
+﻿@page "/epkrs/addepkrs"
+@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
+@inject Blazored.SessionStorage.ISyncSessionStorageService syncSessionStorage
+@inject IEPKRSSevice EPKRSService
+@inject ILoginService LoginService
+@inject IManagementService ManagementService
+@inject IJSRuntime JS
+
+<PageTitle>EPKRS - Add EPKRS</PageTitle>
+
+@if (LoginService.activeUser == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    if (LoginService.activeUser.userPrivileges != null)
+    {
+        @if (!LoginService.activeUser.userPrivileges.Contains("VW"))
+        {
+            <div class="container-fluid">
+                <div class="d-flex align-items-center">
+                    <h3>User Require Elevation</h3>
+                </div>
+            </div>
+        }
+        else
+        {
+            <h3>EPKRS</h3>
+            <small><i>Add EPKRS Document</i></small>
+
+            @if (alertTrigger)
+            {
+                <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
+                    <strong>@alertMessage</strong> @alertBody
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close" @onclick="(() => alertTrigger = false)">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            }
+
+
+            @if (successAlert)
+            {
+                <div class="alert alert-success alert-dismissible fade show my-3" role="alert">
+                    <strong>@alertMessage</strong> @alertBody
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close" @onclick="(() => successAlert = false)">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            }
+
+            
+            <div class="container-fluid">
+                <div class="d-flex flex-column align-items-center">
+
+                    <div class="row my-2">
+                        <div class="col">
+                            <label for="riskId">Reporting Type :</label>
+                            <select id="riskId" class="form-select" @onchange="reportingTypeonChange">
+                                @if (checkReportingType())
+                                {
+                                    <option hidden value="BLANK">Select Reporting Type</option>
+                                    @foreach (var reportType in EPKRSService.reportingTypes)
+                                    {
+                                        <option value="@reportType.ReportingID">@reportType.ReportingDescription</option>
+                                    }
+                                }
+                                else
+                                {
+                                    <option disabled hidden value="BLANK">Data Empty</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    @if (RiskID.Equals("ITEMC"))
+                    {
+                        <EditForm Model="@itemCaseData">
+                            <DataAnnotationsValidator />
+
+                            @if (formPage == 1)
+                            {
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="risk_id">Risk Type :</label>
+                                        <InputSelect id="risk_id" @bind-Value="itemCaseData.RiskID" class="form-select">
+                                            @if (checkRiskType())
+                                            {
+                                                <option hidden value="BLANK">Select Risk Type</option>
+                                                @foreach (var riskType in EPKRSService.riskTypes)
+                                                {
+                                                    @if (!riskType.ReportingID.Equals(RiskID))
+                                                        continue;
+
+                                                    <option value="@riskType.RiskID">@riskType.RiskDescription</option>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <option disabled hidden value="BLANK">Data Empty</option>
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                    <div class="col">
+                                        <label for="doc_id">Document ID :</label>
+                                        <InputText id="doc_id" @bind-Value="itemCaseData.DocumentID" class="form-control" readonly></InputText>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="site_reporter">Site Reporter :</label>
+                                        <InputText id="site_reporter" @bind-Value="itemCaseData.SiteReporter" class="form-control" readonly></InputText>
+                                    </div>
+                                    <div class="col">
+                                        <label for="site_sender">Site Sender :</label>
+                                        <InputSelect id="site_sender" @bind-Value="itemCaseData.SiteSender" class="form-select">
+                                            @if (checkLocation())
+                                            {
+                                                @foreach (var location in ManagementService.locations)
+                                                {
+                                                    <option value="@location.locationId">@location.locationId - @location.locationName</option>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <option disabled value="BLANK">Location Empty</option>
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="report_date">Report Date :</label>
+                                        <InputDate id="report_date" @bind-Value="itemCaseData.ReportDate" class="form-control" readonly></InputDate>
+                                    </div>
+                                    <div class="col">
+                                        <label for="pickup_date">Item Pickup Date :</label>
+                                        <InputDate id="pickup_date" @bind-Value="itemCaseData.ItemPickupDate" class="form-control"></InputDate>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="late">Late ?</label>
+                                        <select id="late" class="form-select" @bind="isLate">
+                                            <option hidden disabled value="BLANK">Select Condition</option>
+                                            <option value="YES">Yes</option>
+                                            <option value="NO">No</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="cctv_covered">CCTV Covered ?</label>
+                                        <select id="cctv_covered" class="form-select" @bind="isCCTVCovered">
+                                            <option hidden disabled value="BLANK">Select Condition</option>
+                                            <option value="YES">Yes</option>
+                                            <option value="NO">No</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="reported">Report to Sender ?</label>
+                                        <select id="reported" class="form-select" @bind="isReportedtoSender">
+                                            <option hidden disabled value="BLANK">Select Condition</option>
+                                            <option value="YES">Yes</option>
+                                            <option value="NO">No</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                            }
+
+                            @if (formPage == 2)
+                            {
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="ld_id">Loading Document ID :</label>
+                                        <div id="ld_id" class="input-group">
+                                            <InputText @bind-Value="itemCaseData.LoadingDocumentID" class="form-control" readonly></InputText>
+                                            <button type="button" class="btn btn-sm btn-primary-cus" @onclick="selectItembyLoadingDocumentID">...</button>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <label for="ld_date">Loading Document Date :</label>
+                                        <InputDate id="ld_date" @bind-Value="itemCaseData.LoadingDocumentDate" class="form-control"></InputDate>
+                                    </div>
+                                </div>
+
+                                @if (checkItemLine())
+                                {
+                                    <table class="table table-sm table-bordered" style="width: 100%">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 5%;">Action</th>
+                                                <th style="width: 15%;">TR ID</th>
+                                                <th style="width: 15%;">Item Code</th>
+                                                <th style="width: 30%;">Description</th>
+                                                <th style="width: 5%;">Qty</th>
+                                                <th style="width: 10%;">UOM</th>
+                                                <th style="width: 15%;">Item Value</th>
+                                                <th style="width: 5%;">Qty Stock</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var line in itemLineData)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="(() => itemLineData.Remove(line))"><i class="oi oi-delete"></i></button>
+                                                    </td>
+                                                    <td>@line.TRID</td>
+                                                    <td>@line.ItemCode</td>
+                                                    <td>@line.ItemDescription</td>
+                                                    <td>@line.ItemQuantity</td>
+                                                    <td>@line.UOM</td>
+                                                    <td>@line.ItemValue</td>
+                                                    <td><input type="number" class="form-control" @bind-value="@line.ItemStock" /></td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
+                                        <strong>Please Select Item by Loading Document Above !</strong>
+                                    </div>
+                                }
+
+                                <div class="row my-3">
+                                    <div class="col">
+                                        <button type="button" title="Add New Line" class="btn btn-sm btn-warning" @onclick="@(() => caseAttachments.Add(new BPIWebApplication.Shared.PagesModel.EPKRS.CaseAttachmentForm()))"><b>Add</b></button>
+                                    </div>
+                                </div>
+
+                                @if (checkCaseAttachment())
+                                {
+                                    <table class="table table-sm table-bordered" style="width: 100%">
+                                        <caption>&lowast; Max File Size Upload @maxFileSize MB(s)</caption>
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 5%;">Action</th>
+                                                <th style="width: 40%;">File Name</th>
+                                                <th style="width: 25%; background-color:aquamarine;">Select File</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var attach in caseAttachments)
+                                            {
+                                                <tr>
+                                                    <td><button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="(() => caseAttachments.Remove(attach))"><i class="oi oi-delete"></i></button></td>
+                                                    <td>@attach.FilePath</td>
+                                                    <td><InputFile class="form-control form-control-file" accept=".pdf"></InputFile></td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
+                                        <strong>Please Add Attachment Using Button Above !</strong>
+                                    </div>                                
+                                }
+                            }
+
+                            <div class="row mt-3 mb-1">
+                                <div class="col">
+                                    <div class="d-flex justify-content-between align-middle">
+                                        <button type="button" title="Previous Category" class="btn btn-sm btn-outline-info text-black fw-bold" disabled="@((formPage - 1) <= 0 ? "disabled" : null)" @onclick="(() => formPage -= 1)"><span class="oi oi-chevron-left"></span> Prev</button>
+                                        <p><span>&lt; @inputPageMapping.SingleOrDefault(x => x.Key.Equals("ITEMC")).Value.SingleOrDefault(y => y.Key.Equals(formPage)).Value &gt;</span></p>
+                                        <button type="button" title="Next Category" class="btn btn-sm btn-outline-info text-black fw-bold" disabled="@((formPage + 1) > inputPageMapping.SingleOrDefault(x => x.Key.Equals("ITEMC")).Value.Count() ? "disabled" : null)" @onclick="(() => formPage += 1)">Next <span class="oi oi-chevron-right"></span></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if (formPage.Equals(inputPageMapping.SingleOrDefault(x => x.Key.Equals("ITEMC")).Value.Count()))
+                            {
+                                <div class="row my-3">
+                                    <div class="col">
+                                        <button type="submit" title="Please Recheck the Amount" class="btn btn-sm btn-primary-cus" @onclick="submitIncidentAccident">
+                                            Create Report
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+
+                        </EditForm>
+                    }
+                    else if (RiskID.Equals("INCAC"))
+                    {
+                        <EditForm Model="@incidentaccidentData">
+                            <DataAnnotationsValidator />
+
+                            @if (formPage == 1)
+                            {
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="risk_id">Risk Type :</label>
+                                        <InputSelect id="risk_id" @bind-Value="incidentaccidentData.RiskID" class="form-select">
+                                            @if (checkRiskType())
+                                            {
+                                                <option hidden value="BLANK">Select Risk Type</option>
+                                                @foreach (var riskType in EPKRSService.riskTypes)
+                                                {
+                                                    @if (!riskType.ReportingID.Equals(RiskID))
+                                                        continue;
+
+                                                    <option value="@riskType.RiskID">@riskType.RiskDescription</option>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <option disabled hidden value="BLANK">Data Empty</option>
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                    <div class="col">
+                                        <label for="doc_id">Document ID :</label>
+                                        <InputText id="doc_id" @bind-Value="incidentaccidentData.DocumentID" class="form-control" readonly></InputText>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="report_date">Report Date :</label>
+                                        <InputDate id="report_date" @bind-Value="incidentaccidentData.ReportDate" class="form-control" readonly></InputDate>
+                                    </div>
+                                    <div class="col">
+                                        <label for="occur_date">Occurence Date :</label>
+                                        <InputDate id="occur_date" @bind-Value="incidentaccidentData.OccurenceDate" class="form-control"></InputDate>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="loc_report">Site Reporter :</label>
+                                        <InputText id="loc_report" @bind-Value="incidentaccidentData.SiteReporter" class="form-control" readonly></InputText>
+                                    </div>
+                                    <div class="col">
+                                        <label for="dept_id">Reporter Department :</label>
+                                        <InputSelect id="dept_id" @bind-Value="incidentaccidentData.DepartmentReporter" class="form-select">
+                                            <option hidden value="0">Select Department</option>
+
+                                            @foreach (var dept in ManagementService.departments)
+                                            {
+                                                <option value="@dept.DepartmentID">@dept.DepartmentName</option>
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="riskrpname">Risk RP Name :</label>
+                                        <InputText id="riskrpname" @bind-Value="incidentaccidentData.RiskRPName" class="form-control"></InputText>
+                                    </div>
+                                    <div class="col">
+                                        <label for="riskrpemail">Risk RP Email :</label>
+                                        <InputText id="riskrpemail" @bind-Value="incidentaccidentData.RiskRPEmail" class="form-control"></InputText>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="dormname">DORM Name :</label>
+                                        <InputText id="riskrpname" @bind-Value="incidentaccidentData.DORMName" class="form-control"></InputText>
+                                    </div>
+                                    <div class="col">
+                                        <label for="dormemail">DORM Email :</label>
+                                        <InputText id="riskrpemail" @bind-Value="incidentaccidentData.DORMEmail" class="form-control"></InputText>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (formPage == 2)
+                            {
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="case_desc">Case Description :</label>
+                                        <InputText id="case_desc" @bind-Value="incidentaccidentData.DORMName" class="form-control"></InputText>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="affected_dept">Affected Department :</label>
+                                        <InputSelect id="affected_dept" @bind-Value="incidentaccidentData.DepartmentAffected" class="form-select">
+                                            <option hidden value="0">Select Department</option>
+
+                                            @foreach (var dept in ManagementService.departments)
+                                            {
+                                                <option value="@dept.DepartmentID">@dept.DepartmentName</option>
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="cronology">Cronology :</label>
+                                        <InputTextArea id="cronology" @bind-Value="incidentaccidentData.Cronology" class="form-control"></InputTextArea>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="rootcause">Root Cause :</label>
+                                        <InputTextArea id="rootcause" @bind-Value="incidentaccidentData.RootCause" class="form-control"></InputTextArea>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (formPage == 3)
+                            {
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="lossdesc">Loss Description :</label>
+                                        <InputTextArea id="lossdesc" @bind-Value="incidentaccidentData.LossDescription" class="form-control"></InputTextArea>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="loss_amount">Loss Amount Estimation (Rp) :</label>
+                                        <InputNumber id="loss_amount" @bind-Value="incidentaccidentData.LossEstimation" class="form-control" @oninput="@((ChangeEventArgs e) => { try { if (e.Value.ToString().Length > 0) { previewLossEstimationAmount = "Rp. " + Convert.ToDecimal(e.Value).ToString("N0") + ",-"; } else { previewLossEstimationAmount = ""; } } catch (Exception exc) { } })"></InputNumber>
+                                    </div>
+                                    <div class="col">
+                                        <label for="loss_amtdisplay">Preview Amount :</label>
+                                        <input type="text" id="loss_amtdisplay" @bind="@previewLossEstimationAmount" @bind:event="onchange" class="form-control" readonly></input>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="return_amount">Return Amount (Rp) :</label>
+                                        <InputNumber id="return_amount" @bind-Value="incidentaccidentData.ReturnAmount" class="form-control" @oninput="@((ChangeEventArgs e) => { try { if (e.Value.ToString().Length > 0) { previewReturnAmount = "Rp. " + Convert.ToDecimal(e.Value).ToString("N0") + ",-"; } else { previewReturnAmount = ""; } } catch (Exception exc) { } })"></InputNumber>
+                                    </div>
+                                    <div class="col">
+                                        <label for="return_amtdisplay">Preview Amount :</label>
+                                        <input type="text" id="return_amtdisplay" @bind="@previewReturnAmount" @bind:event="onchange" class="form-control" readonly></input>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="riskdesc">Risk Description :</label>
+                                        <InputTextArea id="riskdesc" @bind-Value="incidentaccidentData.RiskDescription" class="form-control"></InputTextArea>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="causedesc">Cause Description :</label>
+                                        <InputTextArea id="causedesc" @bind-Value="incidentaccidentData.CauseDescription" class="form-control"></InputTextArea>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (formPage == 4)
+                            {
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="mitigation_pic">Mitigation PIC :</label>
+                                        <InputText id="mitigation_pic" @bind-Value="incidentaccidentData.PIC" class="form-control"></InputText>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="action_plan">Action Plan :</label>
+                                        <InputTextArea id="action_plan" @bind-Value="incidentaccidentData.ActionPlan" class="form-control"></InputTextArea>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="target_date">Target Date :</label>
+                                        <InputDate id="target_date" @bind-Value="incidentaccidentData.TargetDate" class="form-control"></InputDate>
+                                    </div>
+                                    <div class="col">
+                                        <label for="mitigate_date">Mitigation Date :</label>
+                                        <InputDate id="mitigate_date" @bind-Value="incidentaccidentData.MitigationDate" class="form-control"></InputDate>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="mitigate_plan">Mitigation Plan :</label>
+                                        <InputTextArea id="mitigate_plan" @bind-Value="incidentaccidentData.MitigationPlan" class="form-control"></InputTextArea>
+                                    </div>
+                                </div>
+
+                                <div class="row my-3">
+                                    <div class="col">
+                                        <button type="button" title="Add New Line" class="btn btn-sm btn-warning" @onclick="@(() => caseAttachments.Add(new BPIWebApplication.Shared.PagesModel.EPKRS.CaseAttachmentForm()))"><b>Add</b></button>
+                                    </div>
+                                </div>
+
+                                @if (checkCaseAttachment())
+                                {
+                                    <table class="table table-sm table-bordered" style="width: 100%">
+                                        <caption>&lowast; Max File Size Upload @maxFileSize MB(s)</caption>
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 5%;">Action</th>
+                                                <th style="width: 40%;">File Name</th>
+                                                <th style="width: 25%; background-color:aquamarine;">Select File</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var attach in caseAttachments)
+                                            {
+                                                <tr>
+                                                    <td><button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="(() => caseAttachments.Remove(attach))"><i class="oi oi-delete"></i></button></td>
+                                                    <td>@attach.FilePath</td>
+                                                    <td><InputFile class="form-control form-control-file" accept=".pdf"></InputFile></td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
+                                        <strong>Please Add Attachment Using Button Above !</strong>
+                                    </div>
+                                }
+                            }
+
+                            <div class="row mt-3 mb-1">
+                                <div class="col">
+                                    <div class="d-flex justify-content-between align-middle">
+                                        <button type="button" title="Previous Category" class="btn btn-sm btn-outline-info text-black fw-bold" disabled="@((formPage - 1) <= 0 ? "disabled" : null)" @onclick="(() => formPage -= 1)"><span class="oi oi-chevron-left"></span> Prev</button>
+                                        <p><span>&lt; @inputPageMapping.SingleOrDefault(x => x.Key.Equals("INCAC")).Value.SingleOrDefault(y => y.Key.Equals(formPage)).Value &gt;</span></p>
+                                        <button type="button" title="Next Category" class="btn btn-sm btn-outline-info text-black fw-bold" disabled="@((formPage + 1) > inputPageMapping.SingleOrDefault(x => x.Key.Equals("INCAC")).Value.Count() ? "disabled" : null)" @onclick="(() => formPage += 1)">Next <span class="oi oi-chevron-right"></span></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if (formPage.Equals(inputPageMapping.SingleOrDefault(x => x.Key.Equals("INCAC")).Value.Count()))
+                            {
+                                <div class="row my-3">
+                                    <div class="col">
+                                        <button type="submit" title="Please Recheck the Amount" class="btn btn-sm btn-primary-cus" @onclick="submitIncidentAccident">
+                                            Create Report
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+
+                        </EditForm>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
+                            <strong>Please Select Report Type Above !</strong>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col align-middle text-center">
+                    <h3>Fetch Data Privileges in Process</h3>
+                    <small>Refresh Page Using Button Below If There is No Response</small>
+                    <br />
+                    <button type="button" class="btn btn-primary my-4" @onclick="(() => StateHasChanged())"><b>Refresh Page</b></button>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@if (isLoading)
+{
+    <div class="modal show" id="splashLoading" tabindex="-5" role="dialog" aria-labelledby="splashLoadingDialog" aria-hidden="true" style="display:block; background: rgba(0,0,0, 0.7);">
+        <BPIWebApplication.Client.Shared.CustomLayout.SplashScreen></BPIWebApplication.Client.Shared.CustomLayout.SplashScreen>
+    </div>
+}

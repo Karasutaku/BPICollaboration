@@ -3319,7 +3319,7 @@ namespace BPIFacade.Controllers
 
                     res.isSuccess = result.IsSuccessStatusCode;
                     res.ErrorCode = "01";
-                    res.ErrorMessage = $"Failure from createEPKRSItemCaseDocument Facade";
+                    res.ErrorMessage = "Failure from createEPKRSItemCaseDocument BR";
 
                     actionResult = Ok(res);
                 }
@@ -3341,8 +3341,6 @@ namespace BPIFacade.Controllers
         public async Task<IActionResult> createEPKRSIncidentAccidentDocumentData(IncidentAccidentStream data)
         {
             ResultModel<IncidentAccidentStream> res = new ResultModel<IncidentAccidentStream>();
-            DataTable dtMainIdentity = new DataTable("Identity");
-            string id = string.Empty;
             IActionResult actionResult = null;
 
             try
@@ -3368,7 +3366,7 @@ namespace BPIFacade.Controllers
 
                     res.isSuccess = result.IsSuccessStatusCode;
                     res.ErrorCode = "01";
-                    res.ErrorMessage = $"Failure from createEPKRSIncidentAccidentDocument Facade";
+                    res.ErrorMessage = "Failure from createEPKRSIncidentAccidentDocument BR";
 
                     actionResult = Ok(res);
                 }
@@ -3390,8 +3388,6 @@ namespace BPIFacade.Controllers
         public async Task<IActionResult> createEPKRSDocumentDiscussionData(QueryModel<EPKRSUploadDiscussion> data)
         {
             ResultModel<QueryModel<EPKRSUploadDiscussion>> res = new ResultModel<QueryModel<EPKRSUploadDiscussion>>();
-            DataTable dtMainIdentity = new DataTable("Identity");
-            string id = string.Empty;
             IActionResult actionResult = null;
 
             try
@@ -3416,7 +3412,7 @@ namespace BPIFacade.Controllers
 
                     res.isSuccess = result.IsSuccessStatusCode;
                     res.ErrorCode = "01";
-                    res.ErrorMessage = $"Failure from createEPKRSDocumentDiscussion BR";
+                    res.ErrorMessage = "Failure from createEPKRSDocumentDiscussion BR";
 
                     actionResult = Ok(res);
                 }
@@ -3431,6 +3427,94 @@ namespace BPIFacade.Controllers
 
                 actionResult = BadRequest(res);
             }
+            return actionResult;
+        }
+
+        [HttpGet("getEPRKSReportingType")]
+        public async Task<IActionResult> getEPRKSReportingType()
+        {
+            ResultModel<List<ReportingType>> res = new ResultModel<List<ReportingType>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<ReportingType>>>("api/BR/EPKRS/getEPRKSReportingType");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSRiskType")]
+        public async Task<IActionResult> getEPRKSRiskType()
+        {
+            ResultModel<List<RiskType>> res = new ResultModel<List<RiskType>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<RiskType>>>("api/BR/EPKRS/getEPKRSRiskType");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
             return actionResult;
         }
 

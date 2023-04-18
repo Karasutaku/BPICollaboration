@@ -67,7 +67,16 @@ namespace BPIWebApplication.Client.Pages.CashierLogBookPages
 
             if (syncSessionStorage.ContainKey("userName"))
             {
-                privilegeDataParam.moduleId = Convert.ToInt32(Base64Decode(syncSessionStorage.GetItem<string>("ModuleId")));
+                if (param != null)
+                {
+                    int moduleid = Convert.ToInt32(LoginService.moduleList.SingleOrDefault(x => x.url.Equals("/cashierlogbook/addlogbook")).moduleId);
+                    privilegeDataParam.moduleId = moduleid;
+                }
+                else
+                {
+                    privilegeDataParam.moduleId = Convert.ToInt32(Base64Decode(syncSessionStorage.GetItem<string>("ModuleId")));
+                }
+
                 privilegeDataParam.UserName = Base64Decode(syncSessionStorage.GetItem<string>("userName"));
                 privilegeDataParam.userLocationParam = new();
                 privilegeDataParam.userLocationParam.SessionId = syncSessionStorage.GetItem<string>("SessionId");
@@ -117,7 +126,7 @@ namespace BPIWebApplication.Client.Pages.CashierLogBookPages
             await CashierLogbookService.getShiftData("CashierLogbook");
             await CashierLogbookService.getLogbookCategories();
 
-            logbook.LogType = "UTAMA";
+            logbook.LogType = "BLANK";
             logbook.Applicant = Base64Decode(await sessionStorage.GetItemAsync<string>("userName"));
             logbook.LocationID = Base64Decode(await sessionStorage.GetItemAsync<string>("CompLoc")).Split("_")[1].Equals("") ? "HO" : Base64Decode(await sessionStorage.GetItemAsync<string>("CompLoc")).Split("_")[1];
             logbook.LogStatus = "Create";
@@ -125,17 +134,17 @@ namespace BPIWebApplication.Client.Pages.CashierLogBookPages
 
             isActiveDocumentExist = true;
 
-            string param = activeUser.location + $"!_!WHERE LogDate BETWEEN \'{logbook.LogStatusDate.ToString("yyyyMMdd")}\' AND \'{logbook.LogStatusDate.ToString("yyyyMMdd")}\' AND LogStatus != \'DONE\'";
-            var res2 = await CashierLogbookService.getNumberofLogExisting(Base64Encode(param));
+            //string param = activeUser.location + $"!_!WHERE LogDate BETWEEN \'{logbook.LogStatusDate.ToString("yyyyMMdd")}\' AND \'{logbook.LogStatusDate.ToString("yyyyMMdd")}\' AND LogStatus != \'DONE\'";
+            //var res2 = await CashierLogbookService.getNumberofLogExisting(Base64Encode(param));
 
-            if (res2 > 0)
-            {
-                isActiveDocumentExist = true;
-            }
-            else
-            {
-                isActiveDocumentExist = false;
-            }
+            //if (res2 > 0)
+            //{
+            //    isActiveDocumentExist = true;
+            //}
+            //else
+            //{
+            //    isActiveDocumentExist = false;
+            //}
 
             selectedCategoryID = CashierLogbookService.categories.OrderBy(x => x.AmountCategoryName).First().AmountCategoryID;
             selectedShiftID = CashierLogbookService.Shifts.OrderBy(x => x.ShiftID).First().ShiftID;
@@ -147,6 +156,7 @@ namespace BPIWebApplication.Client.Pages.CashierLogBookPages
         {
             if (param != null)
             {
+                
                 isSuccessUpload = false;
                 isLoading = true;
                 string temp = Base64Decode(param);
@@ -178,6 +188,59 @@ namespace BPIWebApplication.Client.Pages.CashierLogBookPages
 
                 isLoading = false;
                 StateHasChanged();
+            }
+        }
+
+        private async void checkOngoingDocument(ChangeEventArgs e)
+        {
+            try
+            {
+                logbook.LogDate = DateTime.Now;
+                logbook.LogType = e.Value.ToString();
+
+                string param = activeUser.location + $"!_!WHERE LogDate BETWEEN \'{logbook.LogDate.ToString("yyyyMMdd")}\' AND \'{logbook.LogDate.ToString("yyyyMMdd")}\' AND LogType = \'{logbook.LogType}\' AND LogStatus != \'DONE\'";
+                var res2 = await CashierLogbookService.getNumberofLogExisting(Base64Encode(param));
+
+                if (res2 > 0)
+                {
+                    isActiveDocumentExist = true;
+                }
+                else
+                {
+                    isActiveDocumentExist = false;
+                }
+
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error {ex.Message} !");
+            }
+        }
+
+        private async void checkOngoingDocumentonDateSelect(ChangeEventArgs e)
+        {
+            try
+            {
+                logbook.LogDate = Convert.ToDateTime(e.Value);
+
+                string param = activeUser.location + $"!_!WHERE LogDate BETWEEN \'{logbook.LogDate.ToString("yyyyMMdd")}\' AND \'{logbook.LogDate.ToString("yyyyMMdd")}\' AND LogType = \'{logbook.LogType}\' AND LogStatus != \'DONE\'";
+                var res2 = await CashierLogbookService.getNumberofLogExisting(Base64Encode(param));
+
+                if (res2 > 0)
+                {
+                    isActiveDocumentExist = true;
+                }
+                else
+                {
+                    isActiveDocumentExist = false;
+                }
+
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error {ex.Message} !");
             }
         }
 

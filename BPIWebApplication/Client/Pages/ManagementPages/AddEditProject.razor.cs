@@ -53,7 +53,16 @@ namespace BPIWebApplication.Client.Pages.ManagementPages
 
             if (syncSessionStorage.ContainKey("userName"))
             {
-                privilegeDataParam.moduleId = Convert.ToInt32(Base64Decode(syncSessionStorage.GetItem<string>("ModuleId")));
+                if (param != null)
+                {
+                    int moduleid = Convert.ToInt32(LoginService.moduleList.SingleOrDefault(x => x.url.Equals("/management/project")).moduleId);
+                    privilegeDataParam.moduleId = moduleid;
+                }
+                else
+                {
+                    privilegeDataParam.moduleId = Convert.ToInt32(Base64Decode(syncSessionStorage.GetItem<string>("ModuleId")));
+                }
+                
                 privilegeDataParam.UserName = Base64Decode(syncSessionStorage.GetItem<string>("userName"));
                 privilegeDataParam.userLocationParam = new();
                 privilegeDataParam.userLocationParam.SessionId = syncSessionStorage.GetItem<string>("SessionId");

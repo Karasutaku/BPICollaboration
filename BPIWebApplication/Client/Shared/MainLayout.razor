@@ -28,6 +28,7 @@
             //activeUser.role = Base64Decode(sessionStorage.GetItem<string>("role"));
 
             activeUser.userName = Base64Decode(sessionStorage.GetItem<string>("userName"));
+            activeUser.location = CommonLibrary.Base64Decode(sessionStorage.GetItem<string>("CompLoc")).Split("_")[1];
         }
     }
 }
@@ -55,7 +56,7 @@
                     <button type="button" class="border-0"><i class="oi oi-menu" ></i></button>
                 </div>*@
                 <div class="userDetailNav">
-                    Welcome, @activeUser.userName
+                    Welcome, @activeUser.userName - @activeUser.location
                 </div>
                 
             </div>

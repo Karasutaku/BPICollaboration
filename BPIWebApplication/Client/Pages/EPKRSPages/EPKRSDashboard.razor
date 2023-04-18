@@ -1,0 +1,169 @@
+﻿@page "/epkrs/dashboard"
+@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
+@inject Blazored.SessionStorage.ISyncSessionStorageService syncSessionStorage
+@inject IEPKRSSevice EPKRSService
+@inject ILoginService LoginService
+@inject IManagementService ManagementService
+@inject IJSRuntime JS
+
+<PageTitle>EPKRS - Dashboard</PageTitle>
+
+@if (LoginService.activeUser == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    if (LoginService.activeUser.userPrivileges != null)
+    {
+        @if (!LoginService.activeUser.userPrivileges.Contains("VW"))
+        {
+            <div class="container-fluid">
+                <div class="d-flex align-items-center">
+                    <h3>User Require Elevation</h3>
+                </div>
+            </div>
+        }
+        else
+        {
+            <h3>EPKRS</h3>
+            <small><i>EPKRS Dashboard</i></small>
+
+            @if (alertTrigger)
+            {
+                <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
+                    <strong>@alertMessage</strong> @alertBody
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close" @onclick="(() => alertTrigger = false)">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            }
+
+
+            @if (successAlert)
+            {
+                <div class="alert alert-success alert-dismissible fade show my-3" role="alert">
+                    <strong>@alertMessage</strong> @alertBody
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close" @onclick="(() => successAlert = false)">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            }
+            
+            
+            <div class="container-fluid">
+                @*<div class="d-flex flex-column align-items-center">
+                    <div>
+                    </div>
+                    <div class="border border-2 my-3 p-2">
+                        <h5 class="float-lg-end"><b>Ongoing EPKRS Document</b></h5>
+                        <ul class="nav nav-pills flex-column flex-sm-row" id="myTab" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" id="itemcase-tab" data-toggle="tab" href="#itemcase" role="tab" aria-controls="itemcase" aria-selected="true">Item Case &lt;  of  &gt;</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="incac-tab" data-toggle="tab" href="#incac" role="tab" aria-controls="incac" aria-selected="false">Incident/Accident &lt;  of  &gt;</a>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" id="myTabContent">
+                            <div class="tab-pane fade show active" id="itemcase" role="tabpanel" aria-labelledby="itemcase-tab">
+                                @if (checkItemCaseData())
+                                {
+                                    
+                                }
+                                else
+                                {
+                                    <p class="fw-bold text-center">. . . There is no Document . . .</p>
+                                }
+                            </div>
+
+                            <div class="tab-pane fade" id="incac" role="tabpanel" aria-labelledby="incac-tab">
+                                @if (checkIncidentAccidentData())
+                                {
+
+                                }
+                                else
+                                {
+                                    <p class="fw-bold text-center">. . . There is no Document . . .</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>*@
+                <div class="row">
+                    <div class="col col-xs-12 col-sm-12 col-md-8 col-lg-9 border border-2 p-2">
+                        <div class="d-flex flex-column align-items-center">
+                            <h5><b>EPKRS Monitoring Panel</b></h5>
+                        </div>
+                    </div>
+                    <div class="col col-xs-12 col-sm-12 col-md-4 col-lg-3 border border-2 p-2">
+                        <div class="d-flex flex-column align-items-center">
+                            <h5><b>EPKRS General Statistics</b></h5>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <div class="border border-2 my-3 p-2">
+                            <h5 class="float-lg-end"><b>Ongoing EPKRS Document</b></h5>
+                            <ul class="nav nav-pills flex-column flex-sm-row" id="myTab" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" id="itemcase-tab" data-toggle="tab" href="#itemcase" role="tab" aria-controls="itemcase" aria-selected="true">Item Case &lt;  of  &gt;</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="incac-tab" data-toggle="tab" href="#incac" role="tab" aria-controls="incac" aria-selected="false">Incident/Accident &lt;  of  &gt;</a>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content" id="myTabContent">
+                                <div class="tab-pane fade show active" id="itemcase" role="tabpanel" aria-labelledby="itemcase-tab">
+                                    @if (checkItemCaseData())
+                                    {
+
+                                    }
+                                    else
+                                    {
+                                        <p class="fw-bold text-center">. . . There is no Document . . .</p>
+                                    }
+                                </div>
+
+                                <div class="tab-pane fade" id="incac" role="tabpanel" aria-labelledby="incac-tab">
+                                    @if (checkIncidentAccidentData())
+                                    {
+
+                                    }
+                                    else
+                                    {
+                                        <p class="fw-bold text-center">. . . There is no Document . . .</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }   
+    }
+    else
+    {
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col align-middle text-center">
+                    <h3>Fetch Data Privileges in Process</h3>
+                    <small>Refresh Page Using Button Below If There is No Response</small>
+                    <br />
+                    <button type="button" class="btn btn-primary my-4" @onclick="(() => StateHasChanged())"><b>Refresh Page</b></button>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@if (isLoading)
+{
+    <div class="modal show" id="splashLoading" tabindex="-5" role="dialog" aria-labelledby="splashLoadingDialog" aria-hidden="true" style="display:block; background: rgba(0,0,0, 0.7);">
+        <BPIWebApplication.Client.Shared.CustomLayout.SplashScreen></BPIWebApplication.Client.Shared.CustomLayout.SplashScreen>
+    </div>
+}

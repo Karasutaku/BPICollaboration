@@ -461,10 +461,10 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
 
         private async void updateBudget(string loc)
         {
-            isLoading = true;
-
             try
             {
+                isLoading = true;
+
                 QueryModel<BalanceDetails> updateData = new();
                 updateData.Data = new();
 
@@ -493,6 +493,8 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
                     isLoading = false;
                     await _jsModule.InvokeVoidAsync("showAlert", "Update Failed, Please Check Your Connection !");
                 }
+
+                StateHasChanged();
             }
             catch (Exception ex)
             {

@@ -4307,8 +4307,6 @@ namespace BPIBR.Controllers
         public async Task<IActionResult> createEPKRSIncidentAccidentDocumentData(IncidentAccidentStream data)
         {
             ResultModel<IncidentAccidentStream> res = new ResultModel<IncidentAccidentStream>();
-            DataTable dtMainIdentity = new DataTable("Identity");
-            string id = string.Empty;
             IActionResult actionResult = null;
 
             try
@@ -4365,8 +4363,6 @@ namespace BPIBR.Controllers
         public async Task<IActionResult> createEPKRSDocumentDiscussionData(QueryModel<EPKRSUploadDiscussion> data)
         {
             ResultModel<QueryModel<EPKRSUploadDiscussion>> res = new ResultModel<QueryModel<EPKRSUploadDiscussion>>();
-            DataTable dtMainIdentity = new DataTable("Identity");
-            string id = string.Empty;
             IActionResult actionResult = null;
 
             try
@@ -4408,6 +4404,94 @@ namespace BPIBR.Controllers
 
                 actionResult = BadRequest(res);
             }
+            return actionResult;
+        }
+
+        [HttpGet("getEPRKSReportingType")]
+        public async Task<IActionResult> getEPRKSReportingType()
+        {
+            ResultModel<List<ReportingType>> res = new ResultModel<List<ReportingType>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<ReportingType>>>("api/DA/EPKRS/getEPRKSReportingType");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSRiskType")]
+        public async Task<IActionResult> getEPRKSRiskType()
+        {
+            ResultModel<List<RiskType>> res = new ResultModel<List<RiskType>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<RiskType>>>("api/DA/EPKRS/getEPKRSRiskType");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
             return actionResult;
         }
 

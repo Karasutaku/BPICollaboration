@@ -17,6 +17,7 @@ namespace BPIWebApplication.Client.Services.LoginServices
         }
 
         public ActiveUser? activeUser { get; set; } = new();
+        public List<FacadeUserModuleResp>? moduleList { get; set; } = new();
 
         //public async Task<ResultModel<ActiveUser<LoginUser>>> GetUserAuthentication(LoginUser data)
         //{
