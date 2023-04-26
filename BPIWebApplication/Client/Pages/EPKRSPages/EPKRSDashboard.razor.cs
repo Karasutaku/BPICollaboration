@@ -1,4 +1,6 @@
 ﻿using BPILibrary;
+using BPIWebApplication.Shared.MainModel;
+using BPIWebApplication.Shared.MainModel.EPKRS;
 using BPIWebApplication.Shared.MainModel.Login;
 using BPIWebApplication.Shared.PagesModel.EPKRS;
 using Microsoft.AspNetCore.Components;
@@ -12,6 +14,13 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
         private ActiveUser activeUser = new();
         private UserPrivileges privilegeDataParam = new();
         private List<string> userPriv = new();
+
+        private Location paramGetCompanyLocation = new();
+
+        private ItemCase previewItemCase = new();
+        private List<ItemLine> previewItemLine = new();
+        private List<CaseAttachment> previewCaseAttachment = new();
+        private List<DocumentDiscussion> previewDocumentDiscussion = new();
 
         private bool isLoading = false;
 
@@ -82,9 +91,28 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
             LoginService.activeUser.userPrivileges = activeUser.userPrivileges;
 
+            paramGetCompanyLocation.Condition = $"a.CompanyId={Convert.ToInt32(activeUser.company)}";
+            paramGetCompanyLocation.PageIndex = 1;
+            paramGetCompanyLocation.PageSize = 100;
+            paramGetCompanyLocation.FieldOrder = "a.CompanyId";
+            paramGetCompanyLocation.MethodOrder = "ASC";
+
+            await ManagementService.GetCompanyLocations(paramGetCompanyLocation);
+
             await EPKRSService.getEPRKSReportingType();
+            await EPKRSService.getEPRKSRiskType();
+
+            string paramGetItemCaseInitialization = activeUser.location + "!_!!_!1";
+            await EPKRSService.getEPKRSItemCaseData(CommonLibrary.Base64Encode(paramGetItemCaseInitialization));
 
             _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/EPKRSPages/addEPKRS.razor.js");
+        }
+
+        private void setItemCasePreviewData(EPKRSUploadItemCase data)
+        {
+            previewItemCase = data.itemCase;
+            previewItemLine = data.itemLine;
+            previewCaseAttachment = data.attachment;
         }
 
         private bool checkReportingType()
@@ -130,6 +158,25 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             try
             {
                 if (EPKRSService.incidentAccidents.Any())
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        private bool checkPreviewItemLine()
+        {
+            try
+            {
+                if (previewItemLine.Any())
                 {
                     return true;
                 }

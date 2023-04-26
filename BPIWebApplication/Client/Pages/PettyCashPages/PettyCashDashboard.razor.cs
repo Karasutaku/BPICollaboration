@@ -1511,8 +1511,21 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
                 isLoading = true;
 
                 string advStatus = "";
-                string advFilType = advFilterType;
-                string advFilValue = advFilterValue;
+                string advFilType = "";
+                string advFilValue = "";
+
+                if (!advFilterType.Equals("STATUS"))
+                {
+                    advStatus = "";
+                    advFilType = advFilterType;
+                    advFilValue = advFilterValue;
+                }
+                else
+                {
+                    advStatus = advFilterValue;
+                    advFilType = advFilterType;
+                    advFilValue = "";
+                }
 
                 PettyCashService.advances.Clear();
 
@@ -1561,8 +1574,21 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
                 isLoading = true;
 
                 string expStatus = "";
-                string expFilType = expFilterType;
-                string expFilValue = expFilterValue;
+                string expFilType = "";
+                string expFilValue = "";
+
+                if (!expFilterType.Equals("STATUS"))
+                {
+                    expStatus = "";
+                    expFilType = expFilterType;
+                    expFilValue = expFilterValue;
+                }
+                else
+                {
+                    expStatus = expFilterValue;
+                    expFilType = expFilterType;
+                    expFilValue = "";
+                }
 
                 PettyCashService.expenses.Clear();
 

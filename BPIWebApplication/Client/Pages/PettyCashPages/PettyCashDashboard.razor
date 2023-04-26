@@ -359,12 +359,13 @@ else
                                             {
                                                 <tr>
                                                     <th scope="col" class="text-center align-middle" style="width: 6%; font-size: 15px;">#</th>
-                                                    <th scope="col" class="text-center align-middle" style="width: 15%; font-size: 15px;">Reimbursment ID</th>
-                                                    <th scope="col" class="text-center align-middle" style="width: 15%; font-size: 15px;">Location</th>
+                                                    <th scope="col" class="text-center align-middle" style="width: 13%; font-size: 15px;">Reimbursment ID</th>
+                                                    <th scope="col" class="text-center align-middle" style="width: 11%; font-size: 15px;">Location</th>
                                                     <th scope="col" class="text-center align-middle" style="width: 16%; font-size: 15px;">User</th>
-                                                    <th scope="col" class="d-none d-sm-table-cell text-center align-middle" style="width: 16%; font-size: 15px;">Create Date</th>
-                                                    <th scope="col" class="d-none d-sm-table-cell text-center align-middle" style="width: 16%; font-size: 15px;">Apv. Difference</th>
-                                                    <th scope="col" class="d-none d-sm-table-cell text-center align-middle" style="width: 16%; font-size: 15px;">Status</th>
+                                                    <th scope="col" class="d-none d-sm-table-cell text-center align-middle" style="width: 13%; font-size: 15px;">Create Date</th>
+                                                    <th scope="col" class="d-none d-sm-table-cell text-center align-middle" style="width: 14%; font-size: 15px;">Apv. Difference</th>
+                                                    <th scope="col" class="d-none d-sm-table-cell text-center align-middle" style="width: 14%; font-size: 15px;">Apv. Amount</th>
+                                                    <th scope="col" class="d-none d-sm-table-cell text-center align-middle" style="width: 11%; font-size: 15px;">Status</th>
                                                 </tr>
                                             }
                                             else
@@ -394,6 +395,7 @@ else
                                                         <td class="text-center align-middle" style="font-size:14px;" @onclick="@(() => modalShow(new(), new(), reim, "reimburse", "MASTER"))">@reim.Applicant</td>
                                                         <td class="d-none d-sm-table-cell text-center align-middle" style="font-size:14px;" @onclick="@(() => modalShow(new(), new(), reim, "reimburse", "MASTER"))">@reim.ReimburseDate.ToString("dd / MM / yyyy")</td>
                                                         <td class="d-none d-sm-table-cell text-center align-middle" style="font-size:14px;" @onclick="@(() => modalShow(new(), new(), reim, "reimburse", "MASTER"))"> @((reim.ReimburseStatus.Equals("Open") || reim.ReimburseStatus.Equals("Confirmed")) ? "0" : Decimal.Subtract(reim.lines.Sum(a => a.Amount), reim.lines.Sum(a => a.ApprovedAmount)).ToString("N0")) </td>
+                                                        <td class="d-none d-sm-table-cell text-center align-middle" style="font-size:14px;" @onclick="@(() => modalShow(new(), new(), reim, "reimburse", "MASTER"))"> @((reim.ReimburseStatus.Equals("Open") || reim.ReimburseStatus.Equals("Confirmed")) ? "0" : @reim.lines.Sum(a => a.ApprovedAmount).ToString("N0")) </td>
                                                         <td class="d-none d-sm-table-cell text-center align-middle" style="font-size:14px;" @onclick="@(() => modalShow(new(), new(), reim, "reimburse", "MASTER"))">@reim.ReimburseStatus</td>
                                                     </tr>
                                                 }

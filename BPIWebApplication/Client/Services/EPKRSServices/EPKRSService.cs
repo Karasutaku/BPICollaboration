@@ -16,8 +16,9 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
 
         public List<ReportingType> reportingTypes { get; set; } = new();
         public List<RiskType> riskTypes { get; set; } = new();
-        public List<EPKRSUploadItemCase> itemCases { get; set; }
-        public List<EPKRSUploadIncidentAccident> incidentAccidents { get; set; }
+        public List<EPKRSUploadItemCase> itemCases { get; set; } = new();
+        public List<EPKRSUploadIncidentAccident> incidentAccidents { get; set; } = new();
+        public List<DocumentDiscussion> documentDiscussions { get; set; } = new();
 
         public async Task<ResultModel<ItemCaseStream>> createEPKRSItemCaseDocument(ItemCaseStream data)
         {
@@ -206,6 +207,80 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
                 {
                     riskTypes.Clear();
                     riskTypes = result.Data;
+
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
+        public async Task<ResultModel<List<EPKRSUploadItemCase>>> getEPKRSItemCaseData(string param)
+        {
+            ResultModel<List<EPKRSUploadItemCase>> resData = new ResultModel<List<EPKRSUploadItemCase>>();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSUploadItemCase>>>($"api/endUser/EPKRS/getEPKRSItemCase/{param}");
+
+                if (result.isSuccess)
+                {
+                    itemCases.Clear();
+                    itemCases = result.Data;
+
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
+        public async Task<ResultModel<List<DocumentDiscussion>>> getEPKRSDocumentDiscussion(string param)
+        {
+            ResultModel<List<DocumentDiscussion>> resData = new ResultModel<List<DocumentDiscussion>>();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<DocumentDiscussion>>>($"api/endUser/EPKRS/getEPKRSDocumentDiscussion/{param}");
+
+                if (result.isSuccess)
+                {
+                    documentDiscussions.Clear();
+                    documentDiscussions = result.Data;
 
                     resData.Data = result.Data;
                     resData.isSuccess = result.isSuccess;

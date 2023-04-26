@@ -1,12 +1,14 @@
 ﻿@inherits LayoutComponentBase
 @inject Blazored.SessionStorage.ISyncSessionStorageService sessionStorage
 @inject ILoginService LoginService
+@inject IManagementService ManagementService
 @using BPIWebApplication.Shared.MainModel.Login
 
 @code {
     private bool sessionActive;
     //private ActiveUser<LoginUser> activeUser = new ActiveUser<LoginUser>();
     private ActiveUser activeUser = new();
+    private string location { get; set; } = string.Empty;
 
     private static string Base64Decode(string base64EncodedData)
     {
@@ -29,6 +31,16 @@
 
             activeUser.userName = Base64Decode(sessionStorage.GetItem<string>("userName"));
             activeUser.location = CommonLibrary.Base64Decode(sessionStorage.GetItem<string>("CompLoc")).Split("_")[1];
+
+            if (activeUser.location.Equals(""))
+            {
+                location = "HEAD OFFICE";
+            }
+            else
+            {
+                location = ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(activeUser.location)).locationName;
+            }
+
         }
     }
 }
@@ -56,7 +68,7 @@
                     <button type="button" class="border-0"><i class="oi oi-menu" ></i></button>
                 </div>*@
                 <div class="userDetailNav">
-                    Welcome, @activeUser.userName - @activeUser.location
+                    Welcome, @activeUser.userName - <b> @location </b>
                 </div>
                 
             </div>

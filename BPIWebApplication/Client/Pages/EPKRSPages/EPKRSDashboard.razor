@@ -1,4 +1,4 @@
-﻿@page "/epkrs/dashboard"
+﻿
 @inject Blazored.SessionStorage.ISessionStorageService sessionStorage
 @inject Blazored.SessionStorage.ISyncSessionStorageService syncSessionStorage
 @inject IEPKRSSevice EPKRSService
@@ -91,15 +91,19 @@ else
                         </div>
                     </div>
                 </div>*@
-                <div class="row">
-                    <div class="col col-xs-12 col-sm-12 col-md-8 col-lg-9 border border-2 p-2">
-                        <div class="d-flex flex-column align-items-center">
-                            <h5><b>EPKRS Monitoring Panel</b></h5>
+                <div class="row mt-3">
+                    <div class="col col-xs-12 col-sm-12 col-md-8 col-lg-9 p-3">
+                        <div class="container w-100 h-100 border border-2 p-2">
+                            <div class="d-flex flex-column align-items-center">
+                                <h5><b>EPKRS Monitoring Panel</b></h5>
+                            </div>
                         </div>
                     </div>
-                    <div class="col col-xs-12 col-sm-12 col-md-4 col-lg-3 border border-2 p-2">
-                        <div class="d-flex flex-column align-items-center">
-                            <h5><b>EPKRS General Statistics</b></h5>
+                    <div class="col col-xs-12 col-sm-12 col-md-4 col-lg-3 p-3">
+                        <div class="container w-100 h-100 border border-2 p-2">
+                            <div class="d-flex flex-column align-items-center">
+                                <h5><b>EPKRS General Statistics</b></h5>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -121,7 +125,47 @@ else
                                 <div class="tab-pane fade show active" id="itemcase" role="tabpanel" aria-labelledby="itemcase-tab">
                                     @if (checkItemCaseData())
                                     {
-
+                                        <div class="m-2 p-1">
+                                            @foreach (var itemCase in EPKRSService.itemCases)
+                                            {
+                                                <div class="card my-1">
+                                                    <div class="card-body">
+                                                        <div class="row">
+                                                            <div class="col align-middle my-auto" style="text-align: center;">
+                                                                <h5 class="card-title mb-2 text-muted">@itemCase.itemCase.DocumentID</h5>
+                                                                <h6 class="card-subtitle">@EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(itemCase.itemCase.RiskID)).RiskDescription</h6>
+                                                                <br />
+                                                                @if (ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(itemCase.itemCase.SiteReporter)) != null)
+                                                                {
+                                                                    <h6 class="card-subtitle mb-2 text-muted">@ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(itemCase.itemCase.SiteReporter)).locationName</h6>
+                                                                }
+                                                                else if (itemCase.itemCase.SiteReporter.Equals("HO"))
+                                                                {
+                                                                    <h6 class="card-subtitle mb-2 text-muted">HEAD OFFICE</h6>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <h6 class="card-subtitle mb-2 text-muted">@itemCase.itemCase.SiteReporter</h6>
+                                                                }
+                                                            </div>
+                                                            <div class="col">
+                                                                <p class="card-text">
+                                                                    <b> Loading Document No : </b> @itemCase.itemCase.LoadingDocumentID, @itemCase.itemCase.LoadingDocumentDate.ToString("dd / MM / yyyy")
+                                                                    <br />
+                                                                    <b> Report Date : </b> @itemCase.itemCase.ReportDate.ToString("dd / MM / yyyy")
+                                                                    <br />
+                                                                    <b> Variance Date : </b> @itemCase.itemCase.VarianceDate
+                                                                    <br />
+                                                                    <b> Variance Date : </b> @itemCase.itemCase.DocumentStatus
+                                                                </p>
+                                                                <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#itemCasePreviewModal" @onclick="(() => setItemCasePreviewData(itemCase))"><i class="oi oi-document"></i> Preview Document</button>
+                                                                <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal"><i class="oi oi-chat"></i> Discussion Panel</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
                                     }
                                     else
                                     {
@@ -167,3 +211,137 @@ else
         <BPIWebApplication.Client.Shared.CustomLayout.SplashScreen></BPIWebApplication.Client.Shared.CustomLayout.SplashScreen>
     </div>
 }
+
+@*Item Case Document Preview Modal*@
+<div class="modal fade" id="itemCasePreviewModal" tabindex="-1" role="dialog" aria-labelledby="itemCasePreviewLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header cus-bg">
+                <h5 class="modal-title fw-bold" id="itemCasePreviewLabel">Item Case Document Preview</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col fw-bold">Document ID</div>
+                    <div class="col">: @previewItemCase.DocumentID</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Report Date</div>
+                    <div class="col">: @previewItemCase.ReportDate.ToString("dd MMMM yyyy")</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Site Reporter</div>
+                    <div class="col">: @(ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewItemCase.SiteReporter)) == null ? previewItemCase.SiteReporter.Equals("HO") ? "HEAD OFFICE" : previewItemCase.SiteReporter : ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewItemCase.SiteReporter)).locationName)</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Site Sender</div>
+                    <div class="col">: @(ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewItemCase.SiteSender)) == null ? previewItemCase.SiteReporter.Equals("HO") ? "HEAD OFFICE" : previewItemCase.SiteReporter : ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewItemCase.SiteSender)).locationName)</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Loading Document ID</div>
+                    <div class="col">: @previewItemCase.LoadingDocumentID</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Loading Document Date</div>
+                    <div class="col">: @previewItemCase.LoadingDocumentDate.ToString("dd MMMM yyyy")</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Item Pickup Date</div>
+                    <div class="col">: @previewItemCase.ItemPickupDate.ToString("dd MMMM yyyy")</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Late Status</div>
+                    <div class="col">: @(previewItemCase.isLate.Equals(true) ? "Late" : "On Time")</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Variance</div>
+                    <div class="col">: @previewItemCase.VarianceDate Day(s)</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">CCTV Status</div>
+                    <div class="col">: @(previewItemCase.isCCTVCoverable.Equals(true) ? "Covered" : "Not Covered") </div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Report Sender Status</div>
+                    <div class="col">: @(previewItemCase.isReportedtoSender.Equals(true) ? "Reported" : "Not Reported")</div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col">
+                        @if (checkPreviewItemLine())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover" style="width: 100%">
+                                    <caption>
+                                        Total @previewItemLine.Count() Item(s) in Report
+                                    </caption>
+                                    <thead>
+                                        <tr>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 17%; font-size: 15px;">TR ID</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 11%; font-size: 15px;">TR Date</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 11%; font-size: 15px;">Item Code</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 21%; font-size: 15px;">Item Desc.</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 11%; font-size: 15px;">Risk Type</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Qty</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">UOM</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 14%; font-size: 15px;">Value</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Stock</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in previewItemLine)
+                                        {
+                                            <tr>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.TRID</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.TRDate.ToString("dd/MM/yyyy")</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemCode</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemDescription</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemRiskCategoryID</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemQuantity</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.UOM</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Rp. @item.ItemValue.ToString("N0") ,-</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemStock</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer cus-bg">
+                <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal"><i class="oi oi-chat"></i> Discussion Panel</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#itemCasePreviewModal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*Document Discussion Modal*@
+<div class="modal fade" id="discussionModal" tabindex="-3" role="dialog" aria-labelledby="discussionModalLabel" aria-hidden="true" style="background: rgba(0,0,0, 0.2);">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header cus-bg">
+                <h5 class="modal-title fw-bold" id="discussionModalLabel">Document Discussion</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                ...
+            </div>
+            <div class="modal-footer cus-bg">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#discussionModal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+

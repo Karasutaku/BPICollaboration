@@ -126,7 +126,7 @@ else
 
                                 <div class="modal-body">
                                     @* body *@
-                                    @if (ManagementService.departments.Any())
+                                    @if (checkDepartment())
                                     {
                                         foreach (var dept in ManagementService.departments)
                                         {

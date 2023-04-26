@@ -5,6 +5,7 @@ using BPIWebApplication.Shared.MainModel.Login;
 using BPIWebApplication.Shared.MainModel;
 using BPIWebApplication.Shared.MainModel.Procedure;
 using Microsoft.IdentityModel.Tokens;
+using BPIWebApplication.Client.Services.EPKRSServices;
 
 namespace BPIWebApplication.Client.Pages.SopPages
 {
@@ -329,6 +330,25 @@ namespace BPIWebApplication.Client.Pages.SopPages
             {
                 throw new Exception(alertMessage, ex);
                 // await JS.InvokeVoidAsync("alert", ex.Message.ToString());
+            }
+        }
+
+        private bool checkDepartment()
+        {
+            try
+            {
+                if (ManagementService.departments.Any())
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
             }
         }
 

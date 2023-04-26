@@ -162,10 +162,10 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
 
         private async void submitReimbursement()
         {
-            isLoading = true;
-
             try
             {
+                isLoading = true;
+
                 if (!reimbursement.lines.Any(x => x.AccountNo.IsNullOrEmpty()))
                 {
                     if (LoginService.activeUser.userPrivileges.Contains("CR"))
@@ -227,15 +227,14 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
 
                                 if (res3.isSuccess)
                                 {
-                                    successUpload = true;
                                     await _jsModule.InvokeVoidAsync("showAlert", "Email Auto Generate Success");
                                 }
                                 else
                                 {
-                                    successUpload = false;
                                     await _jsModule.InvokeVoidAsync("showAlert", "Email Auto Generate Failed");
                                 }
 
+                                successUpload = true;
                                 isLoading = false;
                                 successAlert = true;
                                 alertMessage = "Create Reimbursement Success !";
@@ -275,6 +274,7 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
                     StateHasChanged();
                 }
 
+                isLoading = false;
             }
             catch (Exception ex)
             {

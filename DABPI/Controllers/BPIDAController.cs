@@ -9075,7 +9075,7 @@ namespace BPIDA.Controllers
                 {
                     command.Connection = con;
                     command.CommandType = CommandType.StoredProcedure;
-                    command.CommandText = "[getEPKRSItemCasebyFilter]";
+                    command.CommandText = "[getEPKRSItemLines]";
                     command.CommandTimeout = 1000;
 
                     command.Parameters.Clear();
@@ -9477,30 +9477,52 @@ namespace BPIDA.Controllers
         }
 
         [HttpGet("getEPKRSItemCase/{param}")]
-        public async Task<IActionResult> getEPKRSDocuments(string param)
+        public async Task<IActionResult> getEPKRSItemCaseData(string param)
         {
             ResultModel<List<EPKRSUploadItemCase>> res = new ResultModel<List<EPKRSUploadItemCase>>();
             List<EPKRSUploadItemCase> itemCaseLines = new List<EPKRSUploadItemCase>();
             DataTable dtItemCase = new DataTable("EPKRSUploadItemCase");
             DataTable dtItemLine = new DataTable("ItemLine");
             DataTable dtCaseAttachment = new DataTable("CaseAttachment");
+            DataTable dtParam = new DataTable("Parameter");
             IActionResult actionResult = null;
 
             try
             {
                 string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+                string loc = temp[0].Equals("") ? "HO" : temp[0];
 
-                dtItemCase = getEPKRSItemCaseData(temp[0], temp[1], Convert.ToInt32(temp[2]), _rowPerPage);
+                dtItemCase = getEPKRSItemCaseData(loc, temp[1], Convert.ToInt32(temp[2]), _rowPerPage);
+
+                dtParam = dtItemCase.Copy();
+
+                foreach (var removedCol in new[] {
+                    "ReportingID", 
+                    "SiteReporter", 
+                    "SiteSender", 
+                    "ReportDate", 
+                    "ItemPickupDate", 
+                    "LoadingDocumentID",
+                    "LoadingDocumentDate",
+                    "VarianceDate",
+                    "isLate",
+                    "isCCTVCoverable",
+                    "isReportedtoSender",
+                    "DocumentStatus" })
+                {
+                    if (dtParam.Columns.Contains(removedCol))
+                        dtParam.Columns.Remove(removedCol);
+                }
 
                 if (dtItemCase.Rows.Count <= 0)
                     throw new Exception("Fail Fetch Item Case Data");
 
-                dtItemLine = getEPKRSItemLineData(dtItemCase);
+                dtItemLine = getEPKRSItemLineData(dtParam);
 
                 if (dtItemLine.Rows.Count <= 0)
                     throw new Exception("Fail Fetch Item Line Data");
 
-                dtCaseAttachment = getEPKRSAttachmentData(dtItemCase);
+                dtCaseAttachment = getEPKRSAttachmentData(dtParam);
 
                 if (dtCaseAttachment.Rows.Count <= 0)
                     throw new Exception("Fail Fetch Attachment Data");
@@ -9546,7 +9568,7 @@ namespace BPIDA.Controllers
                             DocumentID = x["DocumentID"].ToString(),
                             LineNum = Convert.ToInt32(x["LineNum"]),
                             UploadDate = Convert.ToDateTime(x["UploadDate"]),
-                            FileExtension = x["FileExtension"].ToString(),
+                            FileExtension = x["FileExtention"].ToString(),
                             FilePath = x["FilePath"].ToString()
                         }).ToList();
 
