@@ -304,7 +304,8 @@ else
                                             <tr>
                                                 <th style="width: 5%;">Select</th>
                                                 <th style="width: 14%;">Expense ID</th>
-                                                <th style="width: 14%;" scope="col" class="d-none d-sm-table-cell">Advance ID</th>
+                                                @*<th style="width: 14%;" scope="col" class="d-none d-sm-table-cell">Advance ID</th>*@
+                                                <th style="width: 14%;" scope="col" class="d-none d-sm-table-cell">Act. Amount</th>
                                                 <th style="width: 6%;" scope="col" class="d-none d-sm-table-cell">Type</th>
                                                 <th style="width: 25%;">Description</th>
                                                 <th style="width: 10%;" scope="col" class="d-none d-sm-table-cell">Department</th>
@@ -321,7 +322,8 @@ else
                                                     </td>
 
                                                     <td style="font-size: 13px; text-align: center;">@exp.ExpenseID</td>
-                                                    <td class="d-none d-sm-table-cell" style="font-size: 13px; text-align: center;">@exp.AdvanceID</td>
+                                                    @*<th style="width: 14%;" scope="col" class="d-none d-sm-table-cell">Advance ID</th>*@
+                                                    <td class="d-none d-sm-table-cell" style="font-size: 13px; text-align: center;">@exp.lines.Sum(x => x.ActualAmount).ToString("N0")</td>
                                                     <td class="d-none d-sm-table-cell" style="font-size: 13px; text-align: center;">@exp.ExpenseType</td>
                                                     <td class="text-truncate" style="font-size: 13px; text-align: center;">@exp.ExpenseNote</td>
                                                     <td class="d-none d-sm-table-cell" style="font-size: 13px; text-align: center;">@exp.DepartmentID</td>

@@ -24,7 +24,7 @@ builder.Services.AddScoped<IManagementService, ManagementService>();
 builder.Services.AddScoped<IPettyCashService, PettyCashService>();
 builder.Services.AddScoped<ICashierLogbookService, CashierLogbookService>();
 builder.Services.AddScoped<IStandarizationService, StandarizationService>();
-builder.Services.AddScoped<IEPKRSSevice, EPKRSService>();
+builder.Services.AddScoped<IEPKRSService, EPKRSService>();
 
 builder.Services.AddBlazoredSessionStorage();
 

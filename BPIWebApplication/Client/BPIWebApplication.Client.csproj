@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Pages\EPKRSPages\EPKRSDashboard.razor~RF1fc0d235.TMP" />
     <None Remove="Pages\SopPages\AddEditSOP.razor.cs~RF58daad6.TMP" />
   </ItemGroup>
 

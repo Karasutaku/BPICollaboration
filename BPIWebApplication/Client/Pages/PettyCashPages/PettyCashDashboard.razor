@@ -960,7 +960,7 @@ else
                                 @* DA *@
                                 @if (LoginService.activeUser.userPrivileges.Contains("DA"))
                                 {
-                                    <button type="button" class="btn btn-sm btn-danger fw-bold" @onclick="@(() => updateDocumentStatus("Rejected"))" disabled="@((!advance.AdvanceStatus.Contains("Submited") && !advance.AdvanceStatus.Contains("Rejected")) ? null : "disabled")">Reject</button>
+                                    <button type="button" class="btn btn-sm btn-danger fw-bold" @onclick="@(() => updateDocumentStatus("Rejected"))" disabled="@((!advance.AdvanceStatus.Contains("Submited") && !advance.AdvanceStatus.Contains("Rejected")) ? ((advance.AdvanceStatus.Contains("Open") && LoginService.activeUser.userPrivileges.Contains("CF")) || (advance.AdvanceStatus.Contains("Confirmed") && LoginService.activeUser.userPrivileges.Contains("SB")) ? null : "disabled") : "disabled")">Reject</button>
                                 }
 
                                 @* SB *@
@@ -1206,7 +1206,7 @@ else
                                 @* DA *@
                                 @if (LoginService.activeUser.userPrivileges.Contains("DA"))
                                 {
-                                    <button type="button" class="btn btn-sm btn-danger fw-bold" @onclick="@(() => updateDocumentStatus("Rejected"))" disabled="@((!expense.ExpenseStatus.Contains("Submited") && !expense.ExpenseStatus.Contains("Rejected"))  ? null : "disabled")">Reject</button>
+                                    <button type="button" class="btn btn-sm btn-danger fw-bold" @onclick="@(() => updateDocumentStatus("Rejected"))" disabled="@((!expense.ExpenseStatus.Contains("Submited") && !expense.ExpenseStatus.Contains("Rejected"))  ? ((expense.ExpenseStatus.Contains("Open") && LoginService.activeUser.userPrivileges.Contains("CF")) || (expense.ExpenseStatus.Contains("Confirmed") && LoginService.activeUser.userPrivileges.Contains("SB")) ? null : "disabled") : "disabled")">Reject</button>
                                 }
 
                                 @* SB *@
@@ -1561,7 +1561,9 @@ else
                                 @* DA *@
                                 @if (LoginService.activeUser.userPrivileges.Contains("DA"))
                                 {
-                                    <button type="button" class="btn btn-sm btn-danger fw-bold" @onclick="@(() => updateDocumentStatus("Rejected"))" disabled="@((!reimburse.ReimburseStatus.Contains("Released") && !reimburse.ReimburseStatus.Contains("Claimed") && !reimburse.ReimburseStatus.Contains("Resolved")  && !reimburse.ReimburseStatus.Contains("Rejected")) ? null : "disabled")">Reject</button>
+                                    <button type="button" class="btn btn-sm btn-danger fw-bold" @onclick="@(() => updateDocumentStatus("Rejected"))" disabled="@((!reimburse.ReimburseStatus.Contains("Released") && !reimburse.ReimburseStatus.Contains("Claimed") && !reimburse.ReimburseStatus.Contains("Resolved")  && !reimburse.ReimburseStatus.Contains("Rejected")) ? ((reimburse.ReimburseStatus.Contains("Open") && LoginService.activeUser.userPrivileges.Contains("CF")) || (reimburse.ReimburseStatus.Contains("Confirmed") && LoginService.activeUser.userPrivileges.Contains("VR")) || (reimburse.ReimburseStatus.Contains("Verified") && LoginService.activeUser.userPrivileges.Contains("AP")) || (reimburse.ReimburseStatus.Contains("Approved") && LoginService.activeUser.userPrivileges.Contains("RL")) ? null : "disabled") : "disabled")">
+                                        Reject
+                                    </button>
                                 }
 
                                 @* SB *@

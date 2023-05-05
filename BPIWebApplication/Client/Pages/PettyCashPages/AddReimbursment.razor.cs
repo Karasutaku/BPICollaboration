@@ -431,7 +431,7 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
         private async Task showModal()
         {
             triggerModal = true;
-
+            expensePageActive = 1;
             PettyCashService.expenses = new();
 
             string expStatus = "Submited";
@@ -492,11 +492,13 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
         {
             expensePageActive = currPage;
 
-            string expStatus = "Confirmed";
+            PettyCashService.expenses = new();
+
+            string expStatus = "Submited";
             string expFilType = "";
             string expFilValue = "";
 
-            string explocPage = activeUser.location + "!_!" + expStatus + "!_!" + expFilType + "!_!" + expFilValue + "!_!" + expensePageActive.ToString();
+            string explocPage = "MASTER!_!" + activeUser.location + "!_!" + expStatus + "!_!" + expFilType + "!_!" + expFilValue + "!_!" + expensePageActive.ToString();
             await PettyCashService.getExpenseDatabyLocation(Base64Encode(explocPage));
 
         }

@@ -14,6 +14,7 @@
         public bool isLate { get; set; } = false;
         public bool isCCTVCoverable { get; set; } = false;
         public bool isReportedtoSender { get; set; } = false;
+        public string ExtendedMitigationPlan { get; set; } = string.Empty;
         public string DocumentStatus { get; set; } = string.Empty;
     }
 
@@ -75,10 +76,27 @@
 
     public class DocumentDiscussion
     {
+        public string rowGuid { get; set; } = string.Empty;
         public string DocumentID { get; set; } = string.Empty;
         public string UserName { get; set; } = string.Empty;
         public DateTime CommentDate { get; set; } = DateTime.Now;
         public string Comment { get; set; } = string.Empty;
         public bool isEdited { get; set; } = false;
+        public string ReplyRowGuid { get; set; } = string.Empty;
+    }
+
+    public class DocumentApproval
+    {
+        public string DocumentID { get; set; } = string.Empty;
+        public string ApprovalAction { get; set; } = string.Empty;
+        public string Approver { get; set; } = string.Empty;
+        public DateTime ApproveDate { get; set; } = DateTime.Now;
+    }
+
+    public class ReportingExtended
+    {
+        public string DocumentID { get; set; } = string.Empty;
+        public string ExtendedRootCause { get; set; } = string.Empty;
+        public string ExtendedMitigationPlan { get; set; } = string.Empty;
     }
 }

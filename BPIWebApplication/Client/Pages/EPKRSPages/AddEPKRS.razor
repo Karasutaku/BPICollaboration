@@ -1,7 +1,8 @@
-﻿
+﻿@page "/epkrs/addepkrs"
+@page "/epkrs/editepkrs/{param}"
 @inject Blazored.SessionStorage.ISessionStorageService sessionStorage
 @inject Blazored.SessionStorage.ISyncSessionStorageService syncSessionStorage
-@inject IEPKRSSevice EPKRSService
+@inject IEPKRSService EPKRSService
 @inject ILoginService LoginService
 @inject IManagementService ManagementService
 @inject IJSRuntime JS
@@ -56,21 +57,43 @@ else
 
                     <div class="row my-2">
                         <div class="col">
-                            <label for="riskId">Reporting Type :</label>
-                            <select id="riskId" class="form-select" @onchange="reportingTypeonChange">
-                                @if (checkReportingType())
-                                {
-                                    <option hidden value="BLANK">Select Reporting Type</option>
-                                    @foreach (var reportType in EPKRSService.reportingTypes)
+
+                            <label for="riskId">Tipe Reporting :</label>
+                            @if (param == null)
+                            {
+                                <select id="riskId" class="form-select" @onchange="reportingTypeonChange" disabled="@((isLoading || successUpload) ? "disabled" : null)">
+                                    @if (checkReportingType())
                                     {
-                                        <option value="@reportType.ReportingID">@reportType.ReportingDescription</option>
+                                        <option hidden value="BLANK">Pilih Tipe Reporting</option>
+                                        @foreach (var reportType in EPKRSService.reportingTypes)
+                                        {
+                                            <option value="@reportType.ReportingID">@reportType.ReportingDescription</option>
+                                        }
                                     }
-                                }
-                                else
-                                {
-                                    <option disabled hidden value="BLANK">Data Empty</option>
-                                }
-                            </select>
+                                    else
+                                    {
+                                        <option disabled hidden value="BLANK">Data Empty</option>
+                                    }
+                                </select>
+                            }
+                            else
+                            {
+                                <select id="riskId" class="form-select" @bind="RiskID" readonly>
+                                    @if (checkReportingType())
+                                    {
+                                        <option hidden value="BLANK">Select Tipe Reporting</option>
+                                        @foreach (var reportType in EPKRSService.reportingTypes)
+                                        {
+                                            <option value="@reportType.ReportingID">@reportType.ReportingDescription</option>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <option disabled hidden value="BLANK">Data Empty</option>
+                                    }
+                                </select>
+                            }
+
                         </div>
                     </div>
 
@@ -83,7 +106,7 @@ else
                             {
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="risk_id">Risk Type :</label>
+                                        <label for="risk_id">Tipe Risiko :</label>
                                         <InputSelect id="risk_id" @bind-Value="itemCaseData.RiskID" class="form-select">
                                             @if (checkRiskType())
                                             {
@@ -103,18 +126,18 @@ else
                                         </InputSelect>
                                     </div>
                                     <div class="col">
-                                        <label for="doc_id">Document ID :</label>
+                                        <label for="doc_id">ID PKRS :</label>
                                         <InputText id="doc_id" @bind-Value="itemCaseData.DocumentID" class="form-control" readonly></InputText>
                                     </div>
                                 </div>
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="site_reporter">Site Reporter :</label>
+                                        <label for="site_reporter">Site Pelapor :</label>
                                         <InputText id="site_reporter" @bind-Value="itemCaseData.SiteReporter" class="form-control" readonly></InputText>
                                     </div>
                                     <div class="col">
-                                        <label for="site_sender">Site Sender :</label>
+                                        <label for="site_sender">Site Pengirim :</label>
                                         <InputSelect id="site_sender" @bind-Value="itemCaseData.SiteSender" class="form-select">
                                             @if (checkLocation())
                                             {
@@ -133,18 +156,18 @@ else
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="report_date">Report Date :</label>
+                                        <label for="report_date">Tanggal Pelaporan :</label>
                                         <InputDate id="report_date" @bind-Value="itemCaseData.ReportDate" class="form-control" readonly></InputDate>
                                     </div>
                                     <div class="col">
-                                        <label for="pickup_date">Item Pickup Date :</label>
+                                        <label for="pickup_date">Tanggal Penerimaan Barang :</label>
                                         <InputDate id="pickup_date" @bind-Value="itemCaseData.ItemPickupDate" class="form-control"></InputDate>
                                     </div>
                                 </div>
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="late">Late ?</label>
+                                        <label for="late">Apakah Penerimaan Barang Terlambat?</label>
                                         <select id="late" class="form-select" @bind="isLate">
                                             <option hidden disabled value="BLANK">Select Condition</option>
                                             <option value="YES">Yes</option>
@@ -155,7 +178,7 @@ else
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="cctv_covered">CCTV Covered ?</label>
+                                        <label for="cctv_covered">Apakah Penerimaan Barang Tercover CCTV?</label>
                                         <select id="cctv_covered" class="form-select" @bind="isCCTVCovered">
                                             <option hidden disabled value="BLANK">Select Condition</option>
                                             <option value="YES">Yes</option>
@@ -166,7 +189,7 @@ else
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="reported">Report to Sender ?</label>
+                                        <label class="text-wrap" for="reported">Apakah Berita Acara Investigasi serta bukti CCTV sudah disampaikan ke LP Pengirim Barang?</label>
                                         <select id="reported" class="form-select" @bind="isReportedtoSender">
                                             <option hidden disabled value="BLANK">Select Condition</option>
                                             <option value="YES">Yes</option>
@@ -198,30 +221,30 @@ else
                                     <table class="table table-sm table-bordered" style="width: 100%">
                                         <thead>
                                             <tr>
-                                                <th style="width: 5%;">Action</th>
-                                                <th style="width: 15%;">TR ID</th>
-                                                <th style="width: 15%;">Item Code</th>
-                                                <th style="width: 30%;">Description</th>
-                                                <th style="width: 5%;">Qty</th>
-                                                <th style="width: 10%;">UOM</th>
-                                                <th style="width: 15%;">Item Value</th>
-                                                <th style="width: 5%;">Qty Stock</th>
+                                                <th class="text-center align-middle text-wrap" style="width: 5%;">Action</th>
+                                                <th class="text-center align-middle text-wrap" style="width: 15%;">TR ID</th>
+                                                <th class="text-center align-middle text-wrap" style="width: 15%;">Item Code</th>
+                                                <th class="text-center align-middle text-wrap" style="width: 30%;">Description</th>
+                                                <th class="text-center align-middle text-wrap" style="width: 5%;">Qty</th>
+                                                <th class="text-center align-middle text-wrap" style="width: 10%;">UOM</th>
+                                                <th class="text-center align-middle text-wrap" style="width: 15%;">Item Value</th>
+                                                <th class="text-center align-middle text-wrap" style="width: 5%;">Qty Stock</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @foreach (var line in itemLineData)
                                             {
                                                 <tr>
-                                                    <td>
+                                                    <td class="text-center align-middle text-wrap">
                                                         <button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="(() => itemLineData.Remove(line))"><i class="oi oi-delete"></i></button>
                                                     </td>
-                                                    <td>@line.TRID</td>
-                                                    <td>@line.ItemCode</td>
-                                                    <td>@line.ItemDescription</td>
-                                                    <td>@line.ItemQuantity</td>
-                                                    <td>@line.UOM</td>
-                                                    <td>@line.ItemValue</td>
-                                                    <td><input type="number" class="form-control" @bind-value="@line.ItemStock" /></td>
+                                                    <td class="text-center align-middle text-wrap">@line.TRID</td>
+                                                    <td class="text-center align-middle text-wrap">@line.ItemCode</td>
+                                                    <td class="text-center align-middle text-wrap">@line.ItemDescription</td>
+                                                    <td class="text-center align-middle text-wrap">@line.ItemQuantity</td>
+                                                    <td class="text-center align-middle text-wrap">@line.UOM</td>
+                                                    <td class="text-center align-middle text-wrap">@line.ItemValue</td>
+                                                    <td class="text-center align-middle text-wrap"><input type="number" class="form-control" @bind-value="@line.ItemStock" /></td>
                                                 </tr>
                                             }
                                         </tbody>
@@ -230,34 +253,34 @@ else
                                 else
                                 {
                                     <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
-                                        <strong>Please Select Item by Loading Document Above !</strong>
+                                        <strong>Pilih Item dengan nomor Loading Dokumen Diatas !</strong>
                                     </div>
                                 }
 
                                 <div class="row my-3">
                                     <div class="col">
-                                        <button type="button" title="Add New Line" class="btn btn-sm btn-warning" @onclick="@(() => caseAttachments.Add(new BPIWebApplication.Shared.PagesModel.EPKRS.CaseAttachmentForm()))"><b>Add</b></button>
+                                        <button type="button" title="Add New Line" class="btn btn-sm btn-warning" @onclick="@(() => fileUploads.Add(new BPIWebApplication.Shared.MainModel.Stream.FileStream()))"><b>Add</b></button>
                                     </div>
                                 </div>
 
-                                @if (checkCaseAttachment())
+                                @if (checkFileAttachment())
                                 {
                                     <table class="table table-sm table-bordered" style="width: 100%">
                                         <caption>&lowast; Max File Size Upload @maxFileSize MB(s)</caption>
                                         <thead>
                                             <tr>
-                                                <th style="width: 5%;">Action</th>
-                                                <th style="width: 40%;">File Name</th>
-                                                <th style="width: 25%; background-color:aquamarine;">Select File</th>
+                                                <th class="text-center align-middle text-wrap" style="width: 5%;">Action</th>
+                                                <th class="text-center align-middle text-wrap" style="width: 40%;">File Name</th>
+                                                <th class="text-center align-middle text-wrap" style="width: 25%; background-color:aquamarine;">Select File</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach (var attach in caseAttachments)
+                                            @foreach (var file in fileUploads)
                                             {
                                                 <tr>
-                                                    <td><button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="(() => caseAttachments.Remove(attach))"><i class="oi oi-delete"></i></button></td>
-                                                    <td>@attach.FilePath</td>
-                                                    <td><InputFile class="form-control form-control-file" accept=".pdf"></InputFile></td>
+                                                    <td class="text-center align-middle text-wrap"><button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="(() => fileUploads.Remove(file))"><i class="oi oi-delete"></i></button></td>
+                                                    <td class="text-center align-middle text-wrap">@file.fileName</td>
+                                                    <td class="text-center align-middle text-wrap"><InputFile class="form-control form-control-file" accept=".pdf"></InputFile></td>
                                                 </tr>
                                             }
                                         </tbody>
@@ -266,7 +289,7 @@ else
                                 else
                                 {
                                     <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
-                                        <strong>Please Add Attachment Using Button Above !</strong>
+                                        <strong>Tambahkan Attachment dengan Tombol Diatas !</strong>
                                     </div>                                
                                 }
                             }
@@ -285,9 +308,18 @@ else
                             {
                                 <div class="row my-3">
                                     <div class="col">
-                                        <button type="submit" title="Please Recheck the Amount" class="btn btn-sm btn-primary-cus" @onclick="submitIncidentAccident">
-                                            Create Report
-                                        </button>
+                                        @if (param == null)
+                                        {
+                                            <button type="submit" title="Submit" class="btn btn-sm btn-primary-cus" @onclick="submitItemCase">
+                                                Create Report
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button type="submit" title="Edit" class="btn btn-sm btn-primary-cus">
+                                                Edit Report
+                                            </button>
+                                        }
                                     </div>
                                 </div>
                             }
@@ -303,8 +335,8 @@ else
                             {
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="risk_id">Risk Type :</label>
-                                        <InputSelect id="risk_id" @bind-Value="incidentaccidentData.RiskID" class="form-select">
+                                        <label for="risk_id">Tipe Risiko :</label>
+                                        <InputSelect id="risk_id" @bind-Value="incidentaccidentData.RiskID" class="form-select" disabled="@((isLoading || successUpload) ? "disabled" : null)">
                                             @if (checkRiskType())
                                             {
                                                 <option hidden value="BLANK">Select Risk Type</option>
@@ -323,30 +355,30 @@ else
                                         </InputSelect>
                                     </div>
                                     <div class="col">
-                                        <label for="doc_id">Document ID :</label>
+                                        <label for="doc_id">ID PKRS :</label>
                                         <InputText id="doc_id" @bind-Value="incidentaccidentData.DocumentID" class="form-control" readonly></InputText>
                                     </div>
                                 </div>
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="report_date">Report Date :</label>
+                                        <label for="report_date">Tanggal Pelaporan :</label>
                                         <InputDate id="report_date" @bind-Value="incidentaccidentData.ReportDate" class="form-control" readonly></InputDate>
                                     </div>
                                     <div class="col">
-                                        <label for="occur_date">Occurence Date :</label>
-                                        <InputDate id="occur_date" @bind-Value="incidentaccidentData.OccurenceDate" class="form-control"></InputDate>
+                                        <label for="occur_date">Tanggal Kejadian :</label>
+                                        <InputDate id="occur_date" @bind-Value="incidentaccidentData.OccurenceDate" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputDate>
                                     </div>
                                 </div>
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="loc_report">Site Reporter :</label>
+                                        <label for="loc_report">Site Pelapor :</label>
                                         <InputText id="loc_report" @bind-Value="incidentaccidentData.SiteReporter" class="form-control" readonly></InputText>
                                     </div>
                                     <div class="col">
-                                        <label for="dept_id">Reporter Department :</label>
-                                        <InputSelect id="dept_id" @bind-Value="incidentaccidentData.DepartmentReporter" class="form-select">
+                                        <label for="dept_id">Department Pelapor :</label>
+                                        <InputSelect id="dept_id" @bind-Value="incidentaccidentData.DepartmentReporter" class="form-select" disabled="@((isLoading || successUpload) ? "disabled" : null)">
                                             <option hidden value="0">Select Department</option>
 
                                             @foreach (var dept in ManagementService.departments)
@@ -359,23 +391,23 @@ else
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="riskrpname">Risk RP Name :</label>
-                                        <InputText id="riskrpname" @bind-Value="incidentaccidentData.RiskRPName" class="form-control"></InputText>
+                                        <label for="riskrpname">Nama Risk RP :</label>
+                                        <InputText id="riskrpname" @bind-Value="incidentaccidentData.RiskRPName" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
                                     </div>
                                     <div class="col">
-                                        <label for="riskrpemail">Risk RP Email :</label>
-                                        <InputText id="riskrpemail" @bind-Value="incidentaccidentData.RiskRPEmail" class="form-control"></InputText>
+                                        <label for="riskrpemail">Email Risk RP :</label>
+                                        <InputText id="riskrpemail" @bind-Value="incidentaccidentData.RiskRPEmail" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
                                     </div>
                                 </div>
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="dormname">DORM Name :</label>
-                                        <InputText id="riskrpname" @bind-Value="incidentaccidentData.DORMName" class="form-control"></InputText>
+                                        <label for="dormname">Nama DORM :</label>
+                                        <InputText id="riskrpname" @bind-Value="incidentaccidentData.DORMName" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
                                     </div>
                                     <div class="col">
-                                        <label for="dormemail">DORM Email :</label>
-                                        <InputText id="riskrpemail" @bind-Value="incidentaccidentData.DORMEmail" class="form-control"></InputText>
+                                        <label for="dormemail">Email DORM :</label>
+                                        <InputText id="riskrpemail" @bind-Value="incidentaccidentData.DORMEmail" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
                                     </div>
                                 </div>
                             }
@@ -384,15 +416,15 @@ else
                             {
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="case_desc">Case Description :</label>
-                                        <InputText id="case_desc" @bind-Value="incidentaccidentData.DORMName" class="form-control"></InputText>
+                                        <label for="case_desc">Deskripsi/Judul Kejadian :</label>
+                                        <InputText id="case_desc" @bind-Value="incidentaccidentData.CaseDescription" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
                                     </div>
                                 </div>
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="affected_dept">Affected Department :</label>
-                                        <InputSelect id="affected_dept" @bind-Value="incidentaccidentData.DepartmentAffected" class="form-select">
+                                        <label for="affected_dept">Department Terdampak :</label>
+                                        <InputSelect id="affected_dept" @bind-Value="incidentaccidentData.DepartmentAffected" class="form-select" disabled="@((isLoading || successUpload) ? "disabled" : null)">
                                             <option hidden value="0">Select Department</option>
 
                                             @foreach (var dept in ManagementService.departments)
@@ -406,14 +438,14 @@ else
                                 <div class="row my-2">
                                     <div class="col">
                                         <label for="cronology">Cronology :</label>
-                                        <InputTextArea id="cronology" @bind-Value="incidentaccidentData.Cronology" class="form-control"></InputTextArea>
+                                        <InputTextArea id="cronology" @bind-Value="incidentaccidentData.Cronology" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputTextArea>
                                     </div>
                                 </div>
 
                                 <div class="row my-2">
                                     <div class="col">
                                         <label for="rootcause">Root Cause :</label>
-                                        <InputTextArea id="rootcause" @bind-Value="incidentaccidentData.RootCause" class="form-control"></InputTextArea>
+                                        <InputTextArea id="rootcause" @bind-Value="incidentaccidentData.RootCause" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputTextArea>
                                     </div>
                                 </div>
                             }
@@ -422,15 +454,15 @@ else
                             {
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="lossdesc">Loss Description :</label>
-                                        <InputTextArea id="lossdesc" @bind-Value="incidentaccidentData.LossDescription" class="form-control"></InputTextArea>
+                                        <label for="lossdesc">Deskripsi Kerugian :</label>
+                                        <InputTextArea id="lossdesc" @bind-Value="incidentaccidentData.LossDescription" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputTextArea>
                                     </div>
                                 </div>
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="loss_amount">Loss Amount Estimation (Rp) :</label>
-                                        <InputNumber id="loss_amount" @bind-Value="incidentaccidentData.LossEstimation" class="form-control" @oninput="@((ChangeEventArgs e) => { try { if (e.Value.ToString().Length > 0) { previewLossEstimationAmount = "Rp. " + Convert.ToDecimal(e.Value).ToString("N0") + ",-"; } else { previewLossEstimationAmount = ""; } } catch (Exception exc) { } })"></InputNumber>
+                                        <label for="loss_amount">Estimasi Kerugian (Rp) :</label>
+                                        <InputNumber id="loss_amount" @bind-Value="incidentaccidentData.LossEstimation" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)" @oninput="@((ChangeEventArgs e) => { try { if (e.Value.ToString().Length > 0) { previewLossEstimationAmount = "Rp. " + Convert.ToDecimal(e.Value).ToString("N0") + ",-"; } else { previewLossEstimationAmount = ""; } } catch (Exception exc) { } })"></InputNumber>
                                     </div>
                                     <div class="col">
                                         <label for="loss_amtdisplay">Preview Amount :</label>
@@ -440,8 +472,8 @@ else
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="return_amount">Return Amount (Rp) :</label>
-                                        <InputNumber id="return_amount" @bind-Value="incidentaccidentData.ReturnAmount" class="form-control" @oninput="@((ChangeEventArgs e) => { try { if (e.Value.ToString().Length > 0) { previewReturnAmount = "Rp. " + Convert.ToDecimal(e.Value).ToString("N0") + ",-"; } else { previewReturnAmount = ""; } } catch (Exception exc) { } })"></InputNumber>
+                                        <label for="return_amount">Jumlah Pengembalian (Rp) :</label>
+                                        <InputNumber id="return_amount" @bind-Value="incidentaccidentData.ReturnAmount" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)" @oninput="@((ChangeEventArgs e) => { try { if (e.Value.ToString().Length > 0) { previewReturnAmount = "Rp. " + Convert.ToDecimal(e.Value).ToString("N0") + ",-"; } else { previewReturnAmount = ""; } } catch (Exception exc) { } })"></InputNumber>
                                     </div>
                                     <div class="col">
                                         <label for="return_amtdisplay">Preview Amount :</label>
@@ -451,15 +483,15 @@ else
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="riskdesc">Risk Description :</label>
-                                        <InputTextArea id="riskdesc" @bind-Value="incidentaccidentData.RiskDescription" class="form-control"></InputTextArea>
+                                        <label for="riskdesc">Deskripsi Risiko :</label>
+                                        <InputTextArea id="riskdesc" @bind-Value="incidentaccidentData.RiskDescription" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputTextArea>
                                     </div>
                                 </div>
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="causedesc">Cause Description :</label>
-                                        <InputTextArea id="causedesc" @bind-Value="incidentaccidentData.CauseDescription" class="form-control"></InputTextArea>
+                                        <label for="causedesc">Dampak Kejadian :</label>
+                                        <InputTextArea id="causedesc" @bind-Value="incidentaccidentData.CauseDescription" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputTextArea>
                                     </div>
                                 </div>
                             }
@@ -468,70 +500,73 @@ else
                             {
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="mitigation_pic">Mitigation PIC :</label>
-                                        <InputText id="mitigation_pic" @bind-Value="incidentaccidentData.PIC" class="form-control"></InputText>
+                                        <label for="mitigation_pic">Email PIC :</label>
+                                        <InputText id="mitigation_pic" @bind-Value="incidentaccidentData.PIC" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
                                     </div>
                                 </div>
 
                                 <div class="row my-2">
                                     <div class="col">
                                         <label for="action_plan">Action Plan :</label>
-                                        <InputTextArea id="action_plan" @bind-Value="incidentaccidentData.ActionPlan" class="form-control"></InputTextArea>
+                                        <InputTextArea id="action_plan" @bind-Value="incidentaccidentData.ActionPlan" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputTextArea>
                                     </div>
                                 </div>
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="target_date">Target Date :</label>
-                                        <InputDate id="target_date" @bind-Value="incidentaccidentData.TargetDate" class="form-control"></InputDate>
+                                        <label for="target_date">Tanggal Target :</label>
+                                        <InputDate id="target_date" @bind-Value="incidentaccidentData.TargetDate" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputDate>
                                     </div>
                                     <div class="col">
-                                        <label for="mitigate_date">Mitigation Date :</label>
-                                        <InputDate id="mitigate_date" @bind-Value="incidentaccidentData.MitigationDate" class="form-control"></InputDate>
+                                        <label for="mitigate_date">Tanggal Mitigasi :</label>
+                                        <InputDate id="mitigate_date" @bind-Value="incidentaccidentData.MitigationDate" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputDate>
                                     </div>
                                 </div>
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="mitigate_plan">Mitigation Plan :</label>
-                                        <InputTextArea id="mitigate_plan" @bind-Value="incidentaccidentData.MitigationPlan" class="form-control"></InputTextArea>
+                                        <label for="mitigate_plan">Deskripsi Rencana Mitigasi :</label>
+                                        <InputTextArea id="mitigate_plan" @bind-Value="incidentaccidentData.MitigationPlan" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputTextArea>
                                     </div>
                                 </div>
 
-                                <div class="row my-3">
-                                    <div class="col">
-                                        <button type="button" title="Add New Line" class="btn btn-sm btn-warning" @onclick="@(() => caseAttachments.Add(new BPIWebApplication.Shared.PagesModel.EPKRS.CaseAttachmentForm()))"><b>Add</b></button>
-                                    </div>
-                                </div>
-
-                                @if (checkCaseAttachment())
+                                @if (param == null)
                                 {
-                                    <table class="table table-sm table-bordered" style="width: 100%">
-                                        <caption>&lowast; Max File Size Upload @maxFileSize MB(s)</caption>
-                                        <thead>
-                                            <tr>
-                                                <th style="width: 5%;">Action</th>
-                                                <th style="width: 40%;">File Name</th>
-                                                <th style="width: 25%; background-color:aquamarine;">Select File</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var attach in caseAttachments)
-                                            {
+                                    <div class="row my-3">
+                                        <div class="col">
+                                            <button type="button" title="Add New Line" class="btn btn-sm btn-warning" disabled="@((isLoading || successUpload) ? "disabled" : null)" @onclick="@(() => fileUploads.Add(new BPIWebApplication.Shared.MainModel.Stream.FileStream()))"><b>Add</b></button>
+                                        </div>
+                                    </div>
+
+                                    @if (checkFileAttachment())
+                                    {
+                                        <table class="table table-sm table-bordered" style="width: 100%">
+                                            <caption>&lowast; Max File Size Upload @maxFileSize MB(s)</caption>
+                                            <thead>
                                                 <tr>
-                                                    <td><button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="(() => caseAttachments.Remove(attach))"><i class="oi oi-delete"></i></button></td>
-                                                    <td>@attach.FilePath</td>
-                                                    <td><InputFile class="form-control form-control-file" accept=".pdf"></InputFile></td>
+                                                    <th class="text-center align-middle text-wrap" style="width: 5%;">Action</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 40%;">File Name</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 25%; background-color:aquamarine;">Select File</th>
                                                 </tr>
-                                            }
-                                        </tbody>
-                                    </table>
-                                }
-                                else
-                                {
-                                    <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
-                                        <strong>Please Add Attachment Using Button Above !</strong>
-                                    </div>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var file in fileUploads)
+                                                {
+                                                    <tr>
+                                                        <td class="text-center align-middle text-wrap"><button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="(() => fileUploads.Remove(file))"><i class="oi oi-delete" disabled="@((isLoading || successUpload) ? "disabled" : null)"></i></button></td>
+                                                        <td class="text-center align-middle text-wrap">@file.fileName</td>
+                                                        <td class="text-center align-middle text-wrap"><InputFile class="form-control form-control-file" accept=".pdf" disabled="@((isLoading || successUpload) ? "disabled" : null)" OnChange="@((InputFileChangeEventArgs args) => UploadHandleSelection(args, file))"></InputFile></td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
+                                            <strong>Please Add Attachment Using Button Above !</strong>
+                                        </div>
+                                    }
                                 }
                             }
 
@@ -549,9 +584,21 @@ else
                             {
                                 <div class="row my-3">
                                     <div class="col">
-                                        <button type="submit" title="Please Recheck the Amount" class="btn btn-sm btn-primary-cus" @onclick="submitIncidentAccident">
-                                            Create Report
-                                        </button>
+                                        @if (param == null)
+                                        {
+                                            <button type="reset" title="Reset" class="btn btn-sm btn-dark" disabled="@((isLoading || successUpload) ? "disabled" : null)">
+                                                Reset
+                                            </button>
+                                            <button type="button" title="Submit" class="btn btn-sm btn-primary-cus" disabled="@((isLoading || successUpload) ? "disabled" : null)" @onclick="submitIncidentAccident">
+                                                Create Report
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" title="Edit" class="btn btn-sm btn-primary-cus" disabled="@((isLoading || successUpload) ? "disabled" : null)" @onclick="editIncidentAccident">
+                                                Edit Report
+                                            </button>
+                                        }
                                     </div>
                                 </div>
                             }
@@ -561,7 +608,7 @@ else
                     else
                     {
                         <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
-                            <strong>Please Select Report Type Above !</strong>
+                            <strong>Pilih Tipe Risiko Diatas !</strong>
                         </div>
                     }
 

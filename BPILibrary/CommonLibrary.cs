@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.IO.Compression;
 using System.Reflection;
 
@@ -48,7 +49,7 @@ namespace BPILibrary
             return dt;
         }
 
-        public static async Task saveFiletoDirectory(string path, byte[] content)
+        public static void saveFiletoDirectory(string path, byte[] content)
         {
             string dir = Path.GetDirectoryName(path);
 
@@ -57,9 +58,9 @@ namespace BPILibrary
                 Directory.CreateDirectory(dir);
             }
 
-            await using FileStream fs = new(path, FileMode.Create);
+            using FileStream fs = new(path, FileMode.Create);
             Stream stream = new MemoryStream(content);
-            await stream.CopyToAsync(fs);
+            stream.CopyTo(fs);
         }
 
         public static async Task saveFiletoDirectoryAsZip(string path, string originalName, byte[] content)
@@ -124,14 +125,14 @@ namespace BPILibrary
             return decompressedData;
         }
 
-        public static async Task<byte[]> getFileStream(string uploadPath, string type, string filename, DateTime date)
+        public static byte[] getFileStream(string uploadPath, string type, string filename, DateTime date, string id)
         {
-            string path = Path.Combine(uploadPath, type, date.Year.ToString(), date.Month.ToString(), date.Day.ToString(), Path.GetFileName(filename));
+            string path = Path.Combine(uploadPath, type, date.Year.ToString(), date.Month.ToString(), date.Day.ToString(), id, Path.GetFileName(filename));
 
-            return await File.ReadAllBytesAsync(path);
+            return File.ReadAllBytes(path);
         }
 
-        public static async Task<byte[]> getFileStreamfromZip(string filename, string originalName, byte[] data)
+        public static byte[] getFileStreamfromZip(string filename, string originalName, byte[] data)
         {
             byte[] compressedData = new byte[0];
 
@@ -144,7 +145,7 @@ namespace BPILibrary
 
             using (var ms = new MemoryStream())
             {
-                await content.CopyToAsync(ms);
+                content.CopyTo(ms);
                 compressedData = ms.ToArray();
             }
 
@@ -163,6 +164,31 @@ namespace BPILibrary
             }
 
             return false;
+        }
+
+        public static string RandomString(int length, string type)
+        {
+            var random = new Random();
+            string chars;
+
+            switch (type)
+            {
+                case "ALPHA":
+                    chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                    break;
+                case "NUM":
+                    chars = "0123456789";
+                    break;
+                case "ALPHANUM":
+                    chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                    break;
+                default:
+                    chars = "";
+                    throw new Exception("Parameter type from Common Library RandomString is not Relevant");
+            }
+
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
         //

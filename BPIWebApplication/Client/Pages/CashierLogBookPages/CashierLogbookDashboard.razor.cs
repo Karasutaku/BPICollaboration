@@ -145,7 +145,7 @@ namespace BPIWebApplication.Client.Pages.CashierLogBookPages
             filValue = "";
             actionLogPageActive = 1;
 
-            string actpz = "BrankasApproveLog!_!" + activeUser.location + "!_!LogID LIKE \'%%\'";
+            string actpz = "BrankasActionLog!_!" + activeUser.location + "!_!LogID LIKE \'%%\'";
             actionLogPageSize = await CashierLogbookService.getModulePageSize(Base64Encode(actpz));
             temp = activeUser.location + "!_!" + orderby + "!_!" + filType + "!_!" + filValue + "!_!" + actionLogPageActive.ToString();
             await CashierLogbookService.getBrankasActionLogData(Base64Encode(temp));
@@ -399,8 +399,8 @@ namespace BPIWebApplication.Client.Pages.CashierLogBookPages
 
             if (isActionLogFilterActive)
             {
-                string orderby = "AuditActionDate";
-                string filType = "LogID";
+                string orderby = "a.AuditActionDate";
+                string filType = "a.LogID";
                 string filValue = "";
 
                 string temp = activeUser.location + "!_!" + orderby + "!_!" + filType + "!_!" + filValue + "!_!" + actionLogPageActive.ToString();
@@ -408,8 +408,8 @@ namespace BPIWebApplication.Client.Pages.CashierLogBookPages
             }
             else
             {
-                string orderby = "AuditActionDate";
-                string filType = "LogID";
+                string orderby = "a.AuditActionDate";
+                string filType = "a.LogID";
                 string filValue = "";
 
                 string temp = activeUser.location + "!_!" + orderby + "!_!" + filType + "!_!" + filValue + "!_!" + actionLogPageActive.ToString();

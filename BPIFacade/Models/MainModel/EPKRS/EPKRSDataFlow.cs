@@ -18,6 +18,7 @@ namespace BPIFacade.Models.MainModel.EPKRS
     public class EPKRSUploadDiscussion
     {
         public DocumentDiscussion discussion { get; set; } = new();
+        public List<CaseAttachment> attachment { get; set; } = new();
         public string LocationID { get; set; } = string.Empty;
     }
 
@@ -31,5 +32,18 @@ namespace BPIFacade.Models.MainModel.EPKRS
     {
         public QueryModel<EPKRSUploadIncidentAccident> mainData { get; set; } = new();
         public List<BPIFacade.Models.MainModel.Stream.FileStream> files { get; set; } = new();
+    }
+
+    public class DocumentDiscussionStream
+    {
+        public QueryModel<EPKRSUploadDiscussion> mainData { get; set; } = new();
+        public List<BPIFacade.Models.MainModel.Stream.FileStream> files { get; set; } = new();
+    }
+
+    public class RISKApprovalExtended
+    {
+        public string reportingType { get; set; } = string.Empty;
+        public DocumentApproval approval { get; set; } = new();
+        public ReportingExtended extendedData { get; set; } = new();
     }
 }

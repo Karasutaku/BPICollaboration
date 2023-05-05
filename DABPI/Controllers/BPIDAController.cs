@@ -4986,6 +4986,15 @@ namespace BPIDA.Controllers
 
                     actionResult = Ok(res);
                 }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
             }
             catch (Exception ex)
             {
@@ -8781,7 +8790,7 @@ namespace BPIDA.Controllers
                 {
                     command.Connection = con;
                     command.CommandType = CommandType.StoredProcedure;
-                    command.CommandText = "[createEPKRSItemCaseData]";
+                    command.CommandText = "[createEPKRSItemCaseDocument]";
                     command.CommandTimeout = 1000;
 
                     command.Parameters.Clear();
@@ -8797,6 +8806,7 @@ namespace BPIDA.Controllers
                     command.Parameters.AddWithValue("@isLate", data.Data.isLate);
                     command.Parameters.AddWithValue("@isCCTVCoverable", data.Data.isCCTVCoverable);
                     command.Parameters.AddWithValue("@isReportedtoSender", data.Data.isReportedtoSender);
+                    command.Parameters.AddWithValue("@ExtendedMitigationPlan", data.Data.ExtendedMitigationPlan);
                     command.Parameters.AddWithValue("@DocumentStatus", data.Data.DocumentStatus);
                     command.Parameters.AddWithValue("@AuditUser", data.userEmail);
                     command.Parameters.AddWithValue("@AuditAction", data.userAction);
@@ -8893,6 +8903,46 @@ namespace BPIDA.Controllers
             return flag;
         }
 
+        internal bool createEPKRSCaseAttachment(DataTable data)
+        {
+            bool flag = false;
+            int conInt = 0;
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    // create and check schema table
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[createEPKRSCaseAttachment]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@AttachLines", data);
+
+                    int ret = command.ExecuteNonQuery();
+
+                    if (ret > 0)
+                        flag = true;
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return flag;
+        }
+
         internal bool createEPKRSDocumentDiscussion(QueryModel<DocumentDiscussion> data, string location)
         {
             bool flag = false;
@@ -8927,6 +8977,7 @@ namespace BPIDA.Controllers
                     command.Parameters.AddWithValue("@CommentDate", data.Data.CommentDate);
                     command.Parameters.AddWithValue("@Comment", data.Data.Comment);
                     command.Parameters.AddWithValue("@isEdited", data.Data.isEdited);
+                    command.Parameters.AddWithValue("@ReplyRowGuid", data.Data.ReplyRowGuid);
                     command.Parameters.AddWithValue("@AuditUser", data.userEmail);
                     command.Parameters.AddWithValue("@AuditAction", data.userAction);
                     command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
@@ -8936,6 +8987,220 @@ namespace BPIDA.Controllers
                     if (ret > 0)
                         flag = true;
                     
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return flag;
+        }
+
+        internal bool createEPKRSDocumentApproval(QueryModel<DocumentApproval> data)
+        {
+            bool flag = false;
+            int conInt = 0;
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    // create and check schema table
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[createEPKRSDocumentApproval]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@DocumentID", data.Data.DocumentID);
+                    command.Parameters.AddWithValue("@ApprovalAction", data.Data.ApprovalAction);
+                    command.Parameters.AddWithValue("@Approver", data.Data.Approver);
+                    command.Parameters.AddWithValue("@ApproveDate", data.Data.ApproveDate);
+                    command.Parameters.AddWithValue("@AuditUser", data.userEmail);
+                    command.Parameters.AddWithValue("@AuditAction", data.userAction);
+                    command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
+
+                    int ret = command.ExecuteNonQuery();
+
+                    if (ret > 0)
+                        flag = true;
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return flag;
+        }
+
+        internal bool editEPKRSDocumentExtendedData(QueryModel<ReportingExtended> data, string type)
+        {
+            bool flag = false;
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    // create and check schema table
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[editEPKRSDocumentExtendedData]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@ReportingType", type);
+                    command.Parameters.AddWithValue("@DocumentID", data.Data.DocumentID);
+                    command.Parameters.AddWithValue("@ExtendedRootCause", data.Data.ExtendedRootCause);
+                    command.Parameters.AddWithValue("@ExtendedMitigationPlan", data.Data.ExtendedMitigationPlan);
+                    command.Parameters.AddWithValue("@AuditUser", data.userEmail);
+                    command.Parameters.AddWithValue("@AuditAction", data.userAction);
+                    command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
+
+                    int ret = command.ExecuteNonQuery();
+
+                    if (ret > 0)
+                        flag = true;
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return flag;
+        }
+
+        internal bool editEPKRSItemCaseData(QueryModel<ItemCase> data)
+        {
+            bool flag = false;
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    // create and check schema table
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[editEPKRSItemCaseData]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@RiskID", data.Data.RiskID);
+                    command.Parameters.AddWithValue("@DocumentID", data.Data.DocumentID);
+                    command.Parameters.AddWithValue("@SiteReporter", data.Data.SiteReporter);
+                    command.Parameters.AddWithValue("@SiteSender", data.Data.SiteSender);
+                    command.Parameters.AddWithValue("@ReportDate", data.Data.ReportDate);
+                    command.Parameters.AddWithValue("@ItemPickupDate", data.Data.ItemPickupDate);
+                    command.Parameters.AddWithValue("@LoadingDocumentID", data.Data.LoadingDocumentID);
+                    command.Parameters.AddWithValue("@LoadingDocumentDate", data.Data.LoadingDocumentDate);
+                    command.Parameters.AddWithValue("@VarianceDate", data.Data.VarianceDate);
+                    command.Parameters.AddWithValue("@isLate", data.Data.isLate);
+                    command.Parameters.AddWithValue("@isCCTVCoverable", data.Data.isCCTVCoverable);
+                    command.Parameters.AddWithValue("@isReportedtoSender", data.Data.isReportedtoSender);
+                    command.Parameters.AddWithValue("@ExtendedMitigationPlan", data.Data.ExtendedMitigationPlan);
+                    command.Parameters.AddWithValue("@DocumentStatus", data.Data.DocumentStatus);
+                    command.Parameters.AddWithValue("@AuditUser", data.userEmail);
+                    command.Parameters.AddWithValue("@AuditAction", data.userAction);
+                    command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
+
+                    int ret = command.ExecuteNonQuery();
+
+                    if (ret > 0)
+                        flag = true;
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return flag;
+        }
+
+        internal bool editEPKRSIncidentAccidentData(QueryModel<IncidentAccident> data)
+        {
+            bool flag = false;
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    // create and check schema table
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[editEPKRSIncidentAccidentData]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@RiskID", data.Data.RiskID);
+                    command.Parameters.AddWithValue("@DocumentID", data.Data.DocumentID);
+                    command.Parameters.AddWithValue("@ReportDate", data.Data.ReportDate);
+                    command.Parameters.AddWithValue("@OccurenceDate", data.Data.OccurenceDate);
+                    command.Parameters.AddWithValue("@SiteReporter", data.Data.SiteReporter);
+                    command.Parameters.AddWithValue("@DepartmentReporter", data.Data.DepartmentReporter);
+                    command.Parameters.AddWithValue("@RiskRPName", data.Data.RiskRPName);
+                    command.Parameters.AddWithValue("@RiskRPEmail", data.Data.RiskRPEmail);
+                    command.Parameters.AddWithValue("@DORMName", data.Data.DORMName);
+                    command.Parameters.AddWithValue("@DORMEmail", data.Data.DORMEmail);
+                    command.Parameters.AddWithValue("@CaseDescription", data.Data.CaseDescription);
+                    command.Parameters.AddWithValue("@DepartmentAffected", data.Data.DepartmentAffected);
+                    command.Parameters.AddWithValue("@Cronology", data.Data.Cronology);
+                    command.Parameters.AddWithValue("@RootCause", data.Data.RootCause);
+                    command.Parameters.AddWithValue("@LossDescription", data.Data.LossDescription);
+                    command.Parameters.AddWithValue("@LossEstimation", data.Data.LossEstimation);
+                    command.Parameters.AddWithValue("@ReturnAmount", data.Data.ReturnAmount);
+                    command.Parameters.AddWithValue("@RiskDescription", data.Data.RiskDescription);
+                    command.Parameters.AddWithValue("@CauseDescription", data.Data.CauseDescription);
+                    command.Parameters.AddWithValue("@PIC", data.Data.PIC);
+                    command.Parameters.AddWithValue("@ActionPlan", data.Data.ActionPlan);
+                    command.Parameters.AddWithValue("@TargetDate", data.Data.TargetDate);
+                    command.Parameters.AddWithValue("@MitigationPlan", data.Data.MitigationPlan);
+                    command.Parameters.AddWithValue("@MitigationDate", data.Data.MitigationDate);
+                    command.Parameters.AddWithValue("@ExtendedRootCause", data.Data.ExtendedRootCause);
+                    command.Parameters.AddWithValue("@ExtendedMitigationPlan", data.Data.ExtendedMitigationPlan);
+                    command.Parameters.AddWithValue("@DocumentStatus", data.Data.DocumentStatus);
+                    command.Parameters.AddWithValue("@AuditUser", data.userEmail);
+                    command.Parameters.AddWithValue("@AuditAction", data.userAction);
+                    command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
+
+                    int ret = command.ExecuteNonQuery();
+
+                    if (ret > 0)
+                        flag = true;
+
                 }
                 catch (SqlException ex)
                 {
@@ -9080,6 +9345,46 @@ namespace BPIDA.Controllers
 
                     command.Parameters.Clear();
                     command.Parameters.AddWithValue("@ItemCases", itemCaseData);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getEPKRSIncidentAccidentData(string location, string conditions, int pageNo, int rowPerPage)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSIncidentAccidentbyFilter]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@LocationID", location);
+                    command.Parameters.AddWithValue("@Conditions", conditions);
+                    command.Parameters.AddWithValue("@PageNo", pageNo);
+                    command.Parameters.AddWithValue("@RowPerPage", rowPerPage);
 
                     SqlDataAdapter da = new SqlDataAdapter();
                     da.SelectCommand = command;
@@ -9283,7 +9588,20 @@ namespace BPIDA.Controllers
                 dtMain.userEmail = data.userEmail;
                 dtMain.userAction = data.userAction;
                 dtMain.userActionDate = data.userActionDate;
-                var dtAttach = CommonLibrary.ListToDataTable<CaseAttachment>(data.Data.attachment, data.userEmail, data.userAction, data.userActionDate, "ItemCaseAttachment");
+
+                List<CaseAttachment> dtAttachTemp = new();
+                data.Data.attachment.ForEach(x =>
+                {
+                    dtAttachTemp.Add(new CaseAttachment
+                    {
+                        DocumentID = id,
+                        LineNum = x.LineNum,
+                        UploadDate = x.UploadDate,
+                        FileExtension = x.FileExtension,
+                        FilePath = x.FilePath
+                    });
+                });
+                var dtAttach = CommonLibrary.ListToDataTable<CaseAttachment>(dtAttachTemp, data.userEmail, data.userAction, data.userActionDate, "ItemCaseAttachment");
 
                 if (createEPKRSIncidentAccidentDocument(dtMain, dtAttach))
                 {
@@ -9321,8 +9639,6 @@ namespace BPIDA.Controllers
         public async Task<IActionResult> createEPKRSDocumentDiscussionData(QueryModel<EPKRSUploadDiscussion> data)
         {
             ResultModel<QueryModel<EPKRSUploadDiscussion>> res = new ResultModel<QueryModel<EPKRSUploadDiscussion>>();
-            DataTable dtMainIdentity = new DataTable("Identity");
-            string id = string.Empty;
             IActionResult actionResult = null;
 
             try
@@ -9337,6 +9653,72 @@ namespace BPIDA.Controllers
 
                 if (createEPKRSDocumentDiscussion(dt, data.Data.LocationID))
                 {
+                    if (data.Data.attachment.Count > 0)
+                    {
+                        var dtAttach = CommonLibrary.ListToDataTable<CaseAttachment>(data.Data.attachment, data.userEmail, data.userAction, data.userActionDate, "Attachment");
+
+                        if (createEPKRSCaseAttachment(dtAttach))
+                        {
+                            res.Data = data;
+                            res.isSuccess = true;
+                            res.ErrorCode = "00";
+                            res.ErrorMessage = "";
+
+                            actionResult = Ok(res);
+                        }
+                        else
+                        {
+                            res.Data = data;
+                            res.isSuccess = false;
+                            res.ErrorCode = "01";
+                            res.ErrorMessage = "Fail To Create Attachment data createEPKRSCaseAttachment to DB";
+
+                            actionResult = Ok(res);
+                        }
+                    }
+                    else
+                    {
+                        res.Data = data;
+                        res.isSuccess = true;
+                        res.ErrorCode = "00";
+                        res.ErrorMessage = "";
+
+                        actionResult = Ok(res);
+                    }
+                }
+                else
+                {
+                    res.Data = data;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Create Data Failed ! SP Fail to Execute";
+
+                    actionResult = Ok(res);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpPost("createEPKRSDocumentApproval")]
+        public async Task<IActionResult> createEPKRSDocumentApprovalData(QueryModel<DocumentApproval> data)
+        {
+            ResultModel<QueryModel<DocumentApproval>> res = new ResultModel<QueryModel<DocumentApproval>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                if (createEPKRSDocumentApproval(data))
+                {
                     res.Data = data;
                     res.isSuccess = true;
                     res.ErrorCode = "00";
@@ -9350,6 +9732,140 @@ namespace BPIDA.Controllers
                     res.isSuccess = false;
                     res.ErrorCode = "01";
                     res.ErrorMessage = "Create Data Failed ! SP Fail to Execute";
+
+                    actionResult = Ok(res);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpPost("createEPKRSDocumentApprovalExtended")]
+        public async Task<IActionResult> createEPKRSDocumentApprovalData(QueryModel<RISKApprovalExtended> data)
+        {
+            ResultModel<QueryModel<RISKApprovalExtended>> res = new ResultModel<QueryModel<RISKApprovalExtended>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                QueryModel<DocumentApproval> param1 = new();
+                param1.Data = new();
+                param1.Data = data.Data.approval;
+                param1.userEmail = data.userEmail;
+                param1.userAction = data.userAction;
+                param1.userActionDate = data.userActionDate;
+
+                QueryModel<ReportingExtended> param2 = new();
+                param2.Data = new();
+                param2.Data = data.Data.extendedData;
+                param2.userEmail = data.userEmail;
+                param2.userAction = data.userAction;
+                param2.userActionDate = data.userActionDate;
+
+                if (createEPKRSDocumentApproval(param1) && editEPKRSDocumentExtendedData(param2, data.Data.reportingType))
+                {
+                    res.Data = data;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = data;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Create Data Failed ! SP Fail to Execute";
+
+                    actionResult = Ok(res);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpPost("editEPKRSItemCaseData")]
+        public async Task<IActionResult> editEPKRSItemCase(QueryModel<ItemCase> data)
+        {
+            ResultModel<QueryModel<ItemCase>> res = new ResultModel<QueryModel<ItemCase>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                if (editEPKRSItemCaseData(data))
+                {
+                    res.Data = data;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = data;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Create Data Failed ! SP Fail to Execute";
+
+                    actionResult = Ok(res);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpPost("editEPKRSIncidentAccidentData")]
+        public async Task<IActionResult> editEPKRSIncidentAccident(QueryModel<IncidentAccident> data)
+        {
+            ResultModel<QueryModel<IncidentAccident>> res = new ResultModel<QueryModel<IncidentAccident>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                if (editEPKRSIncidentAccidentData(data))
+                {
+                    res.Data = data;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = data;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Edit Data Failed ! SP Fail to Execute";
 
                     actionResult = Ok(res);
                 }
@@ -9401,7 +9917,7 @@ namespace BPIDA.Controllers
                 else
                 {
                     res.Data = null;
-                    res.isSuccess = true;
+                    res.isSuccess = false;
                     res.ErrorCode = "01";
                     res.ErrorMessage = "Fetch Empty";
 
@@ -9456,7 +9972,7 @@ namespace BPIDA.Controllers
                 else
                 {
                     res.Data = null;
-                    res.isSuccess = true;
+                    res.isSuccess = false;
                     res.ErrorCode = "01";
                     res.ErrorMessage = "Fetch Empty";
 
@@ -9585,7 +10101,142 @@ namespace BPIDA.Controllers
                 else
                 {
                     res.Data = null;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSIncidentAccident/{param}")]
+        public async Task<IActionResult> getEPKRSIncidentAccidentData(string param)
+        {
+            ResultModel<List<EPKRSUploadIncidentAccident>> res = new ResultModel<List<EPKRSUploadIncidentAccident>>();
+            List<EPKRSUploadIncidentAccident> incidentAccidentLines = new List<EPKRSUploadIncidentAccident>();
+            DataTable dtIncidentAccident = new DataTable("EPKRSUploadIncidentAccident");
+            DataTable dtCaseAttachment = new DataTable("CaseAttachment");
+            DataTable dtParam = new DataTable("Parameter");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+                string loc = temp[0].Equals("") ? "HO" : temp[0];
+
+                dtIncidentAccident = getEPKRSIncidentAccidentData(loc, temp[1], Convert.ToInt32(temp[2]), _rowPerPage);
+
+                dtParam = dtIncidentAccident.Copy();
+
+                foreach (var removedCol in new[] {
+                    "ReportingID",
+                    "ReportDate",
+                    "OccurenceDate",
+                    "SiteReporter",
+                    "DepartmentReporter",
+                    "RiskRPName",
+                    "RiskRPEmail",
+                    "DORMName",
+                    "DORMEmail",
+                    "CaseDescription",
+                    "DepartmentAffected",
+                    "Cronology",
+                    "RootCause",
+                    "LossDescription",
+                    "LossEstimation",
+                    "ReturnAmount",
+                    "RiskDescription",
+                    "CauseDescription",
+                    "PIC",
+                    "ActionPlan",
+                    "TargetDate",
+                    "MitigationPlan",
+                    "MitigationDate",
+                    "ExtendedRootCause" ,
+                    "ExtendedMitigationPlan",
+                    "DocumentStatus" })
+                {
+                    if (dtParam.Columns.Contains(removedCol))
+                        dtParam.Columns.Remove(removedCol);
+                }
+
+                if (dtIncidentAccident.Rows.Count <= 0)
+                    throw new Exception("Fail Fetch Item Case Data");
+
+                dtCaseAttachment = getEPKRSAttachmentData(dtParam);
+
+                if (dtCaseAttachment.Rows.Count <= 0)
+                    throw new Exception("Fail Fetch Attachment Data");
+
+                if (dtIncidentAccident.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtIncidentAccident.Rows)
+                    {
+                        EPKRSUploadIncidentAccident temp1 = new EPKRSUploadIncidentAccident();
+
+                        temp1.incidentAccident.RiskID = dt["RiskID"].ToString();
+                        temp1.incidentAccident.DocumentID = dt["DocumentID"].ToString();
+                        temp1.incidentAccident.ReportDate = Convert.ToDateTime(dt["ReportDate"]);
+                        temp1.incidentAccident.OccurenceDate = Convert.ToDateTime(dt["OccurenceDate"]);
+                        temp1.incidentAccident.SiteReporter = dt["SiteReporter"].ToString();
+                        temp1.incidentAccident.DepartmentReporter = dt["DepartmentReporter"].ToString();
+                        temp1.incidentAccident.RiskRPName = dt["RiskRPName"].ToString();
+                        temp1.incidentAccident.RiskRPEmail = dt["RiskRPEmail"].ToString();
+                        temp1.incidentAccident.DORMName = dt["DORMName"].ToString();
+                        temp1.incidentAccident.DORMEmail = dt["DORMEmail"].ToString();
+                        temp1.incidentAccident.CaseDescription = dt["CaseDescription"].ToString();
+                        temp1.incidentAccident.DepartmentAffected = dt["DepartmentAffected"].ToString();
+                        temp1.incidentAccident.Cronology = dt["Cronology"].ToString();
+                        temp1.incidentAccident.RootCause = dt["RootCause"].ToString();
+                        temp1.incidentAccident.LossDescription = dt["LossDescription"].ToString();
+                        temp1.incidentAccident.LossEstimation = Convert.ToDecimal(dt["LossEstimation"]);
+                        temp1.incidentAccident.ReturnAmount = Convert.ToDecimal(dt["ReturnAmount"]);
+                        temp1.incidentAccident.RiskDescription = dt["RiskDescription"].ToString();
+                        temp1.incidentAccident.CauseDescription = dt["CauseDescription"].ToString();
+                        temp1.incidentAccident.PIC = dt["PIC"].ToString();
+                        temp1.incidentAccident.ActionPlan = dt["ActionPlan"].ToString();
+                        temp1.incidentAccident.TargetDate = Convert.ToDateTime(dt["TargetDate"]);
+                        temp1.incidentAccident.MitigationPlan = dt["MitigationPlan"].ToString();
+                        temp1.incidentAccident.MitigationDate = Convert.ToDateTime(dt["MitigationDate"]);
+                        temp1.incidentAccident.ExtendedRootCause = dt["ExtendedRootCause"].ToString();
+                        temp1.incidentAccident.ExtendedMitigationPlan = dt["ExtendedMitigationPlan"].ToString();
+                        temp1.incidentAccident.DocumentStatus = dt["DocumentStatus"].ToString();
+
+                        temp1.attachment = dtCaseAttachment.AsEnumerable().Where(y => y["DocumentID"].ToString().Equals(dt["DocumentID"].ToString())).Select(x => new CaseAttachment
+                        {
+                            DocumentID = x["DocumentID"].ToString(),
+                            LineNum = Convert.ToInt32(x["LineNum"]),
+                            UploadDate = Convert.ToDateTime(x["UploadDate"]),
+                            FileExtension = x["FileExtention"].ToString(),
+                            FilePath = x["FilePath"].ToString()
+                        }).ToList();
+
+                        incidentAccidentLines.Add(temp1);
+                    }
+
+                    res.Data = incidentAccidentLines;
                     res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = false;
                     res.ErrorCode = "01";
                     res.ErrorMessage = "Fetch Empty";
 
@@ -9625,16 +10276,92 @@ namespace BPIDA.Controllers
                     {
                         DocumentDiscussion temp1 = new DocumentDiscussion();
 
-                        temp1.DocumentID = dt["RiskID"].ToString();
-                        temp1.UserName = dt["RiskDescription"].ToString();
-                        temp1.CommentDate = Convert.ToDateTime(dt["ReportingID"]);
-                        temp1.Comment = dt["ReportingID"].ToString();
+                        temp1.rowGuid = dt["rowGuid"].ToString();
+                        temp1.DocumentID = dt["DocumentID"].ToString();
+                        temp1.UserName = dt["UserName"].ToString();
+                        temp1.CommentDate = Convert.ToDateTime(dt["CommentDate"]);
+                        temp1.Comment = dt["Comment"].ToString();
                         temp1.isEdited = Convert.ToBoolean(dt["isEdited"]);
+                        temp1.ReplyRowGuid = dt["ReplyRowGuid"].ToString();
 
                         documentDiscussions.Add(temp1);
                     }
 
                     res.Data = documentDiscussions;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSCaseAttachment/{param}")]
+        public async Task<IActionResult> getEPKRSCaseAttachment(string param)
+        {
+            ResultModel<List<CaseAttachment>> res = new ResultModel<List<CaseAttachment>>();
+            List<CaseAttachment> caseAttachments = new List<CaseAttachment>();
+            DataTable dtCaseAttachment = new DataTable("CaseAttachment");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string temp = CommonLibrary.Base64Decode(param);
+
+                DataTable tableParam = new("Param");
+                tableParam.Columns.Add(new DataColumn("RiskID", typeof(string)));
+                tableParam.Columns.Add(new DataColumn("DocumentID", typeof(string)));
+                tableParam.Columns.Add(new DataColumn("AuditUser", typeof(string)));
+                tableParam.Columns.Add(new DataColumn("AuditAction", typeof(string)));
+                tableParam.Columns.Add(new DataColumn("AuditActionDate", typeof(DateTime)));
+
+                DataRow tableRowParam = tableParam.NewRow();
+                tableRowParam["RiskID"] = "BLANK";
+                tableRowParam["DocumentID"] = temp;
+                tableRowParam["AuditUser"] = "BLANK";
+                tableRowParam["AuditAction"] = "I";
+                tableRowParam["AuditActionDate"] = DateTime.Now;
+                tableParam.Rows.Add(tableRowParam);
+
+                dtCaseAttachment = getEPKRSAttachmentData(tableParam);
+
+                if (dtCaseAttachment.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtCaseAttachment.Rows)
+                    {
+                        CaseAttachment temp1 = new CaseAttachment();
+
+                        temp1.DocumentID = dt["DocumentID"].ToString();
+                        temp1.LineNum = Convert.ToInt32(dt["LineNum"]);
+                        temp1.UploadDate = Convert.ToDateTime(dt["UploadDate"]);
+                        temp1.FileExtension = dt["FileExtention"].ToString();
+                        temp1.FilePath = dt["FilePath"].ToString();
+
+                        caseAttachments.Add(temp1);
+                    }
+
+                    res.Data = caseAttachments;
                     res.isSuccess = true;
                     res.ErrorCode = "00";
                     res.ErrorMessage = "";

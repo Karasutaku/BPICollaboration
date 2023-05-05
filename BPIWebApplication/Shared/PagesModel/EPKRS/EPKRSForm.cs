@@ -20,6 +20,7 @@ namespace BPIWebApplication.Shared.PagesModel.EPKRS
         public bool isLate { get; set; } = false;
         public bool isCCTVCoverable { get; set; } = false;
         public bool isReportedtoSender { get; set; } = false;
+        public string ExtendedMitigationPlan { get; set; } = string.Empty;
         public string DocumentStatus { get; set; } = string.Empty;
     }
 
@@ -108,11 +109,14 @@ namespace BPIWebApplication.Shared.PagesModel.EPKRS
 
     public class DocumentDiscussionForm
     {
+        public string formId { get; set; } = string.Empty;
+        public string rowGuid { get; set; } = string.Empty;
         public string DocumentID { get; set; } = string.Empty;
         public string UserName { get; set; } = string.Empty;
         public DateTime CommentDate { get; set; } = DateTime.Now;
         [Required(ErrorMessage = "Data is required")]
         public string Comment { get; set; } = string.Empty;
         public bool isEdited { get; set; } = false;
+        public string ReplyRowGuid { get; set; } = string.Empty;
     }
 }

@@ -4,7 +4,7 @@ using BPIWebApplication.Shared.MainModel.EPKRS;
 
 namespace BPIWebApplication.Client.Services.EPKRSServices
 {
-    public interface IEPKRSSevice
+    public interface IEPKRSService
     {
         List<ReportingType> reportingTypes { get; set; }
         List<RiskType> riskTypes { get; set; }
@@ -13,15 +13,25 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
         List<EPKRSUploadIncidentAccident> incidentAccidents { get; set; }
 
         List<DocumentDiscussion> documentDiscussions { get; set; }
+        List<BPIWebApplication.Shared.MainModel.Stream.FileStream> fileStreams { get; set; }
 
         Task<ResultModel<ItemCaseStream>> createEPKRSItemCaseDocument(ItemCaseStream data);
         Task<ResultModel<IncidentAccidentStream>> createEPKRSIncidentAccidentDocument(IncidentAccidentStream data);
-        Task<ResultModel<QueryModel<EPKRSUploadDiscussion>>> createEPKRSDocumentDiscussion(QueryModel<EPKRSUploadDiscussion> data);
+        Task<ResultModel<DocumentDiscussionStream>> createEPKRSDocumentDiscussion(DocumentDiscussionStream data);
+        Task<ResultModel<QueryModel<DocumentApproval>>> createEPKRSDocumentApprovalData(QueryModel<DocumentApproval> data);
+        Task<ResultModel<QueryModel<RISKApprovalExtended>>> createEPKRSDocumentApprovalExtendedData(QueryModel<RISKApprovalExtended> data);
+
+        Task<ResultModel<QueryModel<ItemCase>>> editEPKRSItemCaseData(QueryModel<ItemCase> data);
+        Task<ResultModel<QueryModel<IncidentAccident>>> editEPKRSIncidentAccidentData(QueryModel<IncidentAccident> data);
 
         Task<ResultModel<List<ReportingType>>> getEPRKSReportingType();
         Task<ResultModel<List<RiskType>>> getEPRKSRiskType();
         Task<ResultModel<List<EPKRSUploadItemCase>>> getEPKRSItemCaseData(string param);
+        Task<ResultModel<List<EPKRSUploadIncidentAccident>>> getEPKRSIncidentAccidentData(string param);
         Task<ResultModel<List<DocumentDiscussion>>> getEPKRSDocumentDiscussion(string param);
+        Task<ResultModel<List<BPIWebApplication.Shared.MainModel.Stream.FileStream>>> getEPKRSFileStream(string param);
+
+        Task<int> getEPKRSMaxFileSize();
 
     }
 }
