@@ -544,7 +544,10 @@ namespace BPIWebApplication.Client.Pages.CashierLogBookPages
                 sh.isActive = false;
             }
 
+            activeShift.ForEach(x => { x.isActive = false; });
             activeShift.FirstOrDefault(x => x.ShiftID.Equals(data.ShiftID)).isActive = true;
+
+            StateHasChanged();
         }
 
         private bool checkMainLogPresent()

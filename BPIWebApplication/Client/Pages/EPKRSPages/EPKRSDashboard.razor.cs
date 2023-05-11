@@ -25,22 +25,42 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
         private List<CaseAttachment> previewCaseAttachment = new();
         private List<DocumentDiscussionForm> previewDocumentDiscussion = new();
         private DocumentApproval previewDocumentApproval = new();
+        private List<EPKRSDocumentStatistics>? previewGeneralStatistics = null;
+        private List<EPKRSItemCaseCategoryStatistics>? previewItemCaseCategoryStatistics = null;
+        private List<EPKRSTopLocationReportStatistics>? previewTopLocationReportStatistics = null;
+        private List<EPKRSItemCaseItemCategoryStatistics>? previewItemCategoryStatistics = null;
+        private List<DocumentDiscussionReadHistory>? unreadDiscussion = null;
 
         private ItemCase updateItemCase = new();
         private IncidentAccident updateIncidentAccident = new();
 
         private DocumentDiscussion uploadDocumentDiscussion = new();
-        private List<CaseAttachment> uploadDocumentDIscussionAttachment = new();
+        //private List<CaseAttachment> uploadDocumentDiscussionAttachment = new();
         private List<BPIWebApplication.Shared.MainModel.Stream.FileStream> fileDiscussionUpload = new();
 
         private DocumentDiscussion uploadReplyDocumentDiscussion = new();
-        private List<CaseAttachment> uploadReplyDocumentDIscussionAttachment = new();
+        //private List<CaseAttachment> uploadReplyDocumentDiscussionAttachment = new();
         private List<BPIWebApplication.Shared.MainModel.Stream.FileStream> fileReplyDiscussionUpload = new();
 
         private string previousPreviewedDocumentID = string.Empty;
         private string previousPreviewedDocumentLocation = string.Empty;
 
+        private int itemCaseNumberofPages = 0;
+        private int incidentAccidentNumberofPages = 0;
+        private int itemCasePageActive = 0;
+        private int incidentAccidentPageActive = 0;
+
+        private string itemCaseFilterType { get; set; } = string.Empty;
+        private string incidentAccidentFilterType { get; set; } = string.Empty;
+
+        private string itemCaseFilterValue { get; set; } = string.Empty;
+        private string incidentAccidentFilterValue { get; set; } = string.Empty;
+
+        private bool itemCaseFilterActive = false;
+        private bool incidentAccidentFilterActive = false;
+
         private bool isLoading = false;
+        private bool chartTriggered = false;
         private bool triggerReplyButton = false;
 
         private int maxFileSize { get; set; } = 0;
@@ -126,15 +146,239 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
             await EPKRSService.getEPRKSReportingType();
             await EPKRSService.getEPRKSRiskType();
+            await EPKRSService.getEPKRSItemRiskCategory();
             maxFileSize = await EPKRSService.getEPKRSMaxFileSize();
 
+            incidentAccidentFilterActive = false;
+            itemCaseFilterActive = false;
+
             string paramGetItemCaseInitialization = activeUser.location + "!_!!_!1";
-            await EPKRSService.getEPKRSItemCaseData(CommonLibrary.Base64Encode(paramGetItemCaseInitialization));
+            var itemCaseDt = await EPKRSService.getEPKRSItemCaseData(CommonLibrary.Base64Encode(paramGetItemCaseInitialization));
 
             string paramGetIncidentAccidentInitialization = activeUser.location + "!_!!_!1";
-            await EPKRSService.getEPKRSIncidentAccidentData(CommonLibrary.Base64Encode(paramGetIncidentAccidentInitialization));
+            var incidentAccidentDt = await EPKRSService.getEPKRSIncidentAccidentData(CommonLibrary.Base64Encode(paramGetIncidentAccidentInitialization));
 
+            List<DocumentListParams> docParams = new();
+
+            if (itemCaseDt.Data != null)
+            {
+                if (itemCaseDt.Data.Count > 0)
+                {
+                    itemCaseDt.Data.ForEach(x =>
+                    {
+                        docParams.Add(new DocumentListParams
+                        {
+                            LocationID = x.itemCase.SiteReporter,
+                            DocumentID = x.itemCase.DocumentID
+                        });
+                    });
+                }
+            }
+
+            if (incidentAccidentDt.Data != null)
+            {
+                if (incidentAccidentDt.Data.Count > 0)
+                {
+                    incidentAccidentDt.Data.ForEach(x =>
+                    {
+                        docParams.Add(new DocumentListParams
+                        {
+                            LocationID = x.incidentAccident.SiteReporter,
+                            DocumentID = x.incidentAccident.DocumentID
+                        });
+                    });
+                }
+            }
+
+            await EPKRSService.getEPKRSInitializationDocumentDiscussions(docParams);
+            await EPKRSService.getEPKRSDocumentDiscussionReadHistory(docParams);
+
+            if (activeUser.location.Equals(""))
+            {
+                string itemCaseParampz = $"[EPKRS].ItemCase!_!{activeUser.location}!_!";
+                var itemCasepz = await EPKRSService.getEPKRSModuleNumberOfPage(CommonLibrary.Base64Encode(itemCaseParampz));
+                itemCaseNumberofPages = itemCasepz.Data;
+                
+                string incidentAccidentParampz = $"[EPKRS].IncidentAccident!_!{activeUser.location}!_!";
+                var incidentAccidentpz = await EPKRSService.getEPKRSModuleNumberOfPage(CommonLibrary.Base64Encode(incidentAccidentParampz));
+                incidentAccidentNumberofPages = incidentAccidentpz.Data;
+
+                string generalStatisticsConditions = $"WHERE a.ReportDate BETWEEN \'{DateTime.Now.Year}-01-01\' AND \'{DateTime.Now.Year}-12-31\'";
+                var resGeneralStat = await EPKRSService.getEPKRSGeneralStatistics(CommonLibrary.Base64Encode(generalStatisticsConditions));
+
+                string itemCaseCategoryConditions = $"WHERE a.AuditActionDate BETWEEN \'{DateTime.Now.Year}-01-01\' AND \'{DateTime.Now.Year}-12-31\'";
+                var resItemCaseCategoryStat = await EPKRSService.getEPKRSItemCaseCategoryStatistics(CommonLibrary.Base64Encode(itemCaseCategoryConditions));
+
+                string topLocationReportConditions = $"WHERE a.ReportDate BETWEEN \'{DateTime.Now.Year}-01-01\' AND \'{DateTime.Now.Year}-12-31\'";
+                var resTopLocationReportStat = await EPKRSService.getEPKRSTopLocationReportStatistics(CommonLibrary.Base64Encode(topLocationReportConditions));
+
+                string itemCategoryStatsConditions = $"WHERE a.AuditActionDate BETWEEN \'{DateTime.Now.Year}-01-01\' AND \'{DateTime.Now.Year}-12-31\'";
+                var resItemCategoryStat = await EPKRSService.getEPKRSItemCategoriesStatistics(CommonLibrary.Base64Encode(itemCategoryStatsConditions));
+
+                if (resGeneralStat.isSuccess)
+                {
+                    previewGeneralStatistics = new();
+                    previewGeneralStatistics = resGeneralStat.Data;
+                }
+
+                if (resItemCaseCategoryStat.isSuccess)
+                {
+                    previewItemCaseCategoryStatistics = new();
+                    previewItemCaseCategoryStatistics = resItemCaseCategoryStat.Data;
+                }
+
+                if (resTopLocationReportStat.isSuccess)
+                {
+                    previewTopLocationReportStatistics = new();
+                    previewTopLocationReportStatistics = resTopLocationReportStat.Data;
+                }
+
+                if (resItemCategoryStat.isSuccess)
+                {
+                    previewItemCategoryStatistics = new();
+                    previewItemCategoryStatistics = resItemCategoryStat.Data;
+                }
+            }
+            else
+            {
+                string itemCaseParampz = $"[EPKRS].ItemCase!_!{activeUser.location}!_!WHERE SiteReporter = \'{activeUser.location}\' OR SiteSender = \'{activeUser.location}\'";
+                var itemCasepz = await EPKRSService.getEPKRSModuleNumberOfPage(CommonLibrary.Base64Encode(itemCaseParampz));
+                itemCaseNumberofPages = itemCasepz.Data;
+
+                string incidentAccidentParampz = $"[EPKRS].IncidentAccident!_!{activeUser.location}!_!WHERE SiteReporter = \'{activeUser.location}\'";
+                var incidentAccidentpz = await EPKRSService.getEPKRSModuleNumberOfPage(CommonLibrary.Base64Encode(incidentAccidentParampz));
+                incidentAccidentNumberofPages = incidentAccidentpz.Data;
+            }
+            itemCasePageActive = 1;
+            incidentAccidentPageActive = 1;
+
+            StateHasChanged();
             _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/EPKRSPages/EPKRSDashboard.razor.js");
+        }
+
+        private async void initializeChart()
+        {
+            if (!chartTriggered)
+            {
+                List<string> arrayLabels = new();
+                List<string> arrayStringValues = new();
+                List<int> arrayIntValues = new();
+                List<decimal> arrayDecimalValues = new();
+
+                if (previewTopLocationReportStatistics != null)
+                {
+                    previewTopLocationReportStatistics.ForEach(x =>
+                    {
+                        if (x.LocationID.Equals("HO"))
+                        {
+                            arrayLabels.Add("HEAD OFFICE");
+                        }
+                        else
+                        {
+                            var loc = ManagementService.locations.SingleOrDefault(y => y.locationId.Equals(x.LocationID));
+
+                            if (loc != null)
+                                arrayLabels.Add(loc.locationName);
+                            else
+                                arrayLabels.Add(x.LocationID);
+                        }
+
+                        arrayIntValues.Add(x.TotalDocuments);
+                    });
+
+                    await _jsModule.InvokeVoidAsync(
+                        "initializeBarChart",
+                        "topLocationReportStats",
+                        arrayLabels,
+                        arrayIntValues,
+                        "Top 10 Location with Most Reports",
+                        "# of Reports"
+                    );
+                }
+
+                arrayLabels.Clear();
+                arrayStringValues.Clear();
+                arrayIntValues.Clear();
+                arrayDecimalValues.Clear();
+
+                if (previewItemCaseCategoryStatistics != null)
+                {
+                    previewItemCaseCategoryStatistics.ForEach(x =>
+                    {
+                        var riskCat = EPKRSService.itemRiskCategories.SingleOrDefault(y => y.ItemRiskCategoryID.Equals(x.ItemRiskCategoryID));
+
+                        if (riskCat != null)
+                            arrayLabels.Add(riskCat.CategoryDescription);
+                        else
+                            arrayLabels.Add(x.ItemRiskCategoryID);
+                        
+                        arrayIntValues.Add(x.TotalItemQty);
+                    });
+
+                    await _jsModule.InvokeVoidAsync(
+                        "initializeDoughnutChart",
+                        "itemCaseCategoryStats",
+                        arrayLabels,
+                        arrayIntValues,
+                        "Item Case Count by Risk Type",
+                        "# of Reports"
+                    );
+                }
+
+                arrayLabels.Clear();
+                arrayStringValues.Clear();
+                arrayIntValues.Clear();
+                arrayDecimalValues.Clear();
+
+                if (previewItemCaseCategoryStatistics != null)
+                {
+                    previewItemCaseCategoryStatistics.ForEach(x =>
+                    {
+                        var riskCat = EPKRSService.itemRiskCategories.SingleOrDefault(y => y.ItemRiskCategoryID.Equals(x.ItemRiskCategoryID));
+
+                        if (riskCat != null)
+                            arrayLabels.Add(riskCat.CategoryDescription);
+                        else
+                            arrayLabels.Add(x.ItemRiskCategoryID);
+
+                        arrayDecimalValues.Add(x.TotalItemValue);
+                    });
+
+                    await _jsModule.InvokeVoidAsync(
+                        "initializeLineChart",
+                        "itemCaseValueStats",
+                        arrayLabels,
+                        arrayDecimalValues,
+                        "Item Case Value by Risk Type",
+                        "Total Values"
+                    );
+                }
+
+                arrayLabels.Clear();
+                arrayStringValues.Clear();
+                arrayIntValues.Clear();
+                arrayDecimalValues.Clear();
+
+                if (previewItemCategoryStatistics != null)
+                {
+                    previewItemCategoryStatistics.ForEach(x =>
+                    {
+                        arrayLabels.Add(x.CategoryID);
+                        arrayIntValues.Add(x.TotalDocuments);
+                    });
+
+                    await _jsModule.InvokeVoidAsync(
+                        "initializeBarChart",
+                        "itemCategoryStats",
+                        arrayLabels,
+                        arrayIntValues,
+                        "Item Category Report Statistics",
+                        "# of Reports"
+                    );
+                }
+            }
+
+            chartTriggered = true;
         }
 
         private Stream GetFileStream(byte[] data)
@@ -225,7 +469,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                                 fileDiscussionUpload.Add(new BPIWebApplication.Shared.MainModel.Stream.FileStream
                                 {
                                     type = "Discussion",
-                                    fileName = Path.GetRandomFileName() + "!_!" + fi.Name,
+                                    fileName = System.IO.Path.GetRandomFileName() + "!_!" + fi.Name,
                                     fileDesc = "",
                                     fileType = ext,
                                     fileSize = 0,
@@ -266,7 +510,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                                 fileReplyDiscussionUpload.Add(new BPIWebApplication.Shared.MainModel.Stream.FileStream
                                 {
                                     type = "Discussion",
-                                    fileName = Path.GetRandomFileName() + "!_!" + fi.Name,
+                                    fileName = System.IO.Path.GetRandomFileName() + "!_!" + fi.Name,
                                     fileDesc = "",
                                     fileType = ext,
                                     fileSize = 0,
@@ -371,8 +615,51 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                         });
                     });
 
-                    EPKRSService.fileStreams.Clear();
-                    Task.Run(async () => { await EPKRSService.getEPKRSFileStream(CommonLibrary.Base64Encode(DocumentID)); StateHasChanged(); });
+                    #pragma warning disable CS4014
+                    Task.Run(async () => {
+                        EPKRSService.fileStreams.Clear();
+                        await EPKRSService.getEPKRSFileStream(CommonLibrary.Base64Encode(DocumentID));
+                        StateHasChanged();
+                    });
+                    #pragma warning restore CS4014
+
+                    var dt = EPKRSService.documentDiscussions.ExceptBy(EPKRSService.documentDiscussionReadHistories.Select(f => f.rowGuid), g => g.rowGuid).Where(h => h.DocumentID.Equals(DocumentID)).ToList();
+
+                    if (dt.Count > 0)
+                    {
+                        List<DocumentDiscussionReadHistory> param = new();
+                        QueryModel<DocumentDiscussionReadStream> readHistoryParam = new();
+                        readHistoryParam.Data = new();
+                        readHistoryParam.Data.Data = new();
+
+                        dt.ForEach(x =>
+                        {
+                            param.Add(new DocumentDiscussionReadHistory
+                            {
+                                rowGuid = x.rowGuid,
+                                DocumentID = x.DocumentID,
+                                UserName = activeUser.userName,
+                                ReadDate = DateTime.Now
+                            });
+                        });
+
+                        readHistoryParam.Data.LocationID = LocationID;
+                        readHistoryParam.Data.Data = param;
+                        readHistoryParam.userEmail = activeUser.userName;
+                        readHistoryParam.userAction = "I";
+                        readHistoryParam.userActionDate = DateTime.Now;
+
+                        #pragma warning disable CS4014
+                        Task.Run(async () => {
+                            var res = await EPKRSService.createEPKRSDocumentDiscussionReadHistory(readHistoryParam);
+
+                            if (res.isSuccess)
+                                EPKRSService.documentDiscussionReadHistories.AddRange(param);
+
+                            StateHasChanged();
+                        });
+                        #pragma warning restore CS4014
+                    }
                 }
                 else 
                 {
@@ -414,82 +701,112 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
         {
             try
             {
-                isLoading = true;
-
-                DocumentDiscussionStream uploadData = new();
-                uploadData.mainData = new();
-                uploadData.files = new();
-
-                QueryModel<EPKRSUploadDiscussion> discussionData = new();
-                discussionData.Data = new();
-                discussionData.Data.discussion = new();
-                discussionData.Data.attachment = new();
-
-                discussionData.Data.discussion.rowGuid = "";
-                discussionData.Data.discussion.DocumentID = previousPreviewedDocumentID;
-                discussionData.Data.discussion.UserName = activeUser.userName;
-                discussionData.Data.discussion.Comment = uploadDocumentDiscussion.Comment;
-                discussionData.Data.discussion.CommentDate = DateTime.Now;
-                discussionData.Data.discussion.isEdited = false;
-                discussionData.Data.discussion.ReplyRowGuid = "";
-
-                if (fileDiscussionUpload.Count > 0)
+                if (uploadDocumentDiscussion.Comment.Length > 0)
                 {
-                    int n = 0;
+                    isLoading = true;
 
-                    if (checkPreviewCaseAttachment())
+                    DocumentDiscussionStream uploadData = new();
+                    uploadData.mainData = new();
+                    uploadData.files = new();
+
+                    QueryModel<EPKRSUploadDiscussion> discussionData = new();
+                    discussionData.Data = new();
+                    discussionData.Data.discussion = new();
+                    discussionData.Data.attachment = new();
+
+                    discussionData.Data.discussion.rowGuid = "";
+                    discussionData.Data.discussion.DocumentID = previousPreviewedDocumentID;
+                    discussionData.Data.discussion.UserName = activeUser.userName;
+                    discussionData.Data.discussion.Comment = uploadDocumentDiscussion.Comment;
+                    discussionData.Data.discussion.CommentDate = DateTime.Now;
+                    discussionData.Data.discussion.isEdited = false;
+                    discussionData.Data.discussion.ReplyRowGuid = "";
+
+                    if (fileDiscussionUpload.Count > 0)
                     {
-                        n = EPKRSService.fileStreams.Count;
+                        int n = 0;
+
+                        if (checkPreviewCaseAttachment())
+                        {
+                            n = EPKRSService.fileStreams.Count;
+                        }
+
+                        fileDiscussionUpload.ForEach(x =>
+                        {
+                            n++;
+
+                            discussionData.Data.attachment.Add(new CaseAttachment
+                            {
+                                DocumentID = previousPreviewedDocumentID,
+                                LineNum = n,
+                                UploadDate = DateTime.Now,
+                                FileExtension = x.fileType,
+                                FilePath = x.fileName
+                            });
+                        });
                     }
 
-                    fileDiscussionUpload.ForEach(x =>
+                    discussionData.userEmail = activeUser.userName; ;
+                    discussionData.userAction = "I";
+                    discussionData.userActionDate = DateTime.Now;
+
+                    discussionData.Data.LocationID = previousPreviewedDocumentLocation;
+
+                    uploadData.mainData = discussionData;
+                    uploadData.files = fileDiscussionUpload;
+
+                    var res = await EPKRSService.createEPKRSDocumentDiscussion(uploadData);
+
+                    if (res.isSuccess)
                     {
-                        n++;
+                        await setDocumentDiscussionPreviewData(previousPreviewedDocumentID, previousPreviewedDocumentLocation);
+                        previewCaseAttachment.AddRange(discussionData.Data.attachment);
 
-                        discussionData.Data.attachment.Add(new CaseAttachment
+                        List<DocumentDiscussionReadHistory> param = new();
+                        QueryModel<DocumentDiscussionReadStream> readHistoryParam = new();
+                        readHistoryParam.Data = new();
+                        readHistoryParam.Data.Data = new();
+
+                        param.Add(new DocumentDiscussionReadHistory
                         {
-                            DocumentID = previousPreviewedDocumentID,
-                            LineNum = n,
-                            UploadDate = DateTime.Now,
-                            FileExtension = x.fileType,
-                            FilePath = x.fileName
+                            rowGuid = res.Data.mainData.Data.discussion.rowGuid,
+                            DocumentID = res.Data.mainData.Data.discussion.DocumentID,
+                            UserName = activeUser.userName,
+                            ReadDate = DateTime.Now
                         });
-                    });
-                }
 
-                discussionData.userEmail = activeUser.userName; ;
-                discussionData.userAction = "I";
-                discussionData.userActionDate = DateTime.Now;
+                        readHistoryParam.Data.LocationID = previousPreviewedDocumentLocation;
+                        readHistoryParam.Data.Data = param;
+                        readHistoryParam.userEmail = activeUser.userName;
+                        readHistoryParam.userAction = "I";
+                        readHistoryParam.userActionDate = DateTime.Now;
+                        
+                        #pragma warning disable CS4014
+                        Task.Run(async () => {
+                            var res = await EPKRSService.createEPKRSDocumentDiscussionReadHistory(readHistoryParam);
 
-                discussionData.Data.LocationID = previousPreviewedDocumentLocation;
+                            if (res.isSuccess)
+                                EPKRSService.documentDiscussionReadHistories.AddRange(param);
 
-                uploadData.mainData = discussionData;
-                uploadData.files = fileDiscussionUpload;
+                            StateHasChanged();
+                        });
+                        #pragma warning restore CS4014
 
-                var res = await EPKRSService.createEPKRSDocumentDiscussion(uploadData);
+                        uploadDocumentDiscussion.Comment = "";
+                    }
+                    else
+                    {
+                        await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
+                    }
 
-                if (res.isSuccess)
-                {
-                    await setDocumentDiscussionPreviewData(previousPreviewedDocumentID, previousPreviewedDocumentLocation);
-                    previewCaseAttachment.AddRange(discussionData.Data.attachment);
-
-                    //if (EPKRSService.itemCases.SingleOrDefault(x => x.itemCase.DocumentID.Equals(previousPreviewedDocumentID)) != null)
-                    //    EPKRSService.itemCases.SingleOrDefault(x => x.itemCase.DocumentID.Equals(previousPreviewedDocumentID)).attachment.AddRange(discussionData.Data.attachment);
-
-                    //if (EPKRSService.incidentAccidents.SingleOrDefault(x => x.incidentAccident.DocumentID.Equals(previousPreviewedDocumentID)) != null)
-                    //    EPKRSService.incidentAccidents.SingleOrDefault(x => x.incidentAccident.DocumentID.Equals(previousPreviewedDocumentID)).attachment.AddRange(discussionData.Data.attachment);
-
-                    uploadDocumentDiscussion.Comment = "";
+                    fileDiscussionUpload.Clear();
+                    isLoading = false;
+                    StateHasChanged();
                 }
                 else
                 {
-                    await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
+                    await _jsModule.InvokeVoidAsync("showAlert", "Input Comment !");
                 }
-
-                fileDiscussionUpload.Clear();
-                isLoading = false;
-                StateHasChanged();
-
             }
             catch (Exception ex)
             {
@@ -503,83 +820,112 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
         {
             try
             {
-                isLoading = true;
-
-                DocumentDiscussionStream uploadData = new();
-                uploadData.mainData = new();
-                uploadData.files = new();
-
-                QueryModel<EPKRSUploadDiscussion> discussionData = new();
-                discussionData.Data = new();
-                discussionData.Data.discussion = new();
-                discussionData.Data.attachment = new();
-
-                discussionData.Data.discussion.rowGuid = "";
-                discussionData.Data.discussion.DocumentID = previousPreviewedDocumentID;
-                discussionData.Data.discussion.UserName = activeUser.userName;
-                discussionData.Data.discussion.Comment = uploadReplyDocumentDiscussion.Comment;
-                discussionData.Data.discussion.CommentDate = DateTime.Now;
-                discussionData.Data.discussion.isEdited = false;
-                discussionData.Data.discussion.ReplyRowGuid = data.rowGuid;
-
-                if (fileReplyDiscussionUpload.Count > 0)
+                if (uploadReplyDocumentDiscussion.Comment.Length > 0)
                 {
-                    int n = 0;
+                    isLoading = true;
 
-                    if (checkPreviewCaseAttachment())
+                    DocumentDiscussionStream uploadData = new();
+                    uploadData.mainData = new();
+                    uploadData.files = new();
+
+                    QueryModel<EPKRSUploadDiscussion> discussionData = new();
+                    discussionData.Data = new();
+                    discussionData.Data.discussion = new();
+                    discussionData.Data.attachment = new();
+
+                    discussionData.Data.discussion.rowGuid = "";
+                    discussionData.Data.discussion.DocumentID = previousPreviewedDocumentID;
+                    discussionData.Data.discussion.UserName = activeUser.userName;
+                    discussionData.Data.discussion.Comment = uploadReplyDocumentDiscussion.Comment;
+                    discussionData.Data.discussion.CommentDate = DateTime.Now;
+                    discussionData.Data.discussion.isEdited = false;
+                    discussionData.Data.discussion.ReplyRowGuid = data.rowGuid;
+
+                    if (fileReplyDiscussionUpload.Count > 0)
                     {
-                        n = EPKRSService.fileStreams.Count;
+                        int n = 0;
+
+                        if (checkPreviewCaseAttachment())
+                        {
+                            n = EPKRSService.fileStreams.Count;
+                        }
+
+                        fileReplyDiscussionUpload.ForEach(x =>
+                        {
+                            n++;
+
+                            discussionData.Data.attachment.Add(new CaseAttachment
+                            {
+                                DocumentID = previousPreviewedDocumentID,
+                                LineNum = n,
+                                UploadDate = DateTime.Now,
+                                FileExtension = x.fileType,
+                                FilePath = x.fileName
+                            });
+                        });
                     }
 
-                    fileReplyDiscussionUpload.ForEach(x =>
+                    discussionData.userEmail = activeUser.userName; ;
+                    discussionData.userAction = "I";
+                    discussionData.userActionDate = DateTime.Now;
+
+                    discussionData.Data.LocationID = previousPreviewedDocumentLocation;
+
+                    uploadData.mainData = discussionData;
+                    uploadData.files = fileReplyDiscussionUpload;
+
+                    var res = await EPKRSService.createEPKRSDocumentDiscussion(uploadData);
+
+                    if (res.isSuccess)
                     {
-                        n++;
+                        await setDocumentDiscussionPreviewData(previousPreviewedDocumentID, previousPreviewedDocumentLocation);
+                        previewCaseAttachment.AddRange(discussionData.Data.attachment);
 
-                        discussionData.Data.attachment.Add(new CaseAttachment
+                        List<DocumentDiscussionReadHistory> param = new();
+                        QueryModel<DocumentDiscussionReadStream> readHistoryParam = new();
+                        readHistoryParam.Data = new();
+                        readHistoryParam.Data.Data = new();
+
+                        param.Add(new DocumentDiscussionReadHistory
                         {
-                            DocumentID = previousPreviewedDocumentID,
-                            LineNum = n,
-                            UploadDate = DateTime.Now,
-                            FileExtension = x.fileType,
-                            FilePath = x.fileName
+                            rowGuid = res.Data.mainData.Data.discussion.rowGuid,
+                            DocumentID = res.Data.mainData.Data.discussion.DocumentID,
+                            UserName = activeUser.userName,
+                            ReadDate = DateTime.Now
                         });
-                    });
-                }
 
-                discussionData.userEmail = activeUser.userName; ;
-                discussionData.userAction = "I";
-                discussionData.userActionDate = DateTime.Now;
+                        readHistoryParam.Data.LocationID = previousPreviewedDocumentLocation;
+                        readHistoryParam.Data.Data = param;
+                        readHistoryParam.userEmail = activeUser.userName;
+                        readHistoryParam.userAction = "I";
+                        readHistoryParam.userActionDate = DateTime.Now;
 
-                discussionData.Data.LocationID = previousPreviewedDocumentLocation;
+                        #pragma warning disable CS4014
+                        Task.Run(async () => {
+                            var res = await EPKRSService.createEPKRSDocumentDiscussionReadHistory(readHistoryParam);
 
-                uploadData.mainData = discussionData;
-                uploadData.files = fileReplyDiscussionUpload;
+                            if (res.isSuccess)
+                                EPKRSService.documentDiscussionReadHistories.AddRange(param);
 
-                var res = await EPKRSService.createEPKRSDocumentDiscussion(uploadData);
+                            StateHasChanged();
+                        });
+                        #pragma warning restore CS4014
 
-                if (res.isSuccess)
-                {
-                    await setDocumentDiscussionPreviewData(previousPreviewedDocumentID, previousPreviewedDocumentLocation);
-                    previewCaseAttachment.AddRange(discussionData.Data.attachment);
-                    
-                    //if (EPKRSService.itemCases.SingleOrDefault(x => x.itemCase.DocumentID.Equals(previousPreviewedDocumentID)) != null)
-                    //    EPKRSService.itemCases.SingleOrDefault(x => x.itemCase.DocumentID.Equals(previousPreviewedDocumentID)).attachment.AddRange(discussionData.Data.attachment);
+                        uploadReplyDocumentDiscussion.Comment = "";
+                    }
+                    else
+                    {
+                        await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
+                    }
 
-                    //if (EPKRSService.incidentAccidents.SingleOrDefault(x => x.incidentAccident.DocumentID.Equals(previousPreviewedDocumentID)) != null)
-                    //    EPKRSService.incidentAccidents.SingleOrDefault(x => x.incidentAccident.DocumentID.Equals(previousPreviewedDocumentID)).attachment.AddRange(discussionData.Data.attachment);
-
-                    uploadReplyDocumentDiscussion.Comment = "";
+                    fileReplyDiscussionUpload.Clear();
+                    isLoading = false;
+                    StateHasChanged();
                 }
                 else
                 {
-                    await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
+                    await _jsModule.InvokeVoidAsync("showAlert", "Input Comment !");
                 }
-
-                //triggerReplyButton = false;
-                fileReplyDiscussionUpload.Clear();
-                isLoading = false;
-                StateHasChanged();
-
             }
             catch (Exception ex)
             {
@@ -607,7 +953,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
                 if (res.isSuccess)
                 {
-                    string param = approveType.Equals("Approve") ? "Approved" : approveType.Equals("OnProgress") ? "On Progress" : approveType.Equals("Close") ? "Closed" : "NAN";
+                    string param = approveType.Equals("Approve") ? "Approved" : approveType.Equals("OnProgress") ? "OnProgress" : approveType.Equals("Close") ? "Closed" : "NAN";
 
                     var a = EPKRSService.itemCases.SingleOrDefault(x => x.itemCase.DocumentID.Equals(res.Data.Data.DocumentID));
 
@@ -711,6 +1057,205 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 StateHasChanged();
                 await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} from {ex.Source} {ex.InnerException} !");
             }
+        }
+
+        private async Task incidentAccidentPageSelect(int currPage)
+        {
+            incidentAccidentPageActive = currPage;
+            isLoading = true;
+
+            if (incidentAccidentFilterActive)
+            {
+                if (incidentAccidentFilterType.Equals("ID"))
+                {
+                    string paramGetIncidentAccidentInitialization = activeUser.location + $"!_!WHERE a.DocumentID LIKE \'%{incidentAccidentFilterValue}%\'!_!" + incidentAccidentPageActive.ToString();
+                    await EPKRSService.getEPKRSIncidentAccidentData(CommonLibrary.Base64Encode(paramGetIncidentAccidentInitialization));
+                }
+                else if (incidentAccidentFilterType.Equals("LOC"))
+                {
+                    string paramGetIncidentAccidentInitialization = activeUser.location + $"!_!WHERE a.SiteReporter = \'{incidentAccidentFilterValue}\'!_!" + incidentAccidentPageActive.ToString();
+                    await EPKRSService.getEPKRSIncidentAccidentData(CommonLibrary.Base64Encode(paramGetIncidentAccidentInitialization));
+                }
+                else if (incidentAccidentFilterType.Equals("STATUS"))
+                {
+                    string paramGetIncidentAccidentInitialization = activeUser.location + $"!_!WHERE a.DocumentStatus LIKE \'%{incidentAccidentFilterValue}%\'!_!" + incidentAccidentPageActive.ToString();
+                    await EPKRSService.getEPKRSIncidentAccidentData(CommonLibrary.Base64Encode(paramGetIncidentAccidentInitialization));
+                }
+            }
+            else
+            {
+                string paramGetIncidentAccidentInitialization = activeUser.location + "!_!!_!" + incidentAccidentPageActive.ToString();
+                await EPKRSService.getEPKRSIncidentAccidentData(CommonLibrary.Base64Encode(paramGetIncidentAccidentInitialization));
+            }
+
+            List<DocumentListParams> docParams = new();
+
+            if (EPKRSService.itemCases != null)
+            {
+                if (EPKRSService.itemCases.Count > 0)
+                {
+                    EPKRSService.itemCases.ForEach(x =>
+                    {
+                        docParams.Add(new DocumentListParams
+                        {
+                            LocationID = x.itemCase.SiteReporter,
+                            DocumentID = x.itemCase.DocumentID
+                        });
+                    });
+                }
+            }
+
+            if (EPKRSService.incidentAccidents != null)
+            {
+                if (EPKRSService.incidentAccidents.Count > 0)
+                {
+                    EPKRSService.incidentAccidents.ForEach(x =>
+                    {
+                        docParams.Add(new DocumentListParams
+                        {
+                            LocationID = x.incidentAccident.SiteReporter,
+                            DocumentID = x.incidentAccident.DocumentID
+                        });
+                    });
+                }
+            }
+
+            await EPKRSService.getEPKRSInitializationDocumentDiscussions(docParams);
+            await EPKRSService.getEPKRSDocumentDiscussionReadHistory(docParams);
+
+            isLoading = false;
+            StateHasChanged();
+        }
+
+        private async Task incidentAccidentFilter()
+        {
+            if (incidentAccidentFilterType.Length > 0)
+            {
+                incidentAccidentFilterActive = true;
+                isLoading = true;
+                EPKRSService.incidentAccidents.Clear();
+
+                if (incidentAccidentFilterType.Equals("ID"))
+                {
+                    string incidentAccidentParampz = $"[EPKRS].IncidentAccident!_!{activeUser.location}!_!WHERE DocumentID LIKE '%{incidentAccidentFilterValue}%'";
+                    var incidentAccidentpz = await EPKRSService.getEPKRSModuleNumberOfPage(CommonLibrary.Base64Encode(incidentAccidentParampz));
+                    incidentAccidentNumberofPages = incidentAccidentpz.Data;
+
+                    string paramGetIncidentAccidentInitialization = activeUser.location + $"!_!WHERE a.DocumentID LIKE \'%{incidentAccidentFilterValue}%\'!_!1";
+                    await EPKRSService.getEPKRSIncidentAccidentData(CommonLibrary.Base64Encode(paramGetIncidentAccidentInitialization));
+                }
+                else if (incidentAccidentFilterType.Equals("LOC"))
+                {
+                    string incidentAccidentParampz = $"[EPKRS].IncidentAccident!_!{activeUser.location}!_!WHERE SiteReporter = \'{incidentAccidentFilterValue}\'";
+                    var incidentAccidentpz = await EPKRSService.getEPKRSModuleNumberOfPage(CommonLibrary.Base64Encode(incidentAccidentParampz));
+                    incidentAccidentNumberofPages = incidentAccidentpz.Data;
+
+                    string paramGetIncidentAccidentInitialization = activeUser.location + $"!_!WHERE a.SiteReporter = \'{incidentAccidentFilterValue}\'!_!1";
+                    await EPKRSService.getEPKRSIncidentAccidentData(CommonLibrary.Base64Encode(paramGetIncidentAccidentInitialization));
+                }
+                else if (incidentAccidentFilterType.Equals("STATUS"))
+                {
+                    string incidentAccidentParampz = $"[EPKRS].IncidentAccident!_!{activeUser.location}!_!WHERE DocumentStatus LIKE \'%{incidentAccidentFilterValue}%\'";
+                    var incidentAccidentpz = await EPKRSService.getEPKRSModuleNumberOfPage(CommonLibrary.Base64Encode(incidentAccidentParampz));
+                    incidentAccidentNumberofPages = incidentAccidentpz.Data;
+
+                    string paramGetIncidentAccidentInitialization = activeUser.location + $"!_!WHERE a.DocumentStatus LIKE \'%{incidentAccidentFilterValue}%\'!_!1";
+                    await EPKRSService.getEPKRSIncidentAccidentData(CommonLibrary.Base64Encode(paramGetIncidentAccidentInitialization));
+                }
+
+                List<DocumentListParams> docParams = new();
+
+                if (EPKRSService.itemCases != null)
+                {
+                    if (EPKRSService.itemCases.Count > 0)
+                    {
+                        EPKRSService.itemCases.ForEach(x =>
+                        {
+                            docParams.Add(new DocumentListParams
+                            {
+                                LocationID = x.itemCase.SiteReporter,
+                                DocumentID = x.itemCase.DocumentID
+                            });
+                        });
+                    }
+                }
+
+                if (EPKRSService.incidentAccidents != null)
+                {
+                    if (EPKRSService.incidentAccidents.Count > 0)
+                    {
+                        EPKRSService.incidentAccidents.ForEach(x =>
+                        {
+                            docParams.Add(new DocumentListParams
+                            {
+                                LocationID = x.incidentAccident.SiteReporter,
+                                DocumentID = x.incidentAccident.DocumentID
+                            });
+                        });
+                    }
+                }
+
+                await EPKRSService.getEPKRSInitializationDocumentDiscussions(docParams);
+                await EPKRSService.getEPKRSDocumentDiscussionReadHistory(docParams);
+
+                isLoading = false;
+                StateHasChanged();
+            }
+            else
+            {
+                await _jsModule.InvokeVoidAsync("showAlert", "Please Select Filter Type !");
+            }
+        }
+
+        private async Task resetIncidentAccidentFilter()
+        {
+            isLoading = true;
+
+            string incidentAccidentParampz = $"[EPKRS].IncidentAccident!_!{activeUser.location}!_!";
+            var incidentAccidentpz = await EPKRSService.getEPKRSModuleNumberOfPage(CommonLibrary.Base64Encode(incidentAccidentParampz));
+            incidentAccidentNumberofPages = incidentAccidentpz.Data;
+
+            string paramGetIncidentAccidentInitialization = activeUser.location + "!_!!_!1";
+            await EPKRSService.getEPKRSIncidentAccidentData(CommonLibrary.Base64Encode(paramGetIncidentAccidentInitialization));
+
+            List<DocumentListParams> docParams = new();
+
+            if (EPKRSService.itemCases != null)
+            {
+                if (EPKRSService.itemCases.Count > 0)
+                {
+                    EPKRSService.itemCases.ForEach(x =>
+                    {
+                        docParams.Add(new DocumentListParams
+                        {
+                            LocationID = x.itemCase.SiteReporter,
+                            DocumentID = x.itemCase.DocumentID
+                        });
+                    });
+                }
+            }
+
+            if (EPKRSService.incidentAccidents != null)
+            {
+                if (EPKRSService.incidentAccidents.Count > 0)
+                {
+                    EPKRSService.incidentAccidents.ForEach(x =>
+                    {
+                        docParams.Add(new DocumentListParams
+                        {
+                            LocationID = x.incidentAccident.SiteReporter,
+                            DocumentID = x.incidentAccident.DocumentID
+                        });
+                    });
+                }
+            }
+
+            await EPKRSService.getEPKRSInitializationDocumentDiscussions(docParams);
+            await EPKRSService.getEPKRSDocumentDiscussionReadHistory(docParams);
+
+            incidentAccidentFilterActive = false;
+            isLoading = false;
+            StateHasChanged();
         }
 
         private bool checkReportingType()

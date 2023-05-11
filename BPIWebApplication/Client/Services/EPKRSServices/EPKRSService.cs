@@ -16,9 +16,11 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
 
         public List<ReportingType> reportingTypes { get; set; } = new();
         public List<RiskType> riskTypes { get; set; } = new();
+        public List<ItemRiskCategory> itemRiskCategories { get; set; } = new();
         public List<EPKRSUploadItemCase> itemCases { get; set; } = new();
         public List<EPKRSUploadIncidentAccident> incidentAccidents { get; set; } = new();
         public List<DocumentDiscussion> documentDiscussions { get; set; } = new();
+        public List<DocumentDiscussionReadHistory> documentDiscussionReadHistories { get; set; } = new();
         public List<BPIWebApplication.Shared.MainModel.Stream.FileStream> fileStreams { get; set; } = new();
 
         public async Task<ResultModel<ItemCaseStream>> createEPKRSItemCaseDocument(ItemCaseStream data)
@@ -146,6 +148,52 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
                     resData.isSuccess = false;
                     resData.ErrorCode = "01";
                     resData.ErrorMessage = "Failure from createEPKRSDocumentDiscussion endUser";
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
+        public async Task<ResultModel<QueryModel<DocumentDiscussionReadStream>>> createEPKRSDocumentDiscussionReadHistory(QueryModel<DocumentDiscussionReadStream> data)
+        {
+            ResultModel<QueryModel<DocumentDiscussionReadStream>> resData = new ResultModel<QueryModel<DocumentDiscussionReadStream>>();
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<QueryModel<DocumentDiscussionReadStream>>("api/endUser/EPKRS/createEPKRSDocumentDiscussionReadHistory", data);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<DocumentDiscussionReadStream>>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                    else
+                    {
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                }
+                else
+                {
+                    resData.Data = null;
+                    resData.isSuccess = false;
+                    resData.ErrorCode = "01";
+                    resData.ErrorMessage = "Failure from createEPKRSDocumentDiscussionReadHistory endUser";
                 }
             }
             catch (Exception ex)
@@ -417,6 +465,43 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
             return resData;
         }
 
+        public async Task<ResultModel<List<ItemRiskCategory>>> getEPKRSItemRiskCategory()
+        {
+            ResultModel<List<ItemRiskCategory>> resData = new ResultModel<List<ItemRiskCategory>>();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<ItemRiskCategory>>>("api/endUser/EPKRS/getEPKRSItemRiskCategory");
+
+                if (result.isSuccess)
+                {
+                    itemRiskCategories.Clear();
+                    itemRiskCategories = result.Data;
+
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
         public async Task<ResultModel<List<EPKRSUploadItemCase>>> getEPKRSItemCaseData(string param)
         {
             ResultModel<List<EPKRSUploadItemCase>> resData = new ResultModel<List<EPKRSUploadItemCase>>();
@@ -501,9 +586,6 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
 
                 if (result.isSuccess)
                 {
-                    documentDiscussions.Clear();
-                    documentDiscussions = result.Data;
-
                     resData.Data = result.Data;
                     resData.isSuccess = result.isSuccess;
                     resData.ErrorCode = result.ErrorCode;
@@ -515,6 +597,104 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
                     resData.isSuccess = result.isSuccess;
                     resData.ErrorCode = result.ErrorCode;
                     resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
+        public async Task<ResultModel<List<DocumentDiscussion>>> getEPKRSInitializationDocumentDiscussions(List<DocumentListParams> param)
+        {
+            ResultModel<List<DocumentDiscussion>> resData = new ResultModel<List<DocumentDiscussion>>();
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<List<DocumentListParams>>("api/endUser/EPKRS/getEPKRSInitializationDocumentDiscussions", param);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<DocumentDiscussion>>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        documentDiscussions.Clear();
+                        documentDiscussions = respBody.Data;
+
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                    else
+                    {
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                }
+                else
+                {
+                    resData.Data = null;
+                    resData.isSuccess = false;
+                    resData.ErrorCode = "01";
+                    resData.ErrorMessage = "Failure from getEPKRSInitializationDocumentDiscussions endUser";
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
+        public async Task<ResultModel<List<DocumentDiscussionReadHistory>>> getEPKRSDocumentDiscussionReadHistory(List<DocumentListParams> param)
+        {
+            ResultModel<List<DocumentDiscussionReadHistory>> resData = new ResultModel<List<DocumentDiscussionReadHistory>>();
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<List<DocumentListParams>>("api/endUser/EPKRS/getEPKRSDocumentDiscussionReadHistory", param);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<DocumentDiscussionReadHistory>>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        documentDiscussionReadHistories.Clear();
+                        documentDiscussionReadHistories = respBody.Data;
+
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                    else
+                    {
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                }
+                else
+                {
+                    resData.Data = null;
+                    resData.isSuccess = false;
+                    resData.ErrorCode = "01";
+                    resData.ErrorMessage = "Failure from getEPKRSDocumentDiscussionReadHistory endUser";
                 }
             }
             catch (Exception ex)
@@ -557,6 +737,142 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
             return resData;
         }
 
+        public async Task<ResultModel<List<EPKRSDocumentStatistics>>> getEPKRSGeneralStatistics(string param)
+        {
+            ResultModel<List<EPKRSDocumentStatistics>> resData = new ResultModel<List<EPKRSDocumentStatistics>>();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSDocumentStatistics>>>($"api/endUser/EPKRS/getEPKRSGeneralStatistics/{param}");
+
+                if (result.isSuccess)
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
+        public async Task<ResultModel<List<EPKRSItemCaseCategoryStatistics>>> getEPKRSItemCaseCategoryStatistics(string param)
+        {
+            ResultModel<List<EPKRSItemCaseCategoryStatistics>> resData = new ResultModel<List<EPKRSItemCaseCategoryStatistics>>();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSItemCaseCategoryStatistics>>>($"api/endUser/EPKRS/getEPKRSItemCaseCategoryStatistics/{param}");
+
+                if (result.isSuccess)
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
+        public async Task<ResultModel<List<EPKRSTopLocationReportStatistics>>> getEPKRSTopLocationReportStatistics(string param)
+        {
+            ResultModel<List<EPKRSTopLocationReportStatistics>> resData = new ResultModel<List<EPKRSTopLocationReportStatistics>>();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSTopLocationReportStatistics>>>($"api/endUser/EPKRS/getEPKRSTopLocationReportStatistics/{param}");
+
+                if (result.isSuccess)
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
+        public async Task<ResultModel<List<EPKRSItemCaseItemCategoryStatistics>>> getEPKRSItemCategoriesStatistics(string param)
+        {
+            ResultModel<List<EPKRSItemCaseItemCategoryStatistics>> resData = new ResultModel<List<EPKRSItemCaseItemCategoryStatistics>>();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSItemCaseItemCategoryStatistics>>>($"api/endUser/EPKRS/getEPKRSItemCategoriesStatistics/{param}");
+
+                if (result.isSuccess)
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
         public async Task<int> getEPKRSMaxFileSize()
         {
             ResultModel<int> resData = new ResultModel<int>();
@@ -590,6 +906,41 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
             }
 
             return resData.Data;
+        }
+
+        public async Task<ResultModel<int>> getEPKRSModuleNumberOfPage(string param)
+        {
+            ResultModel<int> resData = new ResultModel<int>();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/endUser/EPKRS/getEPKRSModuleNumberOfPage/{param}");
+
+                if (result.isSuccess)
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = 0;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
         }
 
         //

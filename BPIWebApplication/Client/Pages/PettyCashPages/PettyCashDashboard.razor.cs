@@ -1081,7 +1081,7 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
                         }
                         else
                         {
-                            await _jsModule.InvokeVoidAsync("showAlert", "Status Might've Updated from Another User, Please Refresh Your Page !");
+                            await _jsModule.InvokeVoidAsync("showAlert", $"Status Might've Updated from Another User, Please Refresh Your Page : Details {res.ErrorCode} : {res.ErrorMessage} !");
                         }
 
                         isLoading = false;

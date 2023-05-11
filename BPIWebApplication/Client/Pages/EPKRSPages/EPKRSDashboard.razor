@@ -53,61 +53,140 @@ else
             
             
             <div class="container-fluid">
-                @*<div class="d-flex flex-column align-items-center">
-                    <div>
-                    </div>
-                    <div class="border border-2 my-3 p-2">
-                        <h5 class="float-lg-end"><b>Ongoing EPKRS Document</b></h5>
-                        <ul class="nav nav-pills flex-column flex-sm-row" id="myTab" role="tablist">
-                            <li class="nav-item">
-                                <a class="nav-link active" id="itemcase-tab" data-toggle="tab" href="#itemcase" role="tab" aria-controls="itemcase" aria-selected="true">Item Case &lt;  of  &gt;</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" id="incac-tab" data-toggle="tab" href="#incac" role="tab" aria-controls="incac" aria-selected="false">Incident/Accident &lt;  of  &gt;</a>
-                            </li>
-                        </ul>
+                
+                @if (activeUser.location.Equals("") && LoginService.activeUser.userPrivileges.Contains("XP"))
+                {
 
-                        <div class="tab-content" id="myTabContent">
-                            <div class="tab-pane fade show active" id="itemcase" role="tabpanel" aria-labelledby="itemcase-tab">
-                                @if (checkItemCaseData())
-                                {
-                                    
-                                }
-                                else
-                                {
-                                    <p class="fw-bold text-center">. . . There is no Document . . .</p>
-                                }
-                            </div>
+                    <div class="row mt-3">
+                    
+                        <div class="col p-3">
+                            <div id="accordionStats" style="width: 100%;">
 
-                            <div class="tab-pane fade" id="incac" role="tabpanel" aria-labelledby="incac-tab">
-                                @if (checkIncidentAccidentData())
-                                {
+                                <div class="card" style="width: 100%;">
+                                    <div class="card-header" id="epkrsstats">
+                                        <div class="border border-1">
+                                            <button id="epkrsstatstitle" class="btn w-100" data-toggle="collapse" data-target="#epkrsstatsdata" aria-expanded="true" aria-controls="epkrsstatsdata" @onclick="initializeChart">
+                                                <b>EPKRS General Statistics</b>
+                                            </button>
+                                        </div>
+                                    </div>
 
-                                }
-                                else
-                                {
-                                    <p class="fw-bold text-center">. . . There is no Document . . .</p>
-                                }
+                                    <div id="epkrsstatsdata" class="collapse" aria-labelledby="epkrsstatstitle" data-parent="#accordionStats">
+                                        <div class="card-body">
+
+                                            @if (previewGeneralStatistics != null)
+                                            {
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-hover" style="width: 100%;">
+                                                        <thead>
+                                                            <tr>
+                                                                <th class="text-center align-middle text-wrap" style="width: 17%;">Reporting Type</th>
+                                                                <th class="text-center align-middle text-wrap" style="width: 17%;">Risk Type</th>
+                                                                <th class="text-center align-middle text-wrap" style="width: 8%;">Total Reports</th>
+                                                                <th class="text-center align-middle text-wrap" style="width: 8%;">Open Reports</th>
+                                                                <th class="text-center align-middle text-wrap" style="width: 8%;">Approved Reports</th>
+                                                                <th class="text-center align-middle text-wrap" style="width: 8%;">On Progress Reports</th>
+                                                                <th class="text-center align-middle text-wrap" style="width: 8%;">Closed Reports</th>
+                                                                <th class="text-center align-middle text-wrap" style="width: 13%;">Report Total Value (Rp.)</th>
+                                                                <th class="text-center align-middle text-wrap" style="width: 13%;">Report Return Value (Rp.)</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach (var stat in previewGeneralStatistics)
+                                                            {
+                                                                <tr>
+                                                                    <td class="text-center align-middle text-wrap">
+                                                                        @if (EPKRSService.reportingTypes.SingleOrDefault(x => x.ReportingID.Equals(stat.ReportingID)) != null)
+                                                                            @(EPKRSService.reportingTypes.SingleOrDefault(x => x.ReportingID.Equals(stat.ReportingID)).ReportingDescription)
+                                                                        else
+                                                                            @stat.ReportingID
+                                                                    </td>
+                                                                    <td class="text-center align-middle text-wrap">
+                                                                        @if (EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(stat.RiskID)) != null)
+                                                                            @(EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(stat.RiskID)).RiskDescription)
+                                                                        else
+                                                                            @stat.ReportingID
+                                                                    </td>
+                                                                    <td class="text-center align-middle text-wrap">@stat.ReportTotalDocuments.ToString("N0")</td>
+                                                                    <td class="text-center align-middle text-wrap">@stat.ReportTotalOpenDocuments.ToString("N0")</td>
+                                                                    <td class="text-center align-middle text-wrap">@stat.ReportTotalApprovedDocuments.ToString("N0")</td>
+                                                                    <td class="text-center align-middle text-wrap">@stat.ReportTotalOnProgressDocuments.ToString("N0")</td>
+                                                                    <td class="text-center align-middle text-wrap">@stat.ReportTotalClosedDocuments.ToString("N0")</td>
+                                                                    <td class="text-center align-middle text-wrap">Rp. @stat.ReportTotalValue.ToString("N0") ,-</td>
+                                                                    <td class="text-center align-middle text-wrap">Rp. @stat.ReportReturnValue.ToString("N0") ,-</td>
+                                                                </tr>
+                                                            }
+                                                        </tbody>
+                                                        <tfoot>
+                                                            <tr>
+                                                                <td class="text-center align-middle text-wrap fw-bold" colspan="2">Grand Total</td>
+                                                                <td class="text-center align-middle text-wrap fw-bold">@previewGeneralStatistics.Sum(x => x.ReportTotalDocuments).ToString("N0")</td>
+                                                                <td class="text-center align-middle text-wrap fw-bold">@previewGeneralStatistics.Sum(x => x.ReportTotalOpenDocuments).ToString("N0")</td>
+                                                                <td class="text-center align-middle text-wrap fw-bold">@previewGeneralStatistics.Sum(x => x.ReportTotalApprovedDocuments).ToString("N0")</td>
+                                                                <td class="text-center align-middle text-wrap fw-bold">@previewGeneralStatistics.Sum(x => x.ReportTotalOnProgressDocuments).ToString("N0")</td>
+                                                                <td class="text-center align-middle text-wrap fw-bold">@previewGeneralStatistics.Sum(x => x.ReportTotalClosedDocuments).ToString("N0")</td>
+                                                                <td class="text-center align-middle text-wrap fw-bold">Rp. @previewGeneralStatistics.Sum(x => x.ReportTotalValue).ToString("N0") ,-</td>
+                                                                <td class="text-center align-middle text-wrap fw-bold">Rp. @previewGeneralStatistics.Sum(x => x.ReportReturnValue).ToString("N0") ,-</td>
+                                                            </tr>
+                                                        </tfoot>
+                                                    </table>
+                                                </div>
+                                            }
+
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
+
                     </div>
-                </div>*@
-                <div class="row mt-3">
-                    <div class="col col-xs-12 col-sm-12 col-md-8 col-lg-9 p-3">
-                        <div class="container w-100 h-100 border border-2 p-2">
-                            <div class="d-flex flex-column align-items-center">
-                                <h5><b>EPKRS Monitoring Panel</b></h5>
+                
+                    <div class="row">
+
+                        <div class="col p-3">
+                            <div id="accordionPanel" style="width: 100%;">
+
+                                <div class="card" style="width: 100%;">
+                                    <div class="card-header" id="epkrsmpanel">
+                                        <div class="border border-1">
+                                            <button id="epkrsmpaneltitle" class="btn w-100" data-toggle="collapse" data-target="#epkrsmpaneldata" aria-expanded="true" aria-controls="epkrsmpaneldata" @onclick="initializeChart">
+                                                <b>EPKRS Monitoring Panel</b>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div id="epkrsmpaneldata" class="collapse" aria-labelledby="epkrsmpaneltitle" data-parent="#accordionPanel">
+                                        <div class="card-body">
+
+                                            <div class="row">
+                                                <div class="col align-middle text-center">
+                                                    <canvas id="topLocationReportStats" class="border border-2 p-1 w-100"></canvas>
+                                                </div>
+                                                <div class="col align-middle text-center">
+                                                    <canvas id="itemCategoryStats" class="border border-2 p-1 w-100"></canvas>
+                                                </div>
+                                            </div>
+
+                                            <div class="row my-2">
+                                                <div class="col align-middle text-center">
+                                                    <canvas id="itemCaseValueStats" class="border border-2 p-1 w-100"></canvas>
+                                                </div>
+                                                <div class="col align-middle text-center">
+                                                    <canvas id="itemCaseCategoryStats" class="border border-2 p-1 w-100"></canvas>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
+
                     </div>
-                    <div class="col col-xs-12 col-sm-12 col-md-4 col-lg-3 p-3">
-                        <div class="container w-100 h-100 border border-2 p-2">
-                            <div class="d-flex flex-column align-items-center">
-                                <h5><b>EPKRS General Statistics</b></h5>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                }
+
 
                 <div class="row">
                     <div class="col">
@@ -115,10 +194,10 @@ else
                             <h5 class="float-lg-end"><b>Ongoing EPKRS Document</b></h5>
                             <ul class="nav nav-pills flex-column flex-sm-row" id="myTab" role="tablist">
                                 <li class="nav-item">
-                                    <a class="nav-link active" id="itemcase-tab" data-toggle="tab" href="#itemcase" role="tab" aria-controls="itemcase" aria-selected="true">Item Case &lt;  of  &gt;</a>
+                                    <a class="nav-link active" id="itemcase-tab" data-toggle="tab" href="#itemcase" role="tab" aria-controls="itemcase" aria-selected="true">Item Case &lt; @itemCasePageActive of @itemCaseNumberofPages &gt;</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" id="incac-tab" data-toggle="tab" href="#incac" role="tab" aria-controls="incac" aria-selected="false">Incident/Accident &lt;  of  &gt;</a>
+                                    <a class="nav-link" id="incac-tab" data-toggle="tab" href="#incac" role="tab" aria-controls="incac" aria-selected="false">Incident/Accident &lt; @incidentAccidentPageActive of @incidentAccidentNumberofPages &gt;</a>
                                 </li>
                             </ul>
 
@@ -160,7 +239,15 @@ else
                                                                     <b> Document Status : </b> @itemCase.itemCase.DocumentStatus
                                                                 </p>
                                                                 <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#itemCasePreviewModal" @onclick="(() => setItemCasePreviewData(itemCase))"><i class="oi oi-document"></i> Preview Document</button>
-                                                                <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal" @onclick="(async () => await setDocumentDiscussionPreviewData(itemCase.itemCase.DocumentID, itemCase.itemCase.SiteReporter))"><i class="oi oi-chat"></i> Discussion Panel</button>
+                                                                <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal" @onclick="(async () => await setDocumentDiscussionPreviewData(itemCase.itemCase.DocumentID, itemCase.itemCase.SiteReporter))"><i class="oi oi-chat"></i> Discussion Panel
+                                                                    @{
+                                                                        var unreadCountA = EPKRSService.documentDiscussions.ExceptBy(EPKRSService.documentDiscussionReadHistories.Select(f => f.rowGuid), g => g.rowGuid).Where(h => h.DocumentID.Equals(itemCase.itemCase.DocumentID)).ToList().Count;
+                                                                    }
+                                                                    @if (unreadCountA > 0)
+                                                                    {   
+                                                                        <span class="badge bg-danger text-white">@unreadCountA.ToString("N0")</span>
+                                                                    }
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -175,6 +262,25 @@ else
                                 </div>
 
                                 <div class="tab-pane fade" id="incac" role="tabpanel" aria-labelledby="incac-tab">
+
+                                    <form @onsubmit="incidentAccidentFilter">
+                                        <div class="input-group my-3">
+                                            <div class="input-group-prepend">
+                                                <select class="form-select" @bind="incidentAccidentFilterType">
+                                                    <option hidden disabled value="">Filter By</option>
+                                                    <option value="ID">EPKRS ID</option>
+                                                    <option value="LOC">Location</option>
+                                                    <option value="STATUS">Status</option>
+                                                </select>
+                                            </div>
+                                            <input type="text" class="form-control" aria-label="Text input with dropdown button" @bind-value="incidentAccidentFilterValue">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary fw-bold" type="button" disabled="@(incidentAccidentFilterActive ? null : "disabled")" @onclick="resetIncidentAccidentFilter">Reset</button>
+                                            </div>
+                                        </div>
+                                        <input type="submit" hidden>
+                                    </form>
+                                    
                                     @if (checkIncidentAccidentData())
                                     {
                                         <div class="m-2 p-1">
@@ -211,12 +317,48 @@ else
                                                                     <b> Document Status : </b> @incidentAccident.incidentAccident.DocumentStatus
                                                                 </p>
                                                                 <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#incidentAccidentPreviewModal" @onclick="(() => setIncidentAccidentPreviewData(incidentAccident))"><i class="oi oi-document"></i> Preview Document</button>
-                                                                <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal" @onclick="(async () => await setDocumentDiscussionPreviewData(incidentAccident.incidentAccident.DocumentID, incidentAccident.incidentAccident.SiteReporter))"><i class="oi oi-chat"></i> Discussion Panel</button>
+                                                                <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal" @onclick="(async () => await setDocumentDiscussionPreviewData(incidentAccident.incidentAccident.DocumentID, incidentAccident.incidentAccident.SiteReporter))"><i class="oi oi-chat"></i> Discussion Panel
+                                                                    @{
+                                                                        var unreadCountB = EPKRSService.documentDiscussions.ExceptBy(EPKRSService.documentDiscussionReadHistories.Select(f => f.rowGuid), g => g.rowGuid).Where(h => h.DocumentID.Equals(incidentAccident.incidentAccident.DocumentID)).ToList().Count;
+                                                                    }
+                                                                    @if (unreadCountB > 0)
+                                                                    {
+                                                                        <span class="badge bg-danger text-white">@unreadCountB.ToString("N0")</span>
+                                                                    }
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             }
+
+                                            <nav aria-label="Incident Accident Pagination">
+                                                <ul class="pagination pagination-sm justify-content-center my-2">
+                                                    @if ((incidentAccidentPageActive - 1) > 0)
+                                                    {
+                                                        <li class="page-item px-1 paging-style" @onclick="(() => incidentAccidentPageSelect((incidentAccidentPageActive - 1)))"><span class="page-link">Previous</span></li>
+                                                        <li class="page-item paging-style" @onclick="(() => incidentAccidentPageSelect((incidentAccidentPageActive - 1)))"><span class="page-link">@(incidentAccidentPageActive - 1)</span></li>
+                                                    }
+                                                    else
+                                                    {
+                                                        <li class="page-item px-1 disabled dis-paging-style"><span class="page-link">Previous</span></li>
+                                                        <li class="page-item disabled dis-paging-style"><span class="page-link">. . .</span></li>
+                                                    }
+
+                                                    <li class="page-item active dis-paging-style"><span class="page-link">@incidentAccidentPageActive</span></li>
+
+                                                    @if (incidentAccidentPageActive < incidentAccidentNumberofPages)
+                                                    {
+                                                        <li class="page-item paging-style" @onclick="(() => incidentAccidentPageSelect((incidentAccidentPageActive + 1)))"><span class="page-link">@(incidentAccidentPageActive + 1)</span></li>
+                                                        <li class="page-item px-1 paging-style" @onclick="(() => incidentAccidentPageSelect((incidentAccidentPageActive + 1)))"><span class="page-link">Next</span></li>
+                                                    }
+                                                    else
+                                                    {
+                                                        <li class="page-item disabled dis-paging-style"><span class="page-link">. . .</span></li>
+                                                        <li class="page-item px-1 disabled dis-paging-style"><span class="page-link">Next</span></li>
+                                                    }
+                                                </ul>
+                                            </nav>
                                         </div>
                                     }
                                     else
@@ -228,6 +370,7 @@ else
                         </div>
                     </div>
                 </div>
+
             </div>
         }   
     }
@@ -400,12 +543,32 @@ else
                 </div>
             </div>
             <div class="modal-footer cus-bg">
-                <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Approve"))" disabled="@(previewItemCase.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-task"></i> Approve Report</button>
-                <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#onprogressModal" @onclick="@(() => setDocumentApprovalData("OnProgress"))" disabled="@(previewItemCase.DocumentStatus.Equals("Approved") ? null : "disabled")"><i class="oi oi-flag"></i> Report On Progress</button>
-                <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Close"))"><i class="oi oi-lock-locked" disabled="@(previewItemCase.DocumentStatus.Equals("OnProgress") ? null : "disabled")"></i> Close Report</button>
-                <button type="button" class="btn btn-dark mt-1 fw-bold" data-dismiss="modal" data-target="#itemCasePreviewModal" @onclick="@(() => redirectDocumentEdit("ITEMC"))" disabled="@(previewItemCase.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-pencil"></i> Edit</button>
-                <button type="button" class="btn btn-dark mt-1 fw-bold" data-dismiss="modal" data-target="#itemCasePreviewModal" @onclick="@(() => redirectDocumentEdit("ITEMC"))"><i class="oi oi-pencil"></i> Edit</button>
-                <button type="button" class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal"><i class="oi oi-chat"></i> Discussion Panel</button>
+                @if (LoginService.activeUser.userPrivileges.Contains("AP"))
+                {
+                    <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Approve"))" disabled="@(previewItemCase.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-task"></i> Approve Report</button>
+                    <button type="button" class="btn btn-dark mt-1 fw-bold" data-dismiss="modal" data-target="#itemCasePreviewModal" @onclick="@(() => redirectDocumentEdit("ITEMC"))" disabled="@(previewItemCase.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-pencil"></i> Edit</button>
+                }
+                @if (LoginService.activeUser.userPrivileges.Contains("CF"))
+                {
+                    <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#onprogressModal" @onclick="@(() => setDocumentApprovalData("OnProgress"))" disabled="@(previewItemCase.DocumentStatus.Equals("Approved") ? null : "disabled")"><i class="oi oi-flag"></i> Report On Progress</button>
+                }
+                @if (LoginService.activeUser.userPrivileges.Contains("RL"))
+                {
+                    <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Close"))"><i class="oi oi-lock-locked" disabled="@(previewItemCase.DocumentStatus.Equals("OnProgress") ? null : "disabled")"></i> Close Report</button>
+                }
+                @if (LoginService.activeUser.userPrivileges.Contains("ED"))
+                {
+                    <button type="button" class="btn btn-dark mt-1 fw-bold" data-dismiss="modal" data-target="#itemCasePreviewModal" @onclick="@(() => redirectDocumentEdit("ITEMC"))"><i class="oi oi-pencil"></i> Edit</button>
+                }
+                <button type="button" class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal"><i class="oi oi-chat"></i> Discussion Panel 
+                    @{
+                        var unreadCountC = EPKRSService.documentDiscussions.ExceptBy(EPKRSService.documentDiscussionReadHistories.Select(f => f.rowGuid), g => g.rowGuid).Where(h => h.DocumentID.Equals(previewItemCase.DocumentID)).ToList().Count;
+                    }
+                    @if (unreadCountC > 0)
+                    {
+                        <span class="badge bg-danger text-white">@unreadCountC.ToString("N0")</span>
+                    }
+                </button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#itemCasePreviewModal"><i class="oi oi-x"></i> Close</button>
             </div>
         </div>
@@ -571,12 +734,32 @@ else
 
             </div>
             <div class="modal-footer cus-bg">
-                <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Approve"))" disabled="@(previewIncidentAccident.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-task"></i> Approve Report</button>
-                <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#onprogressModal" @onclick="@(() => setDocumentApprovalData("OnProgress"))" disabled="@(previewIncidentAccident.DocumentStatus.Equals("Approved") ? null : "disabled")"><i class="oi oi-flag"></i> Report On Progress</button>
-                <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Close"))"><i class="oi oi-lock-locked" disabled="@(previewIncidentAccident.DocumentStatus.Equals("OnProgress") ? null : "disabled")"></i> Close Report</button>
-                <button type="button" class="btn btn-dark mt-1 fw-bold" data-dismiss="modal" data-target="#incidentAccidentPreviewModal" @onclick="@(() => redirectDocumentEdit("INCAC"))" disabled="@(previewIncidentAccident.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-pencil"></i> Edit</button>
-                <button type="button" class="btn btn-dark mt-1 fw-bold" data-dismiss="modal" data-target="#incidentAccidentPreviewModal" @onclick="@(() => redirectDocumentEdit("ITEMC"))"><i class="oi oi-pencil"></i> Edit</button>
-                <button type="button" class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal" @onclick="(async () => await setDocumentDiscussionPreviewData(previewIncidentAccident.DocumentID, previewIncidentAccident.SiteReporter))"><i class="oi oi-chat"></i> Discussion Panel</button>
+                @if (LoginService.activeUser.userPrivileges.Contains("AP"))
+                {
+                    <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Approve"))" disabled="@(previewIncidentAccident.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-task"></i> Approve Report</button>
+                    <button type="button" class="btn btn-dark mt-1 fw-bold" data-dismiss="modal" data-target="#incidentAccidentPreviewModal" @onclick="@(() => redirectDocumentEdit("INCAC"))" disabled="@(previewIncidentAccident.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-pencil"></i> Edit</button>
+                }
+                @if (LoginService.activeUser.userPrivileges.Contains("CF"))
+                {
+                    <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#onprogressModal" @onclick="@(() => setDocumentApprovalData("OnProgress"))" disabled="@(previewIncidentAccident.DocumentStatus.Equals("Approved") ? null : "disabled")"><i class="oi oi-flag"></i> Report On Progress</button>
+                }
+                @if (LoginService.activeUser.userPrivileges.Contains("RL"))
+                {
+                    <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Close"))" disabled="@(previewIncidentAccident.DocumentStatus.Equals("OnProgress") ? null : "disabled")"><i class="oi oi-lock-locked"></i> Close Report</button>
+                }
+                @if (LoginService.activeUser.userPrivileges.Contains("ED"))
+                {
+                    <button type="button" class="btn btn-dark mt-1 fw-bold" data-dismiss="modal" data-target="#incidentAccidentPreviewModal" @onclick="@(() => redirectDocumentEdit("INCAC"))"><i class="oi oi-pencil"></i> Edit</button>
+                }
+                <button type="button" class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal" @onclick="(async () => await setDocumentDiscussionPreviewData(previewIncidentAccident.DocumentID, previewIncidentAccident.SiteReporter))"><i class="oi oi-chat"></i> Discussion Panel 
+                    @{
+                        var unreadCountD = EPKRSService.documentDiscussions.ExceptBy(EPKRSService.documentDiscussionReadHistories.Select(f => f.rowGuid), g => g.rowGuid).Where(h => h.DocumentID.Equals(previewIncidentAccident.DocumentID)).ToList().Count;
+                    }
+                    @if (unreadCountD > 0) 
+                    {
+                        <span class="badge bg-danger text-white">@unreadCountD.ToString("N0")</span>
+                    }
+                </button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#incidentAccidentPreviewModal"><i class="oi oi-x"></i> Close</button>
             </div>
         </div>
@@ -595,30 +778,33 @@ else
             </div>
             <div class="modal-body">
 
-                <div class="card">
-                    <div class="card-header">
-                        Let&quot;s Start a New Discussion
-                    </div>
-                    <div class="card-body">
-                        <EditForm Model="@uploadDocumentDiscussion" OnSubmit="createDocumentDiscussion">
-                            <InputTextArea id="cronology" @bind-Value="uploadDocumentDiscussion.Comment" placeholder="Write a Comment .." class="form-control mb-3" readonly="@(isLoading || triggerReplyButton ? "readonly" : null)"></InputTextArea>
+                @if (LoginService.activeUser.userPrivileges.Contains("CR"))
+                {
+                    <div class="card">
+                        <div class="card-header">
+                            Let&quot;s Start a New Discussion
+                        </div>
+                        <div class="card-body">
+                            <EditForm Model="@uploadDocumentDiscussion" OnSubmit="createDocumentDiscussion">
+                                <InputTextArea id="cronology" @bind-Value="uploadDocumentDiscussion.Comment" placeholder="Write a Comment .." class="form-control mb-3" readonly="@(isLoading || triggerReplyButton ? "readonly" : null)"></InputTextArea>
 
-                            @if (checkFileDiscussUpload())
-                            {
-                                <ul class="list-group mb-3">
-                                    @foreach (var attachedFile in fileDiscussionUpload)
-                                    {
-                                        <li class="list-group-item">@attachedFile.fileName.Split("!_!")[1]</li>
-                                    }
-                                </ul>
-                            }
+                                @if (checkFileDiscussUpload())
+                                {
+                                    <ul class="list-group mb-3">
+                                        @foreach (var attachedFile in fileDiscussionUpload)
+                                        {
+                                            <li class="list-group-item">@attachedFile.fileName.Split("!_!")[1]</li>
+                                        }
+                                    </ul>
+                                }
 
-                            <label for="discussionUploadFile" class="btn btn-primary-cus @(triggerReplyButton.Equals(false) ? null : "disabled")"><i class="oi oi-paperclip"></i> Attach</label>
-                            <InputFile id="discussionUploadFile" accept=".pdf" multiple hidden disabled="@(isLoading || triggerReplyButton ? "disabled" : null)" OnChange="@((InputFileChangeEventArgs args) => UploadHandleSelection(args, "New"))"></InputFile>
-                            <button type="submit" class="btn btn-primary-cus" disabled="@(isLoading || triggerReplyButton ? "disabled" : null)"><i class="oi oi-chat"></i> Comment</button>
-                        </EditForm>
+                                <label for="discussionUploadFile" class="btn btn-primary-cus @(triggerReplyButton.Equals(false) ? null : "disabled")"><i class="oi oi-paperclip"></i> Attach</label>
+                                <InputFile id="discussionUploadFile" accept=".pdf" multiple hidden disabled="@(isLoading || triggerReplyButton ? "disabled" : null)" OnChange="@((InputFileChangeEventArgs args) => UploadHandleSelection(args, "New"))"></InputFile>
+                                <button type="submit" class="btn btn-primary-cus" disabled="@(isLoading || triggerReplyButton ? "disabled" : null)"><i class="oi oi-chat"></i> Comment</button>
+                            </EditForm>
+                        </div>
                     </div>
-                </div>
+                }
                 
                 @if (checkDocumentDiscussions())
                 {
@@ -636,43 +822,47 @@ else
                                     <p>@discussion.Comment</p>
                                     <footer class="blockquote-footer">Commented by @discussion.UserName on @discussion.CommentDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")</footer>
                                 </blockquote>
-                                @if (!triggerReplyButton)
+
+                                @if (LoginService.activeUser.userPrivileges.Contains("CR"))
                                 {
-                                    <p class="mb-0 mt-3">
-                                        <button class="btn btn-primary-cus" type="button" disabled="@(isLoading ? "disabled" : null)" @onclick="(() => triggerReplyButton = !triggerReplyButton)" data-toggle="collapse" data-target="#@discussion.formId" aria-expanded="false" aria-controls="@discussion.formId">
-                                            <i class="oi oi-chat"></i> Reply
-                                        </button>
-                                    </p>
+                                    @if (!triggerReplyButton)
+                                    {
+                                        <p class="mb-0 mt-3">
+                                            <button class="btn btn-primary-cus" type="button" disabled="@(isLoading ? "disabled" : null)" @onclick="(() => triggerReplyButton = !triggerReplyButton)" data-toggle="collapse" data-target="#@discussion.formId" aria-expanded="false" aria-controls="@discussion.formId">
+                                                <i class="oi oi-chat"></i> Reply
+                                            </button>
+                                        </p>
+                                    }
+
+                                    <div class="collapse" id="@discussion.formId">
+                                        <div class="card card-body">
+                                            <EditForm Model="@uploadReplyDocumentDiscussion" OnSubmit="(() => replyDiscussion(discussion))">
+                                                <InputTextArea id="cronology" @bind-Value="uploadReplyDocumentDiscussion.Comment" placeholder="Write a Comment .." class="form-control mb-3" readonly="@(isLoading || !triggerReplyButton ? "readonly" : null)"></InputTextArea>
+
+                                                @if (checkReplyFileDiscussUpload())
+                                                {
+                                                    <ul class="list-group mb-3">
+                                                        @foreach (var attachedFile in fileReplyDiscussionUpload)
+                                                        {
+                                                            <li class="list-group-item">@attachedFile.fileName.Split("!_!")[1]</li>
+                                                        }
+                                                    </ul>
+                                                }
+
+                                                <button class="btn btn-secondary" type="button" disabled="@(isLoading ? "disabled" : null)" @onclick="(() => triggerReplyButton = !triggerReplyButton)" data-toggle="collapse" data-target="#@discussion.formId" aria-expanded="false" aria-controls="@discussion.formId">
+                                                    <i class="oi oi-collapse-up"></i> Hide
+                                                </button>
+                                                <label for="discussionReplyUploadFile" class="btn btn-primary-cus @(triggerReplyButton.Equals(false) ? "disabled" : null)"><i class="oi oi-paperclip"></i> Reply Attach</label>
+                                                <InputFile id="discussionReplyUploadFile" accept=".pdf" multiple hidden disabled="@(isLoading || !triggerReplyButton ? "disabled" : null)" OnChange="@((InputFileChangeEventArgs args) => UploadHandleSelection(args, "Reply"))"></InputFile>
+                                                <button type="submit" class="btn btn-primary-cus" disabled="@(isLoading || !triggerReplyButton ? "disabled" : null)"><i class="oi oi-chat"></i> Reply Comment</button>
+                                            </EditForm>
+                                        </div>
+                                    </div>
                                 }
 
-                                <div class="collapse" id="@discussion.formId">
-                                    <div class="card card-body">
-                                        <EditForm Model="@uploadReplyDocumentDiscussion" OnSubmit="(() => replyDiscussion(discussion))">
-                                            <InputTextArea id="cronology" @bind-Value="uploadReplyDocumentDiscussion.Comment" placeholder="Write a Comment .." class="form-control mb-3" readonly="@(isLoading || !triggerReplyButton ? "readonly" : null)"></InputTextArea>
-
-                                            @if (checkReplyFileDiscussUpload())
-                                            {
-                                                <ul class="list-group mb-3">
-                                                    @foreach (var attachedFile in fileReplyDiscussionUpload)
-                                                    {
-                                                        <li class="list-group-item">@attachedFile.fileName.Split("!_!")[1]</li>
-                                                    }
-                                                </ul>
-                                            }
-
-                                            <button class="btn btn-secondary" type="button" disabled="@(isLoading ? "disabled" : null)" @onclick="(() => triggerReplyButton = !triggerReplyButton)" data-toggle="collapse" data-target="#@discussion.formId" aria-expanded="false" aria-controls="@discussion.formId">
-                                                <i class="oi oi-collapse-up"></i> Hide
-                                            </button>
-                                            <label for="discussionReplyUploadFile" class="btn btn-primary-cus @(triggerReplyButton.Equals(false) ? "disabled" : null)"><i class="oi oi-paperclip"></i> Reply Attach</label>
-                                            <InputFile id="discussionReplyUploadFile" accept=".pdf" multiple hidden disabled="@(isLoading || !triggerReplyButton ? "disabled" : null)" OnChange="@((InputFileChangeEventArgs args) => UploadHandleSelection(args, "Reply"))"></InputFile>
-                                            <button type="submit" class="btn btn-primary-cus" disabled="@(isLoading || !triggerReplyButton ? "disabled" : null)"><i class="oi oi-chat"></i> Reply Comment</button>
-                                        </EditForm>
-                                    </div>
-                                </div>
-                                
-                                @if (EPKRSService.documentDiscussions.Any(x => x.ReplyRowGuid.Equals(discussion.rowGuid)))
+                                @if (previewDocumentDiscussion.Any(x => x.ReplyRowGuid.Equals(discussion.rowGuid)))
                                 {
-                                    @foreach (var reply in EPKRSService.documentDiscussions.Where(x => x.ReplyRowGuid.Equals(discussion.rowGuid)).OrderByDescending(x => x.CommentDate))
+                                    @foreach (var reply in previewDocumentDiscussion.Where(x => x.ReplyRowGuid.Equals(discussion.rowGuid)).OrderByDescending(x => x.CommentDate))
                                     {
                                         <div class="card mt-2">
                                             <div class="card-body">

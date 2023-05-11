@@ -85,6 +85,14 @@
         public string ReplyRowGuid { get; set; } = string.Empty;
     }
 
+    public class DocumentDiscussionReadHistory
+    {
+        public string rowGuid { get; set; } = string.Empty;
+        public string DocumentID { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
+        public DateTime ReadDate { get; set; } = DateTime.Now;
+    }
+
     public class DocumentApproval
     {
         public string DocumentID { get; set; } = string.Empty;

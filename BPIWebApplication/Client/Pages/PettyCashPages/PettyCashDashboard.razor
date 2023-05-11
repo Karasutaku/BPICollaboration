@@ -1420,7 +1420,16 @@ else
                                                                 @line.AccountNo
                                                             }
                                                         </td>
-                                                        <td class="text-left align-middle px-3 text-wrap">@line.Details</td>
+                                                        <td class="text-left align-middle px-3 text-wrap">
+                                                            @if (reimburse.ReimburseStatus.Contains("Confirmed"))
+                                                            {
+                                                                <input type="text" class="form-control w-100 h-100" @bind-value="line.Details" />                                                            
+                                                            }
+                                                            else
+                                                            {
+                                                                @line.Details
+                                                            }
+                                                        </td>
                                                         <td class="cus-text-right align-middle px-3">@line.Amount.ToString("N0")</td>
                                                         <td class="cus-text-right align-middle px-3">
                                                             @if (reimburse.ReimburseStatus.Contains("Confirmed"))

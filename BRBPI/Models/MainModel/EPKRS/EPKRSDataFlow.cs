@@ -1,4 +1,5 @@
 ﻿using BPIBR.Models.DbModel;
+using System.Data;
 
 namespace BPIBR.Models.MainModel.EPKRS
 {
@@ -45,5 +46,17 @@ namespace BPIBR.Models.MainModel.EPKRS
         public string reportingType { get; set; } = string.Empty;
         public DocumentApproval approval { get; set; } = new();
         public ReportingExtended extendedData { get; set; } = new();
+    }
+
+    public class DocumentDiscussionReadStream
+    {
+        public string LocationID { get; set; } = string.Empty;
+        public List<DocumentDiscussionReadHistory> Data { get; set; } = new();
+    }
+
+    public class DocumentListParams
+    {
+        public string LocationID { get; set; } = string.Empty;
+        public string DocumentID { get; set; } = string.Empty;
     }
 }

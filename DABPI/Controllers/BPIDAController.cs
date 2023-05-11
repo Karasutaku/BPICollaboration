@@ -20,6 +20,7 @@ using BPILibrary;
 using BPIDA.Models.MainModel.EPKRS;
 using System.Drawing;
 using System.Collections.Immutable;
+using System.Reflection.Metadata;
 
 namespace BPIDA.Controllers
 {
@@ -4360,6 +4361,7 @@ namespace BPIDA.Controllers
             try
             {
                 createAdvanceData(data);
+                createAdvanceLine(CommonLibrary.ListToDataTable<AdvanceLine>(data.Data.lines, data.userEmail, data.userAction, data.userActionDate, "AdvanceLine"));
 
                 res.Data = data;
                 res.isSuccess = true;
@@ -4429,11 +4431,13 @@ namespace BPIDA.Controllers
         public async Task<IActionResult> createExpenseDataTable(QueryModel<Expense> data)
         {
             ResultModel<QueryModel<Expense>> res = new ResultModel<QueryModel<Expense>>();
+            List<ExpenseAttachmentLine> dtLine = new();
             IActionResult actionResult = null;
 
             try
             {
                 createExpenseData(data);
+                createExpenseLine(CommonLibrary.ListToDataTable<ExpenseLine>(data.Data.lines, data.userEmail, data.userAction, data.userActionDate, "ExpenseLine"));
 
                 res.Data = data;
                 res.isSuccess = true;
@@ -4562,6 +4566,7 @@ namespace BPIDA.Controllers
             try
             {
                 createReimburseData(data);
+                createReimburseLine(CommonLibrary.ListToDataTable<ReimburseLine>(data.Data.lines, data.userEmail, data.userAction, data.userActionDate, "ReimburseLine"));
 
                 res.Data = data;
                 res.isSuccess = true;
@@ -9001,6 +9006,47 @@ namespace BPIDA.Controllers
             return flag;
         }
 
+        internal bool createEPKRSDocumentDiscussionReadHistoryData(string location, DataTable data)
+        {
+            bool flag = false;
+            int conInt = 0;
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    // create and check schema table
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[createEPKRSDocumentDiscussionReadHistoryData]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@LocationID", location);
+                    command.Parameters.AddWithValue("@ReadHistories", data);
+
+                    int ret = command.ExecuteNonQuery();
+
+                    if (ret > 0)
+                        flag = true;
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return flag;
+        }
+
         internal bool createEPKRSDocumentApproval(QueryModel<DocumentApproval> data)
         {
             bool flag = false;
@@ -9287,6 +9333,42 @@ namespace BPIDA.Controllers
             return dt;
         }
 
+        internal DataTable getEPKRSItemRiskCategoryData()
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSItemRiskCategory]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
         internal DataTable getEPKRSItemCaseData(string location, string conditions, int pageNo, int rowPerPage)
         {
             DataTable dt = new DataTable("Data");
@@ -9477,6 +9559,230 @@ namespace BPIDA.Controllers
             }
 
             return dt;
+        }
+
+        internal DataTable getEPKRSDocumentDiscussionReadHistoryData(string location, string id)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSDocumentDiscussionReadHistoryData]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@LocationID", location);
+                    command.Parameters.AddWithValue("@DocumentID", id);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getEPKRSGeneralStatisticsData(string conditions)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSGeneralStatisticsData]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@Conditions", conditions);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getEPKRSItemCaseCategoryStatisticsData(string conditions)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSItemCaseCategoryStatisticsData]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@Conditions", conditions);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getEPKRSTopLocationReportStatisticsData(string conditions)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSTopLocationReportStatisticsData]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@Conditions", conditions);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getEPKRSItemCategoriesStatisticsData(string conditions)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSItemCategoriesStatisticsData]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@Conditions", conditions);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal int getEPKRSModuleNumberOfPageData(string TbName, string loc, string conditions, int rowPerPage)
+        {
+            int conInt = 0;
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSModulePageSize]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@TbName", TbName);
+                    command.Parameters.AddWithValue("@LocationID", loc);
+                    command.Parameters.AddWithValue("@Conditions", conditions);
+                    command.Parameters.AddWithValue("@RowPerPage", rowPerPage);
+
+                    var data = command.ExecuteScalar();
+                    conInt = Convert.ToInt32(data);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+            return conInt;
         }
 
         [HttpPost("createEPKRSItemCaseDocument")]
@@ -9685,6 +9991,46 @@ namespace BPIDA.Controllers
 
                         actionResult = Ok(res);
                     }
+                }
+                else
+                {
+                    res.Data = data;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Create Data Failed ! SP Fail to Execute";
+
+                    actionResult = Ok(res);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpPost("createEPKRSDocumentDiscussionReadHistory")]
+        public async Task<IActionResult> createEPKRSDocumentDiscussionReadHistory(QueryModel<DocumentDiscussionReadStream> data)
+        {
+            ResultModel<QueryModel<DocumentDiscussionReadStream>> res = new ResultModel<QueryModel<DocumentDiscussionReadStream>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                if (createEPKRSDocumentDiscussionReadHistoryData(data.Data.LocationID, CommonLibrary.ListToDataTable<DocumentDiscussionReadHistory>(data.Data.Data, data.userEmail, data.userAction, data.userActionDate, "tbParam")))
+                {
+                    res.Data = data;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
                 }
                 else
                 {
@@ -9963,6 +10309,60 @@ namespace BPIDA.Controllers
                     }
 
                     res.Data = riskTypeLines;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSItemRiskCategory")]
+        public async Task<IActionResult> getEPKRSItemRiskCategory()
+        {
+            ResultModel<List<ItemRiskCategory>> res = new ResultModel<List<ItemRiskCategory>>();
+            List<ItemRiskCategory> itemRiskCategoryLines = new List<ItemRiskCategory>();
+            DataTable dtItemRiskCategory = new DataTable("itemRiskCategory");
+            IActionResult actionResult = null;
+
+            try
+            {
+                dtItemRiskCategory = getEPKRSItemRiskCategoryData();
+
+                if (dtItemRiskCategory.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtItemRiskCategory.Rows)
+                    {
+                        ItemRiskCategory temp = new ItemRiskCategory();
+
+                        temp.ItemRiskCategoryID = dt["ItemRiskCategoryID"].ToString();
+                        temp.CategoryDescription = dt["CategoryDescription"].ToString();
+
+                        itemRiskCategoryLines.Add(temp);
+                    }
+
+                    res.Data = itemRiskCategoryLines;
                     res.isSuccess = true;
                     res.ErrorCode = "00";
                     res.ErrorMessage = "";
@@ -10317,6 +10717,136 @@ namespace BPIDA.Controllers
             return actionResult;
         }
 
+        [HttpPost("getEPKRSInitializationDocumentDiscussions")]
+        public async Task<IActionResult> getEPKRSInitializationDocumentDiscussions(List<DocumentListParams> param)
+        {
+            ResultModel<List<DocumentDiscussion>> res = new ResultModel<List<DocumentDiscussion>>();
+            res.Data = new();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var exec = Parallel.ForEach(param, new ParallelOptions { MaxDegreeOfParallelism = 4 }, (dt, i) =>
+                {
+                    List<DocumentDiscussion> documentDiscussions = new List<DocumentDiscussion>();
+                    DataTable dtDocumentDiscussion = new DataTable($"{dt.DocumentID}");
+
+                    dtDocumentDiscussion = getEPKRSDiscussionData(dt.LocationID, dt.DocumentID);
+
+                    if (dtDocumentDiscussion.Rows.Count > 0)
+                    {
+                        foreach (DataRow dta in dtDocumentDiscussion.Rows)
+                        {
+                            DocumentDiscussion temp1 = new DocumentDiscussion();
+
+                            temp1.rowGuid = dta["rowGuid"].ToString();
+                            temp1.DocumentID = dta["DocumentID"].ToString();
+                            temp1.UserName = dta["UserName"].ToString();
+                            temp1.CommentDate = Convert.ToDateTime(dta["CommentDate"]);
+                            temp1.Comment = dta["Comment"].ToString();
+                            temp1.isEdited = Convert.ToBoolean(dta["isEdited"]);
+                            temp1.ReplyRowGuid = dta["ReplyRowGuid"].ToString();
+
+                            documentDiscussions.Add(temp1);
+                        }
+
+                        res.Data.AddRange(documentDiscussions);
+                    }
+                });
+
+                if (exec.IsCompleted)
+                {
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "PARALLEL STOPED PREMATURELY";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpPost("getEPKRSDocumentDiscussionReadHistory")]
+        public async Task<IActionResult> getEPKRSDocumentDiscussionReadHistory(List<DocumentListParams> param)
+        {
+            ResultModel<List<DocumentDiscussionReadHistory>> res = new ResultModel<List<DocumentDiscussionReadHistory>>();
+            res.Data = new();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var exec = Parallel.ForEach(param, new ParallelOptions { MaxDegreeOfParallelism = 4 }, (dt, i) =>
+                {
+                    List<DocumentDiscussionReadHistory> documentDiscussionReadHistories = new List<DocumentDiscussionReadHistory>();
+                    DataTable dtDocumentDiscussionReadHistory = new DataTable($"{dt.DocumentID}");
+
+                    dtDocumentDiscussionReadHistory = getEPKRSDocumentDiscussionReadHistoryData(dt.LocationID, dt.DocumentID);
+
+                    if (dtDocumentDiscussionReadHistory.Rows.Count > 0)
+                    {
+                        foreach (DataRow dta in dtDocumentDiscussionReadHistory.Rows)
+                        {
+                            DocumentDiscussionReadHistory temp1 = new DocumentDiscussionReadHistory();
+
+                            temp1.rowGuid = dta["rowGuid"].ToString();
+                            temp1.DocumentID = dta["DocumentID"].ToString();
+                            temp1.UserName = dta["UserName"].ToString();
+                            temp1.ReadDate = Convert.ToDateTime(dta["ReadDate"]);
+
+                            documentDiscussionReadHistories.Add(temp1);
+                        }
+
+                        res.Data.AddRange(documentDiscussionReadHistories);
+                    }
+                });
+
+                if (exec.IsCompleted)
+                {
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "PARALLEL STOPED PREMATURELY";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
         [HttpGet("getEPKRSCaseAttachment/{param}")]
         public async Task<IActionResult> getEPKRSCaseAttachment(string param)
         {
@@ -10381,6 +10911,270 @@ namespace BPIDA.Controllers
             catch (Exception ex)
             {
                 res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSGeneralStatistics/{param}")]
+        public async Task<IActionResult> getEPKRSGeneralStatistics(string param)
+        {
+            ResultModel<List<EPKRSDocumentStatistics>> res = new ResultModel<List<EPKRSDocumentStatistics>>();
+            List<EPKRSDocumentStatistics> documentStatistics = new List<EPKRSDocumentStatistics>();
+            DataTable dtDocumentStatistics = new DataTable("documentStatistics");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string temp = CommonLibrary.Base64Decode(param);
+
+                dtDocumentStatistics = getEPKRSGeneralStatisticsData(temp);
+
+                if (dtDocumentStatistics.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtDocumentStatistics.Rows)
+                    {
+                        EPKRSDocumentStatistics temp1 = new EPKRSDocumentStatistics();
+
+                        temp1.RiskID = dt["RiskID"].ToString();
+                        temp1.ReportTotalDocuments = Convert.ToInt32(dt["TotalDocuments"]);
+                        temp1.ReportTotalOpenDocuments = Convert.ToInt32(dt["OpenDocuments"]);
+                        temp1.ReportTotalApprovedDocuments = Convert.ToInt32(dt["ApprovedDocuments"]);
+                        temp1.ReportTotalOnProgressDocuments = Convert.ToInt32(dt["OnProgressDocuments"]);
+                        temp1.ReportTotalClosedDocuments = Convert.ToInt32(dt["ClosedDocuments"]);
+                        temp1.ReportTotalValue = Convert.ToDecimal(dt["TotalValues"]);
+                        temp1.ReportingID = dt["ReportingType"].ToString();
+                        temp1.ReportReturnValue = Convert.ToDecimal(dt["ReturnValues"]);
+
+                        documentStatistics.Add(temp1);
+                    }
+
+                    res.Data = documentStatistics;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSItemCaseCategoryStatistics/{param}")]
+        public async Task<IActionResult> getEPKRSItemCaseCategoryStatistics(string param)
+        {
+            ResultModel<List<EPKRSItemCaseCategoryStatistics>> res = new ResultModel<List<EPKRSItemCaseCategoryStatistics>>();
+            List<EPKRSItemCaseCategoryStatistics> itemCaseCategoryStats = new List<EPKRSItemCaseCategoryStatistics>();
+            DataTable dtItemCaseCategoryStats = new DataTable("itemCaseCategoryStats");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string temp = CommonLibrary.Base64Decode(param);
+
+                dtItemCaseCategoryStats = getEPKRSItemCaseCategoryStatisticsData(temp);
+
+                if (dtItemCaseCategoryStats.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtItemCaseCategoryStats.Rows)
+                    {
+                        EPKRSItemCaseCategoryStatistics temp1 = new EPKRSItemCaseCategoryStatistics();
+
+                        temp1.ItemRiskCategoryID = dt["ItemRiskCategory"].ToString();
+                        temp1.TotalItemQty = Convert.ToInt32(dt["TotalItemQty"]);
+                        temp1.TotalItemValue = Convert.ToDecimal(dt["TotalItemValue"]);
+
+                        itemCaseCategoryStats.Add(temp1);
+                    }
+
+                    res.Data = itemCaseCategoryStats;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSTopLocationReportStatistics/{param}")]
+        public async Task<IActionResult> getEPKRSTopLocationReportStatistics(string param)
+        {
+            ResultModel<List<EPKRSTopLocationReportStatistics>> res = new ResultModel<List<EPKRSTopLocationReportStatistics>>();
+            List<EPKRSTopLocationReportStatistics> topLocationReports = new List<EPKRSTopLocationReportStatistics>();
+            DataTable dtTopLocationReports = new DataTable("topLocationReports");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string temp = CommonLibrary.Base64Decode(param);
+
+                dtTopLocationReports = getEPKRSTopLocationReportStatisticsData(temp);
+
+                if (dtTopLocationReports.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtTopLocationReports.Rows)
+                    {
+                        EPKRSTopLocationReportStatistics temp1 = new EPKRSTopLocationReportStatistics();
+
+                        temp1.LocationID = dt["LocationID"].ToString();
+                        temp1.TotalDocuments = Convert.ToInt32(dt["TotalDocuments"]);
+
+                        topLocationReports.Add(temp1);
+                    }
+
+                    res.Data = topLocationReports;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSItemCategoriesStatistics/{param}")]
+        public async Task<IActionResult> getEPKRSItemCategoriesStatistics(string param)
+        {
+            ResultModel<List<EPKRSItemCaseItemCategoryStatistics>> res = new ResultModel<List<EPKRSItemCaseItemCategoryStatistics>>();
+            List<EPKRSItemCaseItemCategoryStatistics> itemCategoryStats = new List<EPKRSItemCaseItemCategoryStatistics>();
+            DataTable dtItemCategoryStats = new DataTable("topLocationReports");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string temp = CommonLibrary.Base64Decode(param);
+
+                dtItemCategoryStats = getEPKRSItemCategoriesStatisticsData(temp);
+
+                if (dtItemCategoryStats.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtItemCategoryStats.Rows)
+                    {
+                        EPKRSItemCaseItemCategoryStatistics temp1 = new EPKRSItemCaseItemCategoryStatistics();
+
+                        temp1.CategoryID = dt["CategoryID"].ToString();
+                        temp1.TotalDocuments = Convert.ToInt32(dt["TotalDocuments"]);
+
+                        itemCategoryStats.Add(temp1);
+                    }
+
+                    res.Data = itemCategoryStats;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSModuleNumberOfPage/{param}")]
+        public async Task<IActionResult> getEPKRSModuleNumberOfPage(string param)
+        {
+            ResultModel<int> res = new ResultModel<int>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+                string loc = temp[1].Equals("") ? "HO" : temp[1];
+
+                res.Data = getEPKRSModuleNumberOfPageData(temp[0], loc, temp[2], _rowPerPage);
+
+                res.isSuccess = true;
+                res.ErrorCode = "00";
+                res.ErrorMessage = "";
+
+                actionResult = Ok(res);
+            }
+            catch (Exception ex)
+            {
+                res.Data = 0;
                 res.isSuccess = false;
                 res.ErrorCode = "99";
                 res.ErrorMessage = ex.Message;

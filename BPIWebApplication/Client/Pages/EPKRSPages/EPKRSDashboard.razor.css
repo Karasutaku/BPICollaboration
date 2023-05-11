@@ -14,6 +14,15 @@
     background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(9,9,121,0.41789215686274506) 35%, rgba(27,66,138,0.6643907563025211) 100%);
 }
 
+.paging-style {
+    user-select: none;
+    cursor: pointer;
+}
+
+.dis-paging-style {
+    user-select: none;
+}
+
 .wrap-card {
     position: relative;
     overflow-x: auto;

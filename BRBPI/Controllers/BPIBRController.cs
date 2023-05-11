@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using BPILibrary;
 using DocumentFormat.OpenXml.Office2013.Excel;
 using BPIBR.Models.MainModel.EPKRS;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace BPIBR.Controllers
 {
@@ -1523,44 +1524,21 @@ namespace BPIBR.Controllers
 
                     if (respBody.isSuccess)
                     {
-                        QueryModel<List<AdvanceLine>> lines = new();
-                        lines.Data = new();
+                        finRes.Data = respBody.Data;
 
-                        lines.Data = data.Data.lines;
-                        lines.userEmail = data.userEmail;
-                        lines.userAction = data.userAction;
-                        lines.userActionDate = data.userActionDate;
+                        finRes.isSuccess = respBody.isSuccess;
+                        finRes.ErrorCode = respBody.ErrorCode;
+                        finRes.ErrorMessage = respBody.ErrorMessage;
 
-                        var result2 = await _http.PostAsJsonAsync<QueryModel<List<AdvanceLine>>>($"api/DA/PettyCash/createAdvanceLineData", lines);
-
-                        if (result2.IsSuccessStatusCode)
-                        {
-                            finRes.Data = data;
-
-                            finRes.isSuccess = true;
-                            finRes.ErrorCode = "00";
-                            finRes.ErrorMessage = "Request Create Advance Success";
-
-                            actionResult = Ok(finRes);
-                        }
-                        else
-                        {
-                            finRes.Data = null;
-
-                            finRes.isSuccess = false;
-                            finRes.ErrorCode = "01";
-                            finRes.ErrorMessage = "Request Create Advance Line Failed";
-
-                            actionResult = Ok(finRes);
-                        }
+                        actionResult = Ok(finRes);
                     }
                     else
                     {
-                        finRes.Data = data;
+                        finRes.Data = respBody.Data;
 
-                        finRes.isSuccess = false;
-                        finRes.ErrorCode = "01";
-                        finRes.ErrorMessage = "Create Advance Failed";
+                        finRes.isSuccess = respBody.isSuccess;
+                        finRes.ErrorCode = respBody.ErrorCode;
+                        finRes.ErrorMessage = respBody.ErrorMessage;
 
                         actionResult = Ok(finRes);
                     }
@@ -1571,111 +1549,10 @@ namespace BPIBR.Controllers
 
                     finRes.isSuccess = false;
                     finRes.ErrorCode = "01";
-                    finRes.ErrorMessage = "Request Create Advance Failed";
+                    finRes.ErrorMessage = "createAdvance Connect to DA API Fail";
 
                     actionResult = Ok(finRes);
                 }
-
-                //Task<ResultModel<QueryModel<Advance>>> res1 = Task.Run(async () =>
-                //{
-                //    ResultModel<QueryModel<Advance>> retResult = new ResultModel<QueryModel<Advance>>();
-                //    var result1 = await _http.PostAsJsonAsync<QueryModel<Advance>>($"api/DA/PettyCash/createAdvanceData", data);
-
-                //    if (result1.IsSuccessStatusCode)
-                //    {
-                //        var respBody = await result1.Content.ReadFromJsonAsync<ResultModel<QueryModel<Advance>>>();
-
-                //        retResult.Data = respBody.Data;
-
-                //        retResult.isSuccess = respBody.isSuccess;
-                //        retResult.ErrorCode = respBody.ErrorCode;
-                //        retResult.ErrorMessage = respBody.ErrorMessage;
-
-                //        return retResult;
-                //    }
-                //    else
-                //    {
-                //        retResult.Data = null;
-
-                //        retResult.isSuccess = result1.IsSuccessStatusCode;
-                //        retResult.ErrorCode = "01";
-                //        retResult.ErrorMessage = "Fail Create data from createAdvanceData DA";
-
-                //        return retResult;
-                //    }
-
-                //});
-                //Task<ResultModel<QueryModel<List<AdvanceLine>>>> res2 = Task.Run(async () =>
-                //{
-                //    ResultModel<QueryModel<List<AdvanceLine>>> retResult = new ResultModel<QueryModel<List<AdvanceLine>>>();
-                //    QueryModel<List<AdvanceLine>> lines = new();
-                //    lines.Data = new();
-
-                //    lines.Data = data.Data.lines;
-                //    lines.userEmail = data.userEmail;
-                //    lines.userAction = data.userAction;
-                //    lines.userActionDate = data.userActionDate;
-
-                //    var result2 = await _http.PostAsJsonAsync<QueryModel<List<AdvanceLine>>>($"api/DA/PettyCash/createAdvanceLineData", lines);
-
-                //    if (result2.IsSuccessStatusCode)
-                //    {
-                //        var respBody = await result2.Content.ReadFromJsonAsync<ResultModel<QueryModel<List<AdvanceLine>>>>();
-
-                //        retResult.Data = respBody.Data;
-
-                //        retResult.isSuccess = respBody.isSuccess;
-                //        retResult.ErrorCode = respBody.ErrorCode;
-                //        retResult.ErrorMessage = respBody.ErrorMessage;
-
-                //        return retResult;
-                //    }
-                //    else
-                //    {
-                //        retResult.Data = null;
-
-                //        retResult.isSuccess = result2.IsSuccessStatusCode;
-                //        retResult.ErrorCode = "01";
-                //        retResult.ErrorMessage = "Fail Create data from createAdvanceLineData DA";
-
-                //        return retResult;
-                //    }
-                //});
-
-                //await Task.WhenAll(res1, res2);
-
-                //if (!res1.Result.isSuccess)
-                //{
-                //    throw new Exception(res1.Result.ErrorMessage);
-                //}
-
-                //if (!res2.Result.isSuccess)
-                //{
-                //    throw new Exception(res2.Result.ErrorMessage);
-                //}
-
-
-                //if (res1.Result.isSuccess && res2.Result.isSuccess)
-                //{
-                //    finRes.Data = data;
-
-                //    finRes.isSuccess = true;
-                //    finRes.ErrorCode = "00";
-                //    finRes.ErrorMessage = "Create Advance Success";
-
-                //    actionResult = Ok(finRes);
-                //}
-                //else
-                //{
-                //    finRes.Data = null;
-
-                //    finRes.isSuccess = false;
-                //    finRes.ErrorCode = "01";
-                //    finRes.ErrorMessage = $"Create Advance Failed (advanceData: {res1.Result.ErrorMessage}, advanceLine: {res2.Result.ErrorMessage}";
-
-                //    actionResult = Ok(finRes);
-                //}
-
             }
             catch (Exception ex)
             {
@@ -1705,29 +1582,21 @@ namespace BPIBR.Controllers
 
                     if (respBody.isSuccess)
                     {
-                        QueryModel<List<ExpenseLine>> lines = new();
-                        lines.Data = new();
+                        QueryModel<List<BPIBR.Models.MainModel.Stream.FileStream>> files = new();
+                        files.Data = new();
 
-                        lines.Data = data.expenseDetails.Data.lines;
-                        lines.userEmail = data.expenseDetails.userEmail;
-                        lines.userAction = data.expenseDetails.userAction;
-                        lines.userActionDate = data.expenseDetails.userActionDate;
+                        files.Data = data.files;
+                        files.userEmail = data.expenseDetails.userEmail;
+                        files.userAction = data.expenseDetails.userAction;
+                        files.userActionDate = data.expenseDetails.userActionDate;
 
-                        var result2 = await _http.PostAsJsonAsync<QueryModel<List<ExpenseLine>>>($"api/DA/PettyCash/createExpenseLineData", lines);
+                        var result2 = await _http.PostAsJsonAsync<QueryModel<List<BPIBR.Models.MainModel.Stream.FileStream>>>($"api/DA/PettyCash/createExpenseAttachLineData", files);
 
                         if (result2.IsSuccessStatusCode)
                         {
-                            QueryModel<List<BPIBR.Models.MainModel.Stream.FileStream>> files = new();
-                            files.Data = new();
+                            var respBody1 = await result2.Content.ReadFromJsonAsync<ResultModel<QueryModel<List<BPIBR.Models.MainModel.Stream.FileStream>>>>();
 
-                            files.Data = data.files;
-                            files.userEmail = data.expenseDetails.userEmail;
-                            files.userAction = data.expenseDetails.userAction;
-                            files.userActionDate = data.expenseDetails.userActionDate;
-
-                            var result3 = await _http.PostAsJsonAsync<QueryModel<List<BPIBR.Models.MainModel.Stream.FileStream>>>($"api/DA/PettyCash/createExpenseAttachLineData", files);
-
-                            if (result3.IsSuccessStatusCode)
+                            if (respBody1.isSuccess)
                             {
                                 foreach (var file in data.files)
                                 {
@@ -1735,26 +1604,25 @@ namespace BPIBR.Controllers
 
                                     await saveFiletoDirectory(path, file.content);
                                 }
-                            }
-                            else
-                            {
-                                finRes.Data = null;
 
-                                finRes.isSuccess = false;
-                                finRes.ErrorCode = "01";
-                                finRes.ErrorMessage = "Request Create Expense Attach Line Failed";
+                                finRes.Data = respBody.Data;
+
+                                finRes.isSuccess = respBody.isSuccess;
+                                finRes.ErrorCode = respBody.ErrorCode;
+                                finRes.ErrorMessage = respBody.ErrorMessage;
 
                                 actionResult = Ok(finRes);
                             }
+                            else
+                            {
+                                finRes.Data = respBody.Data;
 
-                            finRes.Data = data.expenseDetails;
+                                finRes.isSuccess = respBody.isSuccess;
+                                finRes.ErrorCode = respBody.ErrorCode;
+                                finRes.ErrorMessage = respBody.ErrorMessage;
 
-                            finRes.isSuccess = true;
-                            finRes.ErrorCode = "00";
-                            finRes.ErrorMessage = "Request Create Expense Success";
-
-                            actionResult = Ok(finRes);
-
+                                actionResult = Ok(finRes);
+                            }
                         }
                         else
                         {
@@ -1762,18 +1630,18 @@ namespace BPIBR.Controllers
 
                             finRes.isSuccess = false;
                             finRes.ErrorCode = "01";
-                            finRes.ErrorMessage = "Request Create Expense Line Failed";
+                            finRes.ErrorMessage = "createExpenseAttachLineData Connect to DA API Fail";
 
                             actionResult = Ok(finRes);
                         }
                     }
                     else
                     {
-                        finRes.Data = null;
+                        finRes.Data = respBody.Data;
 
-                        finRes.isSuccess = false;
-                        finRes.ErrorCode = "01";
-                        finRes.ErrorMessage = "Create Expense Failed";
+                        finRes.isSuccess = respBody.isSuccess;
+                        finRes.ErrorCode = respBody.ErrorCode;
+                        finRes.ErrorMessage = respBody.ErrorMessage;
 
                         actionResult = Ok(finRes);
                     }
@@ -1784,118 +1652,10 @@ namespace BPIBR.Controllers
 
                     finRes.isSuccess = false;
                     finRes.ErrorCode = "01";
-                    finRes.ErrorMessage = "Request Create Expense Failed";
+                    finRes.ErrorMessage = "createExpense Connect to DA API Fail";
 
                     actionResult = Ok(finRes);
                 }
-
-                //Task<ResultModel<QueryModel<Expense>>> res1 = Task.Run(async () =>
-                //{
-                //    ResultModel<QueryModel<Expense>> retResult = new ResultModel<QueryModel<Expense>>();
-                //    var result1 = await _http.PostAsJsonAsync<QueryModel<Expense>>($"api/DA/PettyCash/createExpenseData", data.expenseDetails);
-
-                //    if (result1.IsSuccessStatusCode)
-                //    {
-                //        var respBody = await result1.Content.ReadFromJsonAsync<ResultModel<QueryModel<Expense>>>();
-
-                //        retResult.Data = respBody.Data;
-
-                //        retResult.isSuccess = respBody.isSuccess;
-                //        retResult.ErrorCode = respBody.ErrorCode;
-                //        retResult.ErrorMessage = respBody.ErrorMessage;
-
-                //        return retResult;
-                //    }
-                //    else
-                //    {
-                //        retResult.Data = null;
-
-                //        retResult.isSuccess = result1.IsSuccessStatusCode;
-                //        retResult.ErrorCode = "01";
-                //        retResult.ErrorMessage = "Fail Create data from createExpenseData DA";
-
-                //        return retResult;
-                //    }
-
-                //});
-                //Task<ResultModel<QueryModel<List<ExpenseLine>>>> res2 = Task.Run(async () =>
-                //{
-                //    ResultModel<QueryModel<List<ExpenseLine>>> retResult = new ResultModel<QueryModel<List<ExpenseLine>>>();
-                //    QueryModel<List<ExpenseLine>> lines = new();
-                //    lines.Data = new();
-
-                //    lines.Data = data.expenseDetails.Data.lines;
-                //    lines.userEmail = data.expenseDetails.userEmail;
-                //    lines.userAction = data.expenseDetails.userAction;
-                //    lines.userActionDate = data.expenseDetails.userActionDate;
-
-                //    var result2 = await _http.PostAsJsonAsync<QueryModel<List<ExpenseLine>>>($"api/DA/PettyCash/createExpenseLineData", lines);
-
-                //    if (result2.IsSuccessStatusCode)
-                //    {
-                //        foreach (var file in data.files)
-                //        {
-                //            string path = Path.Combine(_uploadPath, "ExpenseAttach", DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), data.expenseDetails.Data.ExpenseID, file.fileName);
-
-                //            await saveFiletoDirectory(path, file.content);
-                //        }
-
-                //        var respBody = await result2.Content.ReadFromJsonAsync<ResultModel<QueryModel<List<ExpenseLine>>>>();
-
-                //        retResult.Data = respBody.Data;
-
-                //        retResult.isSuccess = respBody.isSuccess;
-                //        retResult.ErrorCode = respBody.ErrorCode;
-                //        retResult.ErrorMessage = respBody.ErrorMessage;
-
-                //        return retResult;
-                //    }
-                //    else
-                //    {
-                //        retResult.Data = null;
-
-                //        retResult.isSuccess = result2.IsSuccessStatusCode;
-                //        retResult.ErrorCode = "01";
-                //        retResult.ErrorMessage = "Fail Create data from createExpenseLineData DA";
-
-                //        return retResult;
-                //    }
-                //});
-
-                //await Task.WhenAll(res1, res2);
-
-                //if (!res1.Result.isSuccess)
-                //{
-                //    throw new Exception(res1.Result.ErrorMessage);
-                //}
-
-                //if (!res2.Result.isSuccess)
-                //{
-                //    throw new Exception(res2.Result.ErrorMessage);
-                //}
-
-
-                //if (res1.Result.isSuccess && res2.Result.isSuccess)
-                //{
-                //    finRes.Data = data.expenseDetails;
-
-                //    finRes.isSuccess = true;
-                //    finRes.ErrorCode = "00";
-                //    finRes.ErrorMessage = "Create Expense Success";
-
-                //    actionResult = Ok(finRes);
-                //}
-                //else
-                //{
-                //    finRes.Data = null;
-
-                //    finRes.isSuccess = false;
-                //    finRes.ErrorCode = "01";
-                //    finRes.ErrorMessage = $"Create Advance Failed (expenseData: {res1.Result.ErrorMessage}, expenseLine: {res2.Result.ErrorMessage}";
-
-                //    actionResult = Ok(finRes);
-                //}
-
             }
             catch (Exception ex)
             {
@@ -1925,64 +1685,40 @@ namespace BPIBR.Controllers
 
                     if (respBody.isSuccess)
                     {
-                        QueryModel<List<ReimburseLine>> lines = new();
-                        lines.Data = new();
+                        QueryModel<List<BPIBR.Models.MainModel.Stream.FileStream>> files = new();
+                        files.Data = new();
 
-                        lines.Data = data.reimburseDetails.Data.lines;
-                        lines.userEmail = data.reimburseDetails.userEmail;
-                        lines.userAction = data.reimburseDetails.userAction;
-                        lines.userActionDate = data.reimburseDetails.userActionDate;
+                        files.Data = data.files;
+                        files.userEmail = data.reimburseDetails.userEmail;
+                        files.userAction = data.reimburseDetails.userAction;
+                        files.userActionDate = data.reimburseDetails.userActionDate;
 
-                        var result2 = await _http.PostAsJsonAsync<QueryModel<List<ReimburseLine>>>($"api/DA/PettyCash/createReimburseLineData", lines);
+                        var result2 = await _http.PostAsJsonAsync<QueryModel<List<BPIBR.Models.MainModel.Stream.FileStream>>>($"api/DA/PettyCash/createReimburseAttachLineData", files);
 
                         if (result2.IsSuccessStatusCode)
                         {
-                            QueryModel<List<BPIBR.Models.MainModel.Stream.FileStream>> files = new();
-                            files.Data = new();
+                            var respBody2 = await result2.Content.ReadFromJsonAsync<ResultModel<QueryModel<List<BPIBR.Models.MainModel.Stream.FileStream>>>>();
 
-                            files.Data = data.files;
-                            files.userEmail = data.reimburseDetails.userEmail;
-                            files.userAction = data.reimburseDetails.userAction;
-                            files.userActionDate = data.reimburseDetails.userActionDate;
-
-                            var result3 = await _http.PostAsJsonAsync<QueryModel<List<BPIBR.Models.MainModel.Stream.FileStream>>>($"api/DA/PettyCash/createReimburseAttachLineData", files);
-
-                            if (result3.IsSuccessStatusCode)
+                            if (respBody2.isSuccess)
                             {
-                                //foreach (var file in data.files)
-                                //{
-                                //    string path = Path.Combine(_uploadPath, "ReimburseAttach", DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), data.reimburseDetails.Data.ReimburseID, file.fileName);
+                                finRes.Data = respBody.Data;
 
-                                //    await saveFiletoDirectory(path, file.content);
-                                //}
-
-                                finRes.Data = data.reimburseDetails;
-
-                                finRes.isSuccess = true;
-                                finRes.ErrorCode = "00";
-                                finRes.ErrorMessage = "Request Create Reimburse Success";
+                                finRes.isSuccess = respBody.isSuccess;
+                                finRes.ErrorCode = respBody.ErrorCode;
+                                finRes.ErrorMessage = respBody.ErrorMessage;
 
                                 actionResult = Ok(finRes);
                             }
                             else
                             {
-                                finRes.Data = null;
+                                finRes.Data = respBody.Data;
 
-                                finRes.isSuccess = false;
-                                finRes.ErrorCode = "01";
-                                finRes.ErrorMessage = "Request Create Reimburse Attach Line Failed";
+                                finRes.isSuccess = respBody.isSuccess;
+                                finRes.ErrorCode = respBody.ErrorCode;
+                                finRes.ErrorMessage = respBody.ErrorMessage;
 
                                 actionResult = Ok(finRes);
                             }
-
-                            finRes.Data = data.reimburseDetails;
-
-                            finRes.isSuccess = true;
-                            finRes.ErrorCode = "00";
-                            finRes.ErrorMessage = "Request Create Reimburse Success";
-
-                            actionResult = Ok(finRes);
-
                         }
                         else
                         {
@@ -1990,18 +1726,18 @@ namespace BPIBR.Controllers
 
                             finRes.isSuccess = false;
                             finRes.ErrorCode = "01";
-                            finRes.ErrorMessage = "Request Create Reimburse Line Failed";
+                            finRes.ErrorMessage = "createReimburseAttachLineData Connect to DA API Fail";
 
                             actionResult = Ok(finRes);
                         }
                     }
                     else
                     {
-                        finRes.Data = null;
+                        finRes.Data = respBody.Data;
 
-                        finRes.isSuccess = false;
-                        finRes.ErrorCode = "01";
-                        finRes.ErrorMessage = "Create Reimburse Failed";
+                        finRes.isSuccess = respBody.isSuccess;
+                        finRes.ErrorCode = respBody.ErrorCode;
+                        finRes.ErrorMessage = respBody.ErrorMessage;
 
                         actionResult = Ok(finRes);
                     }
@@ -2012,7 +1748,7 @@ namespace BPIBR.Controllers
 
                     finRes.isSuccess = false;
                     finRes.ErrorCode = "01";
-                    finRes.ErrorMessage = "Request Create Reimburse Failed";
+                    finRes.ErrorMessage = "createReimburse Connect to DA API Fail";
 
                     actionResult = Ok(finRes);
                 }
@@ -2223,13 +1959,26 @@ namespace BPIBR.Controllers
                 {
                     var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<string>>>();
 
-                    res.Data = respBody.Data;
+                    if (respBody.isSuccess)
+                    {
+                        res.Data = respBody.Data;
 
-                    res.isSuccess = respBody.isSuccess;
-                    res.ErrorCode = respBody.ErrorCode;
-                    res.ErrorMessage = respBody.ErrorMessage;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
 
-                    actionResult = Ok(res);
+                        actionResult = Ok(res);
+                    }
+                    else
+                    {
+                        res.Data = respBody.Data;
+
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
                 }
                 else
                 {
@@ -2328,7 +2077,7 @@ namespace BPIBR.Controllers
                     Data = null,
                     isSuccess = false,
                     ErrorCode = "99",
-                    ErrorMessage = "PARALEL TASK FORCED STOP : REASON " + ex.Message
+                    ErrorMessage = "PARALLEL TASK FORCED STOP : REASON " + ex.Message
                 });
 
                 actionResult = BadRequest(res);
@@ -4377,23 +4126,35 @@ namespace BPIBR.Controllers
                 {
                     var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<EPKRSUploadDiscussion>>>();
 
-                    if (data.files.Count > 0)
+                    if (respBody.isSuccess)
                     {
-                        data.files.ForEach(x =>
+                        if (data.files.Count > 0)
                         {
-                            string path = Path.Combine(_uploadPath, DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), respBody.Data.Data.discussion.DocumentID, x.fileName);
+                            data.files.ForEach(x =>
+                            {
+                                string path = Path.Combine(_uploadPath, DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), respBody.Data.Data.discussion.DocumentID, x.fileName);
 
-                            CommonLibrary.saveFiletoDirectory(path, x.content);
-                        });
+                                CommonLibrary.saveFiletoDirectory(path, x.content);
+                            });
+                        }
+
+                        res.Data.mainData = respBody.Data;
+
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
                     }
+                    else
+                    {
+                        res.Data.mainData = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
 
-                    res.Data.mainData = respBody.Data;
-
-                    res.isSuccess = respBody.isSuccess;
-                    res.ErrorCode = respBody.ErrorCode;
-                    res.ErrorMessage = respBody.ErrorMessage;
-
-                    actionResult = Ok(res);
+                        actionResult = Ok(res);
+                    }
                 }
                 else
                 {
@@ -4408,6 +4169,64 @@ namespace BPIBR.Controllers
                     actionResult = Ok(res);
                 }
 
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpPost("createEPKRSDocumentDiscussionReadHistory")]
+        public async Task<IActionResult> createEPKRSDocumentDiscussionReadHistory(QueryModel<DocumentDiscussionReadStream> data)
+        {
+            ResultModel<QueryModel<DocumentDiscussionReadStream>> res = new ResultModel<QueryModel<DocumentDiscussionReadStream>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<QueryModel<DocumentDiscussionReadStream>>("api/DA/EPKRS/createEPKRSDocumentDiscussionReadHistory", data);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<DocumentDiscussionReadStream>>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                    else
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<DocumentDiscussionReadStream>>>();
+
+                    res.Data = null;
+
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
             }
             catch (Exception ex)
             {
@@ -4701,6 +4520,50 @@ namespace BPIBR.Controllers
             return actionResult;
         }
 
+        [HttpGet("getEPKRSItemRiskCategory")]
+        public async Task<IActionResult> getEPKRSItemRiskCategory()
+        {
+            ResultModel<List<ItemRiskCategory>> res = new ResultModel<List<ItemRiskCategory>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<ItemRiskCategory>>>("api/DA/EPKRS/getEPKRSItemRiskCategory");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
         [HttpGet("getEPKRSItemCase/{param}")]
         public async Task<IActionResult> getEPKRSItemCaseData(string param)
         {
@@ -4833,6 +4696,122 @@ namespace BPIBR.Controllers
             return actionResult;
         }
 
+        [HttpPost("getEPKRSInitializationDocumentDiscussions")]
+        public async Task<IActionResult> getEPKRSInitializationDocumentDiscussions(List<DocumentListParams> param)
+        {
+            ResultModel<List<DocumentDiscussion>> res = new ResultModel<List<DocumentDiscussion>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<List<DocumentListParams>>("api/DA/EPKRS/getEPKRSInitializationDocumentDiscussions", param);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<DocumentDiscussion>>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                    else
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<DocumentDiscussion>>>();
+
+                    res.Data = null;
+
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpPost("getEPKRSDocumentDiscussionReadHistory")]
+        public async Task<IActionResult> getEPKRSDocumentDiscussionReadHistory(List<DocumentListParams> param)
+        {
+            ResultModel<List<DocumentDiscussionReadHistory>> res = new ResultModel<List<DocumentDiscussionReadHistory>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<List<DocumentListParams>>("api/DA/EPKRS/getEPKRSDocumentDiscussionReadHistory", param);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<DocumentDiscussionReadHistory>>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                    else
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<DocumentDiscussionReadHistory>>>();
+
+                    res.Data = null;
+
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
         [HttpGet("getEPKRSFileStream/{param}")]
         public async Task<IActionResult> getEPKRSFileStream(string param)
         {
@@ -4879,6 +4858,226 @@ namespace BPIBR.Controllers
             catch (Exception ex)
             {
                 res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSGeneralStatistics/{param}")]
+        public async Task<IActionResult> getEPKRSGeneralStatistics(string param)
+        {
+            ResultModel<List<EPKRSDocumentStatistics>> res = new ResultModel<List<EPKRSDocumentStatistics>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSDocumentStatistics>>>($"api/DA/EPKRS/getEPKRSGeneralStatistics/{param}");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSItemCaseCategoryStatistics/{param}")]
+        public async Task<IActionResult> getEPKRSItemCaseCategoryStatistics(string param)
+        {
+            ResultModel<List<EPKRSItemCaseCategoryStatistics>> res = new ResultModel<List<EPKRSItemCaseCategoryStatistics>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSItemCaseCategoryStatistics>>>($"api/DA/EPKRS/getEPKRSItemCaseCategoryStatistics/{param}");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSTopLocationReportStatistics/{param}")]
+        public async Task<IActionResult> getEPKRSTopLocationReportStatistics(string param)
+        {
+            ResultModel<List<EPKRSTopLocationReportStatistics>> res = new ResultModel<List<EPKRSTopLocationReportStatistics>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSTopLocationReportStatistics>>>($"api/DA/EPKRS/getEPKRSTopLocationReportStatistics/{param}");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSItemCategoriesStatistics/{param}")]
+        public async Task<IActionResult> getEPKRSItemCategoriesStatistics(string param)
+        {
+            ResultModel<List<EPKRSItemCaseItemCategoryStatistics>> res = new ResultModel<List<EPKRSItemCaseItemCategoryStatistics>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSItemCaseItemCategoryStatistics>>>($"api/DA/EPKRS/getEPKRSItemCategoriesStatistics/{param}");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSModuleNumberOfPage/{param}")]
+        public async Task<IActionResult> getEPKRSModuleNumberOfPage(string param)
+        {
+            ResultModel<int> res = new ResultModel<int>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/DA/EPKRS/getEPKRSModuleNumberOfPage/{param}");
+                
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = 0;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = 0;
                 res.isSuccess = false;
                 res.ErrorCode = "99";
                 res.ErrorMessage = ex.Message;

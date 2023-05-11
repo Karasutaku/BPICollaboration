@@ -340,6 +340,7 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
                                         await _jsModule.InvokeVoidAsync("showAlert", "Email Auto Generate Failed");
                                     }
 
+                                    showModalConfirmation = false;
                                     successUpload = true;
                                     isLoading = false;
                                     alertTrigger = false;
@@ -351,6 +352,7 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
                                 }
                                 else
                                 {
+                                    showModalConfirmation = false;
                                     successUpload = false;
                                     isLoading = false;
                                     successAlert = false;
@@ -385,6 +387,7 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
                                     await _jsModule.InvokeVoidAsync("showAlert", "Email Auto Generate Failed");
                                 }
 
+                                showModalConfirmation = false;
                                 successUpload = true;
                                 isLoading = false;
                                 alertTrigger = false;
@@ -396,6 +399,7 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
                             }
                             else
                             {
+                                showModalConfirmation = false;
                                 successUpload = false;
                                 isLoading = false;
                                 successAlert = false;
@@ -409,6 +413,7 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
                     }
                     else
                     {
+                        showModalConfirmation = false;
                         successUpload = false;
                         successAlert = false;
                         alertTrigger = true;
