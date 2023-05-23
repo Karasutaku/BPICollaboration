@@ -238,23 +238,6 @@ namespace BPIWebApplication.Client.Pages.StandarizationPages
 
         IReadOnlyList<IBrowserFile>? listFileUpload;
 
-        //private bool fileValidation(string ext)
-        //{
-        //    if (!ext.Contains("pdf", StringComparison.OrdinalIgnoreCase))
-        //        return false;
-
-        //    if (!ext.Contains("xlsx", StringComparison.OrdinalIgnoreCase))
-        //        return false;
-
-        //    if (!ext.Contains("xls", StringComparison.OrdinalIgnoreCase))
-        //        return false;
-
-        //    if (!ext.Contains("mp4", StringComparison.OrdinalIgnoreCase))
-        //        return false;
-
-        //    return true;
-        //}
-
         private bool validateInput()
         {
             if (standarizationData.TypeID.IsNullOrEmpty())
@@ -370,6 +353,8 @@ namespace BPIWebApplication.Client.Pages.StandarizationPages
                         temp.Data.Attachments = new();
 
                         temp.Data = standarizationData;
+                        temp.Data.Tags.Clear();
+                        temp.Data.Attachments.Clear();
 
                         foreach (var tag in tags)
                         {
@@ -467,10 +452,13 @@ namespace BPIWebApplication.Client.Pages.StandarizationPages
 
                         QueryModel<Standarizations> temp = new();
                         temp.Data = new();
-                        temp.Data = standarizationData;
-
                         temp.Data.Tags = new();
                         temp.Data.Attachments = new();
+
+                        temp.Data = standarizationData;
+
+                        temp.Data.Tags.Clear();
+                        temp.Data.Attachments.Clear();
 
                         foreach (var tag in tags)
                         {

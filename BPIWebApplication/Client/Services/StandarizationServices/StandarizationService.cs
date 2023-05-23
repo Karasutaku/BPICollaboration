@@ -126,6 +126,22 @@ namespace BPIWebApplication.Client.Services.StandarizationServices
                         resData.ErrorCode = respBody.ErrorCode;
                         resData.ErrorMessage = respBody.ErrorMessage;
                     }
+                    else
+                    {
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<Standarizations>>>();
+
+                    resData.Data = respBody.Data;
+                    resData.isSuccess = respBody.isSuccess;
+                    resData.ErrorCode = respBody.ErrorCode;
+                    resData.ErrorMessage = respBody.ErrorMessage;
                 }
             }
             catch (Exception ex)
@@ -158,6 +174,22 @@ namespace BPIWebApplication.Client.Services.StandarizationServices
                         resData.ErrorCode = respBody.ErrorCode;
                         resData.ErrorMessage = respBody.ErrorMessage;
                     }
+                    else
+                    {
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<Standarizations>>>();
+
+                    resData.Data = respBody.Data;
+                    resData.isSuccess = respBody.isSuccess;
+                    resData.ErrorCode = respBody.ErrorCode;
+                    resData.ErrorMessage = respBody.ErrorMessage;
                 }
             }
             catch (Exception ex)
@@ -190,6 +222,22 @@ namespace BPIWebApplication.Client.Services.StandarizationServices
                         resData.ErrorCode = respBody.ErrorCode;
                         resData.ErrorMessage = respBody.ErrorMessage;
                     }
+                    else
+                    {
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<string>>>();
+
+                    resData.Data = respBody.Data;
+                    resData.isSuccess = respBody.isSuccess;
+                    resData.ErrorCode = respBody.ErrorCode;
+                    resData.ErrorMessage = respBody.ErrorMessage;
                 }
             }
             catch (Exception ex)

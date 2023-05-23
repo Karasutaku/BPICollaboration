@@ -22,6 +22,7 @@ using BPIWebApplication.Shared.PagesModel.PettyCash;
 using BPIWebApplication.Shared.MainModel.EPKRS;
 using System.Net.Http.Json;
 using BPIWebApplication.Shared.MainModel.POMF;
+using BPILibrary;
 
 namespace BPIWebApplication.Server.Controllers
 {
@@ -3310,22 +3311,6 @@ namespace BPIWebApplication.Server.Controllers
             _acceptedFileExtensions = config.GetValue<string>("File:Standarizations:AcceptedFileExtensions").Split("|");
         }
 
-        // data processing
-        private async Task<Byte[]> compressData(byte[] data)
-        {
-            byte[] compressedData = new byte[0];
-
-            using (var compressedStream = new MemoryStream())
-            using (var zipStream = new GZipStream(compressedStream, CompressionMode.Compress))
-            {
-                zipStream.Write(data, 0, data.Length);
-                zipStream.Close();
-                compressedData = compressedStream.ToArray();
-            }
-
-            return compressedData;
-        }
-
         private async Task<Byte[]> decompressData(byte[] data)
         {
             byte[] decompressedData = new byte[0];
@@ -3354,11 +3339,11 @@ namespace BPIWebApplication.Server.Controllers
                 StandarizationStream processed = new();
                 processed = data;
 
-                processed.files.ForEach(async x =>
+                processed.files.ForEach(x =>
                 {
                     if (_compressedFileExtensions.Any(y => y.Equals(x.fileType)))
                     {
-                        x.content = await compressData(x.content);
+                        x.content = CommonLibrary.compressData(x.content);
                     }
                 });
 
@@ -3411,7 +3396,7 @@ namespace BPIWebApplication.Server.Controllers
                 StandarizationStream processed = new();
                 processed = data;
 
-                processed.files.ForEach(async x =>
+                processed.files.ForEach(x =>
                 {
                     //if (x.fileName.Contains(".mp4"))
                     //{
@@ -3420,7 +3405,7 @@ namespace BPIWebApplication.Server.Controllers
 
                     if (_compressedFileExtensions.Any(y => y.Equals(x.fileType)))
                     {
-                        x.content = await compressData(x.content);
+                        x.content = CommonLibrary.compressData(x.content);
                     }
                 });
 
@@ -3613,15 +3598,11 @@ namespace BPIWebApplication.Server.Controllers
 
                     temp.ForEach(async x =>
                     {
-                        //if (x.fileName.Contains(".mp4"))
-                        //{
-                        //    x.content = await decompressData(x.content);
-                        //}
                         FileInfo fi = new FileInfo(x.fileName);
 
                         if (_compressedFileExtensions.Any(y => y.Equals(fi.Extension)))
                         {
-                            x.content = await decompressData(x.content);
+                            x.content = CommonLibrary.decompressData(x.content);
                         }
                     });
 
