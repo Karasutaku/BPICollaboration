@@ -3469,42 +3469,55 @@ namespace BPIBR.Controllers
                 {
                     var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<Standarizations>>>();
 
-                    foreach (var file in data.files)
+                    if (respBody.isSuccess)
                     {
-                        if (_compressedFileExtensions.Any(y => y.Equals(file.fileType)))
-                        //if (file.fileName.Contains(".mp4"))
+                        foreach (var file in data.files)
                         {
-                            byte[] tempContent = new byte[0];
-                            string oriPath = Path.Combine(_uploadPath, data.standarizationDetails.Data.TypeID, DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), file.fileName);
-                            string zipPath = Path.ChangeExtension(oriPath, ".zip");
+                            if (_compressedFileExtensions.Any(y => y.Equals(file.fileType)))
+                            //if (file.fileName.Contains(".mp4"))
+                            {
+                                byte[] tempContent = new byte[0];
+                                string oriPath = Path.Combine(_uploadPath, data.standarizationDetails.Data.TypeID, DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), file.fileName);
+                                string zipPath = Path.ChangeExtension(oriPath, ".zip");
 
-                            tempContent = CommonLibrary.decompressData(file.content);
+                                tempContent = CommonLibrary.decompressData(file.content);
 
-                            CommonLibrary.saveFiletoDirectoryAsZip(zipPath, oriPath, tempContent);
+                                CommonLibrary.saveFiletoDirectoryAsZip(zipPath, oriPath, tempContent);
+                            }
+                            else
+                            {
+                                string path = Path.Combine(_uploadPath, data.standarizationDetails.Data.TypeID, DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), file.fileName);
+
+                                CommonLibrary.saveFiletoDirectory(path, file.content);
+                            }
                         }
-                        else
-                        {
-                            string path = Path.Combine(_uploadPath, data.standarizationDetails.Data.TypeID, DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), file.fileName);
 
-                            CommonLibrary.saveFiletoDirectory(path, file.content);
-                        }
+                        res.Data = respBody.Data;
+
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
                     }
+                    else
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
 
-                    res.Data = respBody.Data;
-
-                    res.isSuccess = respBody.isSuccess;
-                    res.ErrorCode = respBody.ErrorCode;
-                    res.ErrorMessage = respBody.ErrorMessage;
-
-                    actionResult = Ok(res);
+                        actionResult = Ok(res);
+                    }
                 }
                 else
                 {
-                    res.Data = null;
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<Standarizations>>>();
 
-                    res.isSuccess = result.IsSuccessStatusCode;
-                    res.ErrorCode = "01";
-                    res.ErrorMessage = $"Fail Create from createStandarizationData DA";
+                    res.Data = respBody.Data;
+                    res.isSuccess = respBody.isSuccess;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
 
                     actionResult = Ok(res);
                 }
@@ -3554,46 +3567,61 @@ namespace BPIBR.Controllers
                 {
                     var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<Standarizations>>>();
 
-                    foreach (var file in data.files)
+                    if (respBody.isSuccess)
                     {
-                        //string path = Path.Combine(_uploadPath, data.standarizationDetails.Data.TypeID, DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), file.fileName);
-
-                        //await saveFiletoDirectory(path, file.content);
-
-                        if (_compressedFileExtensions.Any(y => y.Equals(file.fileType)))
-                        //if (file.fileName.Contains(".mp4"))
+                        foreach (var file in data.files)
                         {
-                            byte[] tempContent = new byte[0];
-                            string oriPath = Path.Combine(_uploadPath, data.standarizationDetails.Data.TypeID, DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), file.fileName);
-                            string zipPath = Path.ChangeExtension(oriPath, ".zip");
+                            //string path = Path.Combine(_uploadPath, data.standarizationDetails.Data.TypeID, DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), file.fileName);
 
-                            tempContent = CommonLibrary.decompressData(file.content);
+                            //await saveFiletoDirectory(path, file.content);
 
-                            CommonLibrary.saveFiletoDirectoryAsZip(zipPath, oriPath, tempContent);
+                            if (_compressedFileExtensions.Any(y => y.Equals(file.fileType)))
+                            //if (file.fileName.Contains(".mp4"))
+                            {
+                                byte[] tempContent = new byte[0];
+                                string oriPath = Path.Combine(_uploadPath, data.standarizationDetails.Data.TypeID, DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), file.fileName);
+                                string zipPath = Path.ChangeExtension(oriPath, ".zip");
+
+                                tempContent = CommonLibrary.decompressData(file.content);
+
+                                CommonLibrary.saveFiletoDirectoryAsZip(zipPath, oriPath, tempContent);
+                            }
+                            else
+                            {
+                                string path = Path.Combine(_uploadPath, data.standarizationDetails.Data.TypeID, DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), file.fileName);
+
+                                CommonLibrary.saveFiletoDirectory(path, file.content);
+                            }
                         }
-                        else
-                        {
-                            string path = Path.Combine(_uploadPath, data.standarizationDetails.Data.TypeID, DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), file.fileName);
 
-                            CommonLibrary.saveFiletoDirectory(path, file.content);
-                        }
+                        res.Data = respBody.Data;
+
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
                     }
+                    else
+                    {
+                        res.Data = respBody.Data;
+
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<Standarizations>>>();
 
                     res.Data = respBody.Data;
 
                     res.isSuccess = respBody.isSuccess;
                     res.ErrorCode = respBody.ErrorCode;
                     res.ErrorMessage = respBody.ErrorMessage;
-
-                    actionResult = Ok(res);
-                }
-                else
-                {
-                    res.Data = null;
-
-                    res.isSuccess = result.IsSuccessStatusCode;
-                    res.ErrorCode = "01";
-                    res.ErrorMessage = $"Fail settle from editStandarizationData DA";
 
                     actionResult = Ok(res);
                 }

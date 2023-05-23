@@ -7852,7 +7852,127 @@ namespace BPIDA.Controllers
             return dt;
         }
 
-        internal bool createStandarizationData(QueryModel<Standarizations> data)
+        //internal bool createStandarizationData(QueryModel<Standarizations> data)
+        //{
+        //    bool flag = false;
+
+        //    using (SqlConnection con = new SqlConnection(_conString))
+        //    {
+        //        con.Open();
+        //        SqlCommand command = new SqlCommand();
+
+        //        try
+        //        {
+        //            command.Connection = con;
+        //            command.CommandType = CommandType.StoredProcedure;
+        //            command.CommandText = "[createStandarizationData]";
+        //            command.CommandTimeout = 1000;
+
+        //            command.Parameters.Clear();
+        //            command.Parameters.AddWithValue("@TypeID", data.Data.TypeID);
+        //            command.Parameters.AddWithValue("@StandarizationID", data.Data.StandarizationID);
+        //            command.Parameters.AddWithValue("@StandarizationDetails", data.Data.StandarizationDetails);
+        //            command.Parameters.AddWithValue("@StandarizationDate", data.Data.StandarizationDate);
+        //            command.Parameters.AddWithValue("@AuditUser", data.userEmail);
+        //            command.Parameters.AddWithValue("@AuditAction", data.userAction);
+        //            command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
+
+        //            int ret = command.ExecuteNonQuery();
+
+        //            if (ret >= 0)
+        //                flag = true;
+
+        //        }
+        //        catch (SqlException ex)
+        //        {
+        //            throw ex;
+        //        }
+        //        finally
+        //        {
+        //            con.Close();
+        //        }
+        //    }
+
+        //    return flag;
+        //}
+
+        //internal bool createStandarizationTagData(DataTable data)
+        //{
+        //    bool flag = false;
+
+        //    using (SqlConnection con = new SqlConnection(_conString))
+        //    {
+        //        con.Open();
+        //        SqlCommand command = new SqlCommand();
+
+        //        try
+        //        {
+        //            command.Connection = con;
+        //            command.CommandType = CommandType.StoredProcedure;
+        //            command.CommandText = "[createStandarizationTags]";
+        //            command.CommandTimeout = 1000;
+
+        //            command.Parameters.Clear();
+        //            command.Parameters.AddWithValue("@StandarizationTags", data);
+
+        //            int ret = command.ExecuteNonQuery();
+
+        //            if (ret >= 0)
+        //                flag = true;
+
+        //        }
+        //        catch (SqlException ex)
+        //        {
+        //            throw ex;
+        //        }
+        //        finally
+        //        {
+        //            con.Close();
+        //        }
+        //    }
+
+        //    return flag;
+        //}
+
+        //internal bool createStandarizationAttachmentData(DataTable data)
+        //{
+        //    bool flag = false;
+
+        //    using (SqlConnection con = new SqlConnection(_conString))
+        //    {
+        //        con.Open();
+        //        SqlCommand command = new SqlCommand();
+
+        //        try
+        //        {
+        //            command.Connection = con;
+        //            command.CommandType = CommandType.StoredProcedure;
+        //            command.CommandText = "[createStandarizationAttachment]";
+        //            command.CommandTimeout = 1000;
+
+        //            command.Parameters.Clear();
+        //            command.Parameters.AddWithValue("@StandarizationAttachments", data);
+
+        //            int ret = command.ExecuteNonQuery();
+
+        //            if (ret >= 0)
+        //                flag = true;
+
+        //        }
+        //        catch (SqlException ex)
+        //        {
+        //            throw ex;
+        //        }
+        //        finally
+        //        {
+        //            con.Close();
+        //        }
+        //    }
+
+        //    return flag;
+        //}
+
+        internal bool createStandarizationDocument(QueryModel<Standarizations> data, DataTable tags, DataTable attach)
         {
             bool flag = false;
 
@@ -7865,7 +7985,7 @@ namespace BPIDA.Controllers
                 {
                     command.Connection = con;
                     command.CommandType = CommandType.StoredProcedure;
-                    command.CommandText = "[createStandarizationData]";
+                    command.CommandText = "[createStandarizationDocument]";
                     command.CommandTimeout = 1000;
 
                     command.Parameters.Clear();
@@ -7877,43 +7997,8 @@ namespace BPIDA.Controllers
                     command.Parameters.AddWithValue("@AuditAction", data.userAction);
                     command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
 
-                    int ret = command.ExecuteNonQuery();
-
-                    if (ret >= 0)
-                        flag = true;
-
-                }
-                catch (SqlException ex)
-                {
-                    throw ex;
-                }
-                finally
-                {
-                    con.Close();
-                }
-            }
-
-            return flag;
-        }
-
-        internal bool createStandarizationTagData(DataTable data)
-        {
-            bool flag = false;
-
-            using (SqlConnection con = new SqlConnection(_conString))
-            {
-                con.Open();
-                SqlCommand command = new SqlCommand();
-
-                try
-                {
-                    command.Connection = con;
-                    command.CommandType = CommandType.StoredProcedure;
-                    command.CommandText = "[createStandarizationTags]";
-                    command.CommandTimeout = 1000;
-
-                    command.Parameters.Clear();
-                    command.Parameters.AddWithValue("@StandarizationTags", data);
+                    command.Parameters.AddWithValue("@StandarizationTags", tags);
+                    command.Parameters.AddWithValue("@StandarizationAttachments", attach);
 
                     int ret = command.ExecuteNonQuery();
 
@@ -7934,163 +8019,125 @@ namespace BPIDA.Controllers
             return flag;
         }
 
-        internal bool createStandarizationAttachmentData(DataTable data)
-        {
-            bool flag = false;
+        //internal bool editStandarizationData(QueryModel<Standarizations> data)
+        //{
+        //    bool flag = false;
 
-            using (SqlConnection con = new SqlConnection(_conString))
-            {
-                con.Open();
-                SqlCommand command = new SqlCommand();
+        //    using (SqlConnection con = new SqlConnection(_conString))
+        //    {
+        //        con.Open();
+        //        SqlCommand command = new SqlCommand();
 
-                try
-                {
-                    command.Connection = con;
-                    command.CommandType = CommandType.StoredProcedure;
-                    command.CommandText = "[createStandarizationAttachment]";
-                    command.CommandTimeout = 1000;
+        //        try
+        //        {
+        //            command.Connection = con;
+        //            command.CommandType = CommandType.StoredProcedure;
+        //            command.CommandText = "[editStandarizationData]";
+        //            command.CommandTimeout = 1000;
 
-                    command.Parameters.Clear();
-                    command.Parameters.AddWithValue("@StandarizationAttachments", data);
+        //            command.Parameters.Clear();
+        //            command.Parameters.AddWithValue("@TypeID", data.Data.TypeID);
+        //            command.Parameters.AddWithValue("@StandarizationID", data.Data.StandarizationID);
+        //            command.Parameters.AddWithValue("@StandarizationDetails", data.Data.StandarizationDetails);
+        //            command.Parameters.AddWithValue("@StandarizationDate", data.Data.StandarizationDate);
+        //            command.Parameters.AddWithValue("@AuditUser", data.userEmail);
+        //            command.Parameters.AddWithValue("@AuditAction", data.userAction);
+        //            command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
 
-                    int ret = command.ExecuteNonQuery();
+        //            int ret = command.ExecuteNonQuery();
 
-                    if (ret >= 0)
-                        flag = true;
+        //            if (ret >= 0)
+        //                flag = true;
 
-                }
-                catch (SqlException ex)
-                {
-                    throw ex;
-                }
-                finally
-                {
-                    con.Close();
-                }
-            }
+        //        }
+        //        catch (SqlException ex)
+        //        {
+        //            throw ex;
+        //        }
+        //        finally
+        //        {
+        //            con.Close();
+        //        }
+        //    }
 
-            return flag;
-        }
+        //    return flag;
+        //}
 
-        internal bool editStandarizationData(QueryModel<Standarizations> data)
-        {
-            bool flag = false;
+        //internal bool editStandarizationTagData(DataTable data)
+        //{
+        //    bool flag = false;
 
-            using (SqlConnection con = new SqlConnection(_conString))
-            {
-                con.Open();
-                SqlCommand command = new SqlCommand();
+        //    using (SqlConnection con = new SqlConnection(_conString))
+        //    {
+        //        con.Open();
+        //        SqlCommand command = new SqlCommand();
 
-                try
-                {
-                    command.Connection = con;
-                    command.CommandType = CommandType.StoredProcedure;
-                    command.CommandText = "[editStandarizationData]";
-                    command.CommandTimeout = 1000;
+        //        try
+        //        {
+        //            command.Connection = con;
+        //            command.CommandType = CommandType.StoredProcedure;
+        //            command.CommandText = "[editStandarizationTags]";
+        //            command.CommandTimeout = 1000;
 
-                    command.Parameters.Clear();
-                    command.Parameters.AddWithValue("@TypeID", data.Data.TypeID);
-                    command.Parameters.AddWithValue("@StandarizationID", data.Data.StandarizationID);
-                    command.Parameters.AddWithValue("@StandarizationDetails", data.Data.StandarizationDetails);
-                    command.Parameters.AddWithValue("@StandarizationDate", data.Data.StandarizationDate);
-                    command.Parameters.AddWithValue("@AuditUser", data.userEmail);
-                    command.Parameters.AddWithValue("@AuditAction", data.userAction);
-                    command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
+        //            command.Parameters.Clear();
+        //            command.Parameters.AddWithValue("@StandarizationTags", data);
 
-                    int ret = command.ExecuteNonQuery();
+        //            int ret = command.ExecuteNonQuery();
 
-                    if (ret >= 0)
-                        flag = true;
+        //            if (ret >= 0)
+        //                flag = true;
 
-                }
-                catch (SqlException ex)
-                {
-                    throw ex;
-                }
-                finally
-                {
-                    con.Close();
-                }
-            }
+        //        }
+        //        catch (SqlException ex)
+        //        {
+        //            throw ex;
+        //        }
+        //        finally
+        //        {
+        //            con.Close();
+        //        }
+        //    }
 
-            return flag;
-        }
+        //    return flag;
+        //}
 
-        internal bool editStandarizationTagData(DataTable data)
-        {
-            bool flag = false;
+        //internal bool editStandarizationAttachmentData(DataTable data)
+        //{
+        //    bool flag = false;
 
-            using (SqlConnection con = new SqlConnection(_conString))
-            {
-                con.Open();
-                SqlCommand command = new SqlCommand();
+        //    using (SqlConnection con = new SqlConnection(_conString))
+        //    {
+        //        con.Open();
+        //        SqlCommand command = new SqlCommand();
 
-                try
-                {
-                    command.Connection = con;
-                    command.CommandType = CommandType.StoredProcedure;
-                    command.CommandText = "[editStandarizationTags]";
-                    command.CommandTimeout = 1000;
+        //        try
+        //        {
+        //            command.Connection = con;
+        //            command.CommandType = CommandType.StoredProcedure;
+        //            command.CommandText = "[editStandarizationAttachment]";
+        //            command.CommandTimeout = 1000;
 
-                    command.Parameters.Clear();
-                    command.Parameters.AddWithValue("@StandarizationTags", data);
+        //            command.Parameters.Clear();
+        //            command.Parameters.AddWithValue("@StandarizationAttachments", data);
 
-                    int ret = command.ExecuteNonQuery();
+        //            int ret = command.ExecuteNonQuery();
 
-                    if (ret >= 0)
-                        flag = true;
+        //            if (ret >= 0)
+        //                flag = true;
 
-                }
-                catch (SqlException ex)
-                {
-                    throw ex;
-                }
-                finally
-                {
-                    con.Close();
-                }
-            }
+        //        }
+        //        catch (SqlException ex)
+        //        {
+        //            throw ex;
+        //        }
+        //        finally
+        //        {
+        //            con.Close();
+        //        }
+        //    }
 
-            return flag;
-        }
-
-        internal bool editStandarizationAttachmentData(DataTable data)
-        {
-            bool flag = false;
-
-            using (SqlConnection con = new SqlConnection(_conString))
-            {
-                con.Open();
-                SqlCommand command = new SqlCommand();
-
-                try
-                {
-                    command.Connection = con;
-                    command.CommandType = CommandType.StoredProcedure;
-                    command.CommandText = "[editStandarizationAttachment]";
-                    command.CommandTimeout = 1000;
-
-                    command.Parameters.Clear();
-                    command.Parameters.AddWithValue("@StandarizationAttachments", data);
-
-                    int ret = command.ExecuteNonQuery();
-
-                    if (ret >= 0)
-                        flag = true;
-
-                }
-                catch (SqlException ex)
-                {
-                    throw ex;
-                }
-                finally
-                {
-                    con.Close();
-                }
-            }
-
-            return flag;
-        }
+        //    return flag;
+        //}
 
         internal DataTable getStandarizationTypeData()
         {
@@ -8331,26 +8378,6 @@ namespace BPIDA.Controllers
 
             try
             {
-                //dtMainIdentity = createIDData("CashierLogbook");
-
-                //if (dtMainIdentity.Rows.Count > 0)
-                //{
-                //    foreach (DataRow dt in dtMainIdentity.Rows)
-                //    {
-                //        string zero = string.Empty;
-
-                //        for (int i = 0; i < 16 - (Convert.ToInt32(dt["IDLength"]) + dt["Code"].ToString().Length); i++)
-                //        {
-                //            zero = zero + "0";
-                //        }
-
-                //        standarizationId = dt["Code"].ToString() + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + zero + dt["DocNumber"].ToString() + dt["Parity"].ToString();
-
-                //    }
-                //}
-
-                //data.Data.StandarizationID = standarizationId;
-
                 List<StandarizationTag> tags = new();
 
                 foreach (var tag in data.Data.Tags)
@@ -8363,28 +8390,43 @@ namespace BPIDA.Controllers
                     });
                 }
 
-                bool success = createStandarizationData(data);
+                if (createStandarizationDocument(
+                    data
+                    , ListToDataTable<StandarizationTag>(tags, data.userEmail, data.userAction, data.userActionDate, "Tags")
+                    , ListToDataTable<StandarizationAttachment>(data.Data.Attachments, data.userEmail, data.userAction, data.userActionDate, "Attachments"))
+                )
+                {
+                    res.Data = data;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
 
-                if (!success)
-                    throw new Exception("Fail Create Standarization Header");
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = data;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "SP Failed to Execute !";
 
-                success = createStandarizationTagData(ListToDataTable<StandarizationTag>(tags, data.userEmail, data.userAction, data.userActionDate, "Tags"));
+                    actionResult = Ok(res);
+                }
 
-                if (!success)
-                    throw new Exception("Fail Create Standarization Tags");
+                //bool success = createStandarizationData(data);
 
-                success = createStandarizationAttachmentData(ListToDataTable<StandarizationAttachment>(data.Data.Attachments, data.userEmail, data.userAction, data.userActionDate, "Attachments"));
+                //if (!success)
+                //    throw new Exception("Fail Create Standarization Header");
 
-                if (!success)
-                    throw new Exception("Fail Create Standarization Attachment");
+                //success = createStandarizationTagData(ListToDataTable<StandarizationTag>(tags, data.userEmail, data.userAction, data.userActionDate, "Tags"));
 
+                //if (!success)
+                //    throw new Exception("Fail Create Standarization Tags");
 
-                res.Data = data;
-                res.isSuccess = true;
-                res.ErrorCode = "00";
-                res.ErrorMessage = "";
+                //success = createStandarizationAttachmentData(ListToDataTable<StandarizationAttachment>(data.Data.Attachments, data.userEmail, data.userAction, data.userActionDate, "Attachments"));
 
-                actionResult = Ok(res);
+                //if (!success)
+                //    throw new Exception("Fail Create Standarization Attachment");
 
             }
             catch (Exception ex)
@@ -8409,21 +8451,6 @@ namespace BPIDA.Controllers
             {
                 deleteStandarizationData(data.Data.StandarizationID, data.userEmail, data.userAction, data.userActionDate);
 
-                //bool success = editStandarizationData(data);
-
-                //if (!success)
-                //    throw new Exception("Fail Create Standarization Header");
-
-                //success = editStandarizationTagData(ListToDataTable<StandarizationTag>(data.Data.Tags, data.userEmail, data.userAction, data.userActionDate, "Tags"));
-
-                //if (!success)
-                //    throw new Exception("Fail Create Standarization Tags");
-
-                //success = editStandarizationAttachmentData(ListToDataTable<StandarizationAttachment>(data.Data.Attachments, data.userEmail, data.userAction, data.userActionDate, "Attachments"));
-
-                //if (!success)
-                //    throw new Exception("Fail Create Standarization Attachment");
-
                 List<StandarizationTag> tags = new();
 
                 foreach (var tag in data.Data.Tags)
@@ -8436,28 +8463,43 @@ namespace BPIDA.Controllers
                     });
                 }
 
-                bool success = createStandarizationData(data);
+                if (createStandarizationDocument(
+                    data
+                    , ListToDataTable<StandarizationTag>(tags, data.userEmail, data.userAction, data.userActionDate, "Tags")
+                    , ListToDataTable<StandarizationAttachment>(data.Data.Attachments, data.userEmail, data.userAction, data.userActionDate, "Attachments"))
+                )
+                {
+                    res.Data = data;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
 
-                if (!success)
-                    throw new Exception("Fail Create Standarization Header");
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = data;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "SP Failed to Execute !";
 
-                success = createStandarizationTagData(ListToDataTable<StandarizationTag>(tags, data.userEmail, data.userAction, data.userActionDate, "Tags"));
+                    actionResult = Ok(res);
+                }
 
-                if (!success)
-                    throw new Exception("Fail Create Standarization Tags");
+                //bool success = createStandarizationData(data);
 
-                success = createStandarizationAttachmentData(ListToDataTable<StandarizationAttachment>(data.Data.Attachments, data.userEmail, data.userAction, data.userActionDate, "Attachments"));
+                //if (!success)
+                //    throw new Exception("Fail Create Standarization Header");
 
-                if (!success)
-                    throw new Exception("Fail Create Standarization Attachment");
+                //success = createStandarizationTagData(ListToDataTable<StandarizationTag>(tags, data.userEmail, data.userAction, data.userActionDate, "Tags"));
 
+                //if (!success)
+                //    throw new Exception("Fail Create Standarization Tags");
 
-                res.Data = data;
-                res.isSuccess = true;
-                res.ErrorCode = "00";
-                res.ErrorMessage = "";
+                //success = createStandarizationAttachmentData(ListToDataTable<StandarizationAttachment>(data.Data.Attachments, data.userEmail, data.userAction, data.userActionDate, "Attachments"));
 
-                actionResult = Ok(res);
+                //if (!success)
+                //    throw new Exception("Fail Create Standarization Attachment");
 
             }
             catch (Exception ex)
