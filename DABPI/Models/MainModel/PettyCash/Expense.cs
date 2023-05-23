@@ -23,4 +23,9 @@ namespace BPIDA.Models.MainModel.PettyCash
         public List<ExpenseLine> lines { get; set; } = new();
         public ExpenseDocumentStatus statusDetails { get; set; } = new();
     }
+
+    public class ExpenseIds
+    {
+        public string ExpenseID { get; set; } = string.Empty;
+    }
 }

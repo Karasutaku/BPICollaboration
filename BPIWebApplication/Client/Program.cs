@@ -7,6 +7,7 @@ using BPIWebApplication.Client.Services.CashierLogbookServices;
 using BPIWebApplication.Client.Services.EPKRSServices;
 using BPIWebApplication.Client.Services.ManagementServices;
 using BPIWebApplication.Client.Services.PettyCashServices;
+using BPIWebApplication.Client.Services.POMFServices;
 using BPIWebApplication.Client.Services.StandarizationServices;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -25,6 +26,7 @@ builder.Services.AddScoped<IPettyCashService, PettyCashService>();
 builder.Services.AddScoped<ICashierLogbookService, CashierLogbookService>();
 builder.Services.AddScoped<IStandarizationService, StandarizationService>();
 builder.Services.AddScoped<IEPKRSService, EPKRSService>();
+builder.Services.AddScoped<IPOMFService, POMFService>();
 
 builder.Services.AddBlazoredSessionStorage();
 

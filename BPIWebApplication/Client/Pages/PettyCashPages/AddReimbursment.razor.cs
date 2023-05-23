@@ -206,43 +206,42 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
 
                         uploadData.files = PettyCashService.fileStreams;
 
-                        QueryModel<List<string>> settleExpenseData = new();
-                        settleExpenseData.Data = new();
+                        //QueryModel<List<string>> settleExpenseData = new();
+                        //settleExpenseData.Data = new();
 
-                        settleExpenseData.Data = settlingExpense;
-                        settleExpenseData.userEmail = activeUser.userName;
-                        settleExpenseData.userAction = "D";
-                        settleExpenseData.userActionDate = DateTime.Now;
+                        //settleExpenseData.Data = settlingExpense;
+                        //settleExpenseData.userEmail = activeUser.userName;
+                        //settleExpenseData.userAction = "D";
+                        //settleExpenseData.userActionDate = DateTime.Now;
 
-                        var res = await PettyCashService.updateExpenseDataSettlement(settleExpenseData);
+                        //var res = await PettyCashService.updateExpenseDataSettlement(settleExpenseData);
 
-                        if (res.isSuccess)
+                        //if (res.isSuccess)
+                        //{
+
+                        var res2 = await PettyCashService.createReimburseData(uploadData);
+
+                        if (res2.isSuccess)
                         {
-                            var res2 = await PettyCashService.createReimburseData(uploadData);
+                            string temp = "PettyCash!_!AddPCR!_!" + activeUser.location + "!_!" + activeUser.userName + "!_!" + reimburseId.Data;
+                            var res3 = await PettyCashService.autoEmail(Base64Encode(temp));
 
-                            if (res2.isSuccess)
+                            if (res3.isSuccess)
                             {
-                                string temp = "PettyCash!_!AddPCR!_!" + activeUser.location + "!_!" + activeUser.userName + "!_!" + reimburseId.Data;
-                                var res3 = await PettyCashService.autoEmail(Base64Encode(temp));
-
-                                if (res3.isSuccess)
-                                {
-                                    await _jsModule.InvokeVoidAsync("showAlert", "Email Auto Generate Success");
-                                }
-                                else
-                                {
-                                    await _jsModule.InvokeVoidAsync("showAlert", "Email Auto Generate Failed");
-                                }
-
-                                successUpload = true;
-                                isLoading = false;
-                                successAlert = true;
-                                alertMessage = "Create Reimbursement Success !";
-                                alertBody = $"Your Reimburse ID is {reimburseId.Data}";
-
-                                StateHasChanged();
+                                await _jsModule.InvokeVoidAsync("showAlert", "Email Auto Generate Success");
+                            }
+                            else
+                            {
+                                await _jsModule.InvokeVoidAsync("showAlert", "Email Auto Generate Failed");
                             }
 
+                            successUpload = true;
+                            isLoading = false;
+                            successAlert = true;
+                            alertMessage = "Create Reimbursement Success !";
+                            alertBody = $"Your Reimburse ID is {reimburseId.Data}";
+
+                            StateHasChanged();
                         }
                         else
                         {
@@ -253,6 +252,17 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
 
                             StateHasChanged();
                         }
+
+                        //}
+                        //else
+                        //{
+                        //    isLoading = false;
+                        //    alertTrigger = true;
+                        //    alertMessage = "Create Reimbursement Failed !";
+                        //    alertBody = "Please Recheck Your Input Field";
+
+                        //    StateHasChanged();
+                        //}
                     }
                     else
                     {

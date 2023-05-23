@@ -27,6 +27,9 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
         Task<ResultModel<QueryModel<ItemCase>>> editEPKRSItemCaseData(QueryModel<ItemCase> data);
         Task<ResultModel<QueryModel<IncidentAccident>>> editEPKRSIncidentAccidentData(QueryModel<IncidentAccident> data);
 
+        Task<ResultModel<QueryModel<string>>> deleteEPKRSItemCaseDocumentData(QueryModel<string> data);
+        Task<ResultModel<QueryModel<string>>> deleteEPKRSIncidentAccidentDocumentData(QueryModel<string> data);
+
         Task<ResultModel<List<ReportingType>>> getEPRKSReportingType();
         Task<ResultModel<List<RiskType>>> getEPRKSRiskType();
         Task<ResultModel<List<ItemRiskCategory>>> getEPKRSItemRiskCategory();

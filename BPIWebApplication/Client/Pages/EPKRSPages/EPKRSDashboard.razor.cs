@@ -29,7 +29,6 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
         private List<EPKRSItemCaseCategoryStatistics>? previewItemCaseCategoryStatistics = null;
         private List<EPKRSTopLocationReportStatistics>? previewTopLocationReportStatistics = null;
         private List<EPKRSItemCaseItemCategoryStatistics>? previewItemCategoryStatistics = null;
-        private List<DocumentDiscussionReadHistory>? unreadDiscussion = null;
 
         private ItemCase updateItemCase = new();
         private IncidentAccident updateIncidentAccident = new();
@@ -50,7 +49,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
         private int itemCasePageActive = 0;
         private int incidentAccidentPageActive = 0;
 
-        private string itemCaseFilterType { get; set; } = string.Empty;
+        private string itemCaseFilterType { get; set; } = string.Empty; 
         private string incidentAccidentFilterType { get; set; } = string.Empty;
 
         private string itemCaseFilterValue { get; set; } = string.Empty;
@@ -1059,7 +1058,73 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             }
         }
 
-        private async Task incidentAccidentPageSelect(int currPage)
+        private async Task deleteEPKRSDocument(string docType)
+        {
+            try
+            {
+                string temp = previousPreviewedDocumentID  + "!_!" + previousPreviewedDocumentLocation;
+                
+                QueryModel<string> paramData = new();
+                paramData.Data = CommonLibrary.Base64Encode(temp);
+                paramData.userEmail = activeUser.userName;
+                paramData.userAction = "D";
+                paramData.userActionDate = DateTime.Now;
+
+                if (docType.Equals("ITCASE"))
+                {
+                    var res = await EPKRSService.deleteEPKRSItemCaseDocumentData(paramData);
+
+                    if (res.isSuccess)
+                    {
+                        previewItemCase.DocumentStatus = "DELETED";
+                        var a = EPKRSService.itemCases.SingleOrDefault(x => x.itemCase.DocumentID.Equals(res.Data.Data.Split("!_!")[0]));
+
+                        if (a != null)
+                            EPKRSService.itemCases.SingleOrDefault(x => x.itemCase.DocumentID.Equals(res.Data.Data.Split("!_!")[0])).itemCase.DocumentStatus = "DELETED";
+
+                        await _jsModule.InvokeVoidAsync("showAlert", "Delete Document Success, Please REFRESH Your Page !");
+                    }
+                    else
+                    {
+                        await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
+                    }
+                }
+                else if (docType.Equals("INCAC"))
+                {
+                    previewIncidentAccident.DocumentStatus = "DELETED";
+                    var res = await EPKRSService.deleteEPKRSIncidentAccidentDocumentData(paramData);
+
+                    if (res.isSuccess)
+                    {
+                        var b = EPKRSService.incidentAccidents.SingleOrDefault(x => x.incidentAccident.DocumentID.Equals(res.Data.Data.Split("!_!")[0]));
+
+                        if (b != null)
+                            EPKRSService.incidentAccidents.SingleOrDefault(x => x.incidentAccident.DocumentID.Equals(res.Data.Data.Split("!_!")[0])).incidentAccident.DocumentStatus = "DELETED";
+
+                        await _jsModule.InvokeVoidAsync("showAlert", "Delete Document Success, Please REFRESH Your Page !");
+                    }
+                    else
+                    {
+                        await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
+                    }
+                }
+                else
+                {
+                    throw new Exception("Delete Document : docType parameter isn\'t correctly supplied !");
+                }
+
+                isLoading = false;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                isLoading = false;
+                StateHasChanged();
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} from {ex.Source} {ex.InnerException} !");
+            }
+        }
+
+        private async void incidentAccidentPageSelect(int currPage)
         {
             incidentAccidentPageActive = currPage;
             isLoading = true;
@@ -1127,13 +1192,14 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             StateHasChanged();
         }
 
-        private async Task incidentAccidentFilter()
+        private async void incidentAccidentFilter()
         {
             if (incidentAccidentFilterType.Length > 0)
             {
                 incidentAccidentFilterActive = true;
                 isLoading = true;
                 EPKRSService.incidentAccidents.Clear();
+                incidentAccidentPageActive = 1;
 
                 if (incidentAccidentFilterType.Equals("ID"))
                 {
@@ -1207,9 +1273,10 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             }
         }
 
-        private async Task resetIncidentAccidentFilter()
+        private async void resetIncidentAccidentFilter()
         {
             isLoading = true;
+            incidentAccidentPageActive = 1;
 
             string incidentAccidentParampz = $"[EPKRS].IncidentAccident!_!{activeUser.location}!_!";
             var incidentAccidentpz = await EPKRSService.getEPKRSModuleNumberOfPage(CommonLibrary.Base64Encode(incidentAccidentParampz));

@@ -311,105 +311,108 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
 
                         // settlement
 
-                        if (isSettlement)
+                        //if (isSettlement)
+                        //{
+                            //QueryModel<string> updateData = new();
+                            //updateData.Data = expense.AdvanceID;
+                            //updateData.userEmail = activeUser.userName;
+                            //updateData.userAction = "U";
+                            //updateData.userActionDate = DateTime.Now;
+
+                            //var res = await PettyCashService.updateAdvanceDataSettlement(updateData);
+
+                            //if (res.isSuccess)
+                            //{
+
+                        var res2 = await PettyCashService.createExpenseData(uploadData);
+
+                        if (res2.isSuccess)
                         {
-                            QueryModel<string> updateData = new();
-                            updateData.Data = expense.AdvanceID;
-                            updateData.userEmail = activeUser.userName;
-                            updateData.userAction = "U";
-                            updateData.userActionDate = DateTime.Now;
+                            string temp1 = "PettyCash!_!AddDocument!_!" + activeUser.location + "!_!" + activeUser.userName + "!_!" + expenseId.Data;
+                            var res3 = await PettyCashService.autoEmail(Base64Encode(temp1));
 
-                            var res = await PettyCashService.updateAdvanceDataSettlement(updateData);
-
-                            if (res.isSuccess)
+                            if (res3.isSuccess)
                             {
-
-                                var res2 = await PettyCashService.createExpenseData(uploadData);
-
-                                if (res2.isSuccess)
-                                {
-                                    string temp1 = "PettyCash!_!AddDocument!_!" + activeUser.location + "!_!" + activeUser.userName + "!_!" + expenseId.Data;
-                                    var res3 = await PettyCashService.autoEmail(Base64Encode(temp1));
-
-                                    if (res3.isSuccess)
-                                    {
-                                        await _jsModule.InvokeVoidAsync("showAlert", "Email Auto Generate Success");
-                                    }
-                                    else
-                                    {
-                                        await _jsModule.InvokeVoidAsync("showAlert", "Email Auto Generate Failed");
-                                    }
-
-                                    showModalConfirmation = false;
-                                    successUpload = true;
-                                    isLoading = false;
-                                    alertTrigger = false;
-                                    successAlert = true;
-                                    alertMessage = "Create Expense Success !";
-                                    alertBody = $"Your Expense ID is {expenseId.Data}";
-
-                                    StateHasChanged();
-                                }
-                                else
-                                {
-                                    showModalConfirmation = false;
-                                    successUpload = false;
-                                    isLoading = false;
-                                    successAlert = false;
-                                    alertTrigger = true;
-                                    alertMessage = "Create Expense Failed !";
-                                    alertBody = "Please Recheck Your Input Field";
-
-                                    StateHasChanged();
-                                }
+                                await _jsModule.InvokeVoidAsync("showAlert", "Email Auto Generate Success");
                             }
                             else
                             {
-                                throw new Exception("Settle Error");
+                                await _jsModule.InvokeVoidAsync("showAlert", "Email Auto Generate Failed");
                             }
 
+                            showModalConfirmation = false;
+                            successUpload = true;
+                            isLoading = false;
+                            alertTrigger = false;
+                            successAlert = true;
+                            alertMessage = "Create Expense Success !";
+                            alertBody = $"Your Expense ID is {expenseId.Data}";
+
+                            StateHasChanged();
                         }
                         else
                         {
-                            var res2 = await PettyCashService.createExpenseData(uploadData);
+                            showModalConfirmation = false;
+                            successUpload = false;
+                            isLoading = false;
+                            successAlert = false;
+                            alertTrigger = true;
+                            alertMessage = "Create Expense Failed !";
+                            alertBody = "";
 
-                            if (res2.isSuccess)
-                            {
-                                string temp1 = "PettyCash!_!AddDocument!_!" + activeUser.location + "!_!" + activeUser.userName + "!_!" + expenseId.Data;
-                                var res3 = await PettyCashService.autoEmail(Base64Encode(temp1));
+                            await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res2.ErrorCode} - {res2.ErrorMessage}");
 
-                                if (res3.isSuccess)
-                                {
-                                    await _jsModule.InvokeVoidAsync("showAlert", "Email Auto Generate Success");
-                                }
-                                else
-                                {
-                                    await _jsModule.InvokeVoidAsync("showAlert", "Email Auto Generate Failed");
-                                }
-
-                                showModalConfirmation = false;
-                                successUpload = true;
-                                isLoading = false;
-                                alertTrigger = false;
-                                successAlert = true;
-                                alertMessage = "Create Expense Success !";
-                                alertBody = $"Your Expense ID is {expenseId.Data}";
-
-                                StateHasChanged();
-                            }
-                            else
-                            {
-                                showModalConfirmation = false;
-                                successUpload = false;
-                                isLoading = false;
-                                successAlert = false;
-                                alertTrigger = true;
-                                alertMessage = "Create Expense Failed !";
-                                alertBody = "Please Recheck Your Input Field";
-
-                                StateHasChanged();
-                            }
+                            StateHasChanged();
                         }
+
+                            //}
+                            //else
+                            //{
+                            //    throw new Exception("Settle Error");
+                            //}
+
+                        //}
+                        //else
+                        //{
+                        //    var res2 = await PettyCashService.createExpenseData(uploadData);
+
+                        //    if (res2.isSuccess)
+                        //    {
+                        //        string temp1 = "PettyCash!_!AddDocument!_!" + activeUser.location + "!_!" + activeUser.userName + "!_!" + expenseId.Data;
+                        //        var res3 = await PettyCashService.autoEmail(Base64Encode(temp1));
+
+                        //        if (res3.isSuccess)
+                        //        {
+                        //            await _jsModule.InvokeVoidAsync("showAlert", "Email Auto Generate Success");
+                        //        }
+                        //        else
+                        //        {
+                        //            await _jsModule.InvokeVoidAsync("showAlert", "Email Auto Generate Failed");
+                        //        }
+
+                        //        showModalConfirmation = false;
+                        //        successUpload = true;
+                        //        isLoading = false;
+                        //        alertTrigger = false;
+                        //        successAlert = true;
+                        //        alertMessage = "Create Expense Success !";
+                        //        alertBody = $"Your Expense ID is {expenseId.Data}";
+
+                        //        StateHasChanged();
+                        //    }
+                        //    else
+                        //    {
+                        //        showModalConfirmation = false;
+                        //        successUpload = false;
+                        //        isLoading = false;
+                        //        successAlert = false;
+                        //        alertTrigger = true;
+                        //        alertMessage = "Create Expense Failed !";
+                        //        alertBody = "Please Recheck Your Input Field";
+
+                        //        StateHasChanged();
+                        //    }
+                        //}
                     }
                     else
                     {

@@ -134,7 +134,7 @@ namespace BPIWebApplication.Client.Pages.StandarizationPages
 
             using var streamRef = new DotNetStreamReference(stream: filestream);
 
-            await _jsModule.InvokeVoidAsync("exportStream", filename, streamRef);
+            await _jsModule.InvokeVoidAsync("downloadFileFromStream", filename, streamRef);
         }
 
         private async Task downloadStandarizationFile(StandarizationAttachment data)
@@ -148,17 +148,18 @@ namespace BPIWebApplication.Client.Pages.StandarizationPages
                     var content = StandarizationService.fileStreams.SingleOrDefault(x => x.type.Equals(data.StandarizationID) && x.fileName.Equals(data.FilePath)).content;
                     string filename = data.FilePath.Split("!_!")[1];
 
-                    //await HandleDownloadDocument(content, filename);
+                    await HandleDownloadDocument(content, filename);
+                    //await _jsModule.InvokeVoidAsync("loadPDF", Convert.ToBase64String(content));
 
                     // test
 
-                    filetextname = filename;
-                    FileInfo f = new(filename);
-                    fileext = f.Extension;
-                    filecont = content;
-                    //show = true;
+                    //filetextname = filename;
+                    //FileInfo f = new(filename);
+                    //fileext = f.Extension;
+                    //filecont = content;
+                    ////show = true;
 
-                    FileViewer.setShowModal(true);
+                    //FileViewer.setShowModal(true);
 
                     isLoading = false;
                 }

@@ -19,41 +19,6 @@ namespace BPIWebApplication.Client.Services.LoginServices
         public ActiveUser? activeUser { get; set; } = new();
         public List<FacadeUserModuleResp>? moduleList { get; set; } = new();
 
-        //public async Task<ResultModel<ActiveUser<LoginUser>>> GetUserAuthentication(LoginUser data)
-        //{
-        //    ResultModel<ActiveUser<LoginUser>> resData = new ResultModel<ActiveUser<LoginUser>>();
-
-        //    try
-        //    {
-        //        // check login api user Windows
-        //        var result1 = await _http.PostAsJsonAsync<LoginUser>("api/Login/Authenticate", data);
-
-        //        // kalau ada, check admin user
-        //        if (result1.IsSuccessStatusCode)
-        //        {
-        //            var result2 = await _http.PostAsJsonAsync<LoginUser>("api/Login/IsAdmin", data);
-
-        //            var respBody = await result2.Content.ReadFromJsonAsync<ResultModel<ActiveUser<LoginUser>>>();
-
-        //            if (respBody.isSuccess) {
-        //                resData.Data = respBody.Data;
-        //                resData.isSuccess = respBody.isSuccess;
-        //                resData.ErrorCode = respBody.ErrorCode;
-        //                resData.ErrorMessage = respBody.ErrorMessage;
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        resData.Data = null;
-        //        resData.isSuccess = false;
-        //        resData.ErrorCode = "99";
-        //        resData.ErrorMessage = ex.Message;
-        //    }
-
-        //    return resData;
-        //}
-
         public async Task<ResultModel<FacadeLoginResponse>> smsApiFacadeLogin(FacadeLogin data)
         {
             ResultModel<FacadeLoginResponse> resData = new ResultModel<FacadeLoginResponse>();
@@ -80,7 +45,15 @@ namespace BPIWebApplication.Client.Services.LoginServices
                         resData.ErrorCode = respBody.ErrorCode;
                         resData.ErrorMessage = respBody.ErrorMessage;
                     }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<FacadeLoginResponse>>();
 
+                    resData.Data = respBody.Data;
+                    resData.isSuccess = respBody.isSuccess;
+                    resData.ErrorCode = respBody.ErrorCode;
+                    resData.ErrorMessage = respBody.ErrorMessage;
                 }
             }
             catch (Exception ex)

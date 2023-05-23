@@ -21,6 +21,8 @@ using BPIDA.Models.MainModel.EPKRS;
 using System.Drawing;
 using System.Collections.Immutable;
 using System.Reflection.Metadata;
+using BPIDA.Models.MainModel.POMF;
+using System.Linq;
 
 namespace BPIDA.Controllers
 {
@@ -165,7 +167,7 @@ namespace BPIDA.Controllers
 
         // create DA
 
-        
+
         internal void createNewDepartmentData(QueryModel<Department> data)
         {
             using (SqlConnection con = new SqlConnection(_conString))
@@ -2364,7 +2366,7 @@ namespace BPIDA.Controllers
             {
                 foreach (var deptapl in data.Data)
                 {
-                    if (isDepartmentProcedureDataPresent(deptapl.ProcedureNo , deptapl.DepartmentID))
+                    if (isDepartmentProcedureDataPresent(deptapl.ProcedureNo, deptapl.DepartmentID))
                         continue;
 
                     QueryModel<DepartmentProcedure> dt = new QueryModel<DepartmentProcedure>();
@@ -2773,49 +2775,7 @@ namespace BPIDA.Controllers
             return dt;
         }
 
-        internal void createAdvanceData(QueryModel<Advance> data)
-        {
-            using (SqlConnection con = new SqlConnection(_conString))
-            {
-                con.Open();
-                SqlCommand command = new SqlCommand();
-
-                try
-                {
-                    command.Connection = con;
-                    command.CommandType = CommandType.StoredProcedure;
-                    command.CommandText = "[createAdvanceData]";
-                    command.CommandTimeout = 1000;
-
-                    command.Parameters.Clear();
-                    command.Parameters.AddWithValue("@AdvanceID", data.Data.AdvanceID);
-                    command.Parameters.AddWithValue("@LocationID", data.Data.LocationID);
-                    command.Parameters.AddWithValue("@Approver", data.Data.Approver);
-                    command.Parameters.AddWithValue("@AdvanceDate", data.Data.AdvanceDate);
-                    command.Parameters.AddWithValue("@DepartmentID", data.Data.DepartmentID);
-                    command.Parameters.AddWithValue("@AdvanceNIK", data.Data.AdvanceNIK);
-                    command.Parameters.AddWithValue("@AdvanceNote", data.Data.AdvanceNote);
-                    command.Parameters.AddWithValue("@AdvanceType", data.Data.AdvanceType);
-                    command.Parameters.AddWithValue("@TypeAccount", data.Data.TypeAccount);
-                    command.Parameters.AddWithValue("@AdvanceStatus", data.Data.AdvanceStatus);
-                    command.Parameters.AddWithValue("@AuditUser", data.userEmail);
-                    command.Parameters.AddWithValue("@AuditAction", data.userAction);
-                    command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
-
-                    command.ExecuteNonQuery();
-                }
-                catch (SqlException ex)
-                {
-                    throw ex;
-                }
-                finally
-                {
-                    con.Close();
-                }
-            }
-        }
-
-        //internal void createAdvanceLine(QueryModel<AdvanceLine> data)
+        //internal void createAdvanceData(QueryModel<Advance> data)
         //{
         //    using (SqlConnection con = new SqlConnection(_conString))
         //    {
@@ -2826,15 +2786,20 @@ namespace BPIDA.Controllers
         //        {
         //            command.Connection = con;
         //            command.CommandType = CommandType.StoredProcedure;
-        //            command.CommandText = "[createAdvanceLines]";
+        //            command.CommandText = "[createAdvanceData]";
         //            command.CommandTimeout = 1000;
 
         //            command.Parameters.Clear();
         //            command.Parameters.AddWithValue("@AdvanceID", data.Data.AdvanceID);
-        //            command.Parameters.AddWithValue("@LineNum", data.Data.LineNo);
-        //            command.Parameters.AddWithValue("@Details", data.Data.Details);
-        //            command.Parameters.AddWithValue("@Amount", data.Data.Amount);
-        //            command.Parameters.AddWithValue("@AStatus", data.Data.Status);
+        //            command.Parameters.AddWithValue("@LocationID", data.Data.LocationID);
+        //            command.Parameters.AddWithValue("@Approver", data.Data.Approver);
+        //            command.Parameters.AddWithValue("@AdvanceDate", data.Data.AdvanceDate);
+        //            command.Parameters.AddWithValue("@DepartmentID", data.Data.DepartmentID);
+        //            command.Parameters.AddWithValue("@AdvanceNIK", data.Data.AdvanceNIK);
+        //            command.Parameters.AddWithValue("@AdvanceNote", data.Data.AdvanceNote);
+        //            command.Parameters.AddWithValue("@AdvanceType", data.Data.AdvanceType);
+        //            command.Parameters.AddWithValue("@TypeAccount", data.Data.TypeAccount);
+        //            command.Parameters.AddWithValue("@AdvanceStatus", data.Data.AdvanceStatus);
         //            command.Parameters.AddWithValue("@AuditUser", data.userEmail);
         //            command.Parameters.AddWithValue("@AuditAction", data.userAction);
         //            command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
@@ -2852,8 +2817,40 @@ namespace BPIDA.Controllers
         //    }
         //}
 
-        internal void createAdvanceLine(DataTable data)
+        //internal void createAdvanceLine(DataTable data)
+        //{
+        //    using (SqlConnection con = new SqlConnection(_conString))
+        //    {
+        //        con.Open();
+        //        SqlCommand command = new SqlCommand();
+
+        //        try
+        //        {
+        //            command.Connection = con;
+        //            command.CommandType = CommandType.StoredProcedure;
+        //            command.CommandText = "[createAdvanceLines]";
+        //            command.CommandTimeout = 1000;
+
+        //            command.Parameters.Clear();
+        //            command.Parameters.AddWithValue("@AdvanceLinesData", data);
+
+        //            command.ExecuteNonQuery();
+        //        }
+        //        catch (SqlException ex)
+        //        {
+        //            throw ex;
+        //        }
+        //        finally
+        //        {
+        //            con.Close();
+        //        }
+        //    }
+        //}
+
+        internal bool createPettycashAdvanceDocument(QueryModel<Advance> data, DataTable lines)
         {
+            bool flag = false;
+
             using (SqlConnection con = new SqlConnection(_conString))
             {
                 con.Open();
@@ -2863,13 +2860,31 @@ namespace BPIDA.Controllers
                 {
                     command.Connection = con;
                     command.CommandType = CommandType.StoredProcedure;
-                    command.CommandText = "[createAdvanceLines]";
+                    command.CommandText = "[createPettycashAdvanceDocument]";
                     command.CommandTimeout = 1000;
 
                     command.Parameters.Clear();
-                    command.Parameters.AddWithValue("@AdvanceLinesData", data);
+                    command.Parameters.AddWithValue("@AdvanceID", data.Data.AdvanceID);
+                    command.Parameters.AddWithValue("@LocationID", data.Data.LocationID);
+                    command.Parameters.AddWithValue("@Approver", data.Data.Approver);
+                    command.Parameters.AddWithValue("@AdvanceDate", data.Data.AdvanceDate);
+                    command.Parameters.AddWithValue("@DepartmentID", data.Data.DepartmentID);
+                    command.Parameters.AddWithValue("@AdvanceNIK", data.Data.AdvanceNIK);
+                    command.Parameters.AddWithValue("@AdvanceNote", data.Data.AdvanceNote);
+                    command.Parameters.AddWithValue("@AdvanceType", data.Data.AdvanceType);
+                    command.Parameters.AddWithValue("@TypeAccount", data.Data.TypeAccount);
+                    command.Parameters.AddWithValue("@AdvanceStatus", data.Data.AdvanceStatus);
+                    command.Parameters.AddWithValue("@AuditUser", data.userEmail);
+                    command.Parameters.AddWithValue("@AuditAction", data.userAction);
+                    command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
 
-                    command.ExecuteNonQuery();
+                    command.Parameters.AddWithValue("@AdvanceLinesData", lines);
+
+                    int ret = command.ExecuteNonQuery();
+
+                    if (ret > 0)
+                        flag = true;
+
                 }
                 catch (SqlException ex)
                 {
@@ -2880,10 +2895,87 @@ namespace BPIDA.Controllers
                     con.Close();
                 }
             }
+
+            return flag;
         }
 
-        internal void createExpenseData(QueryModel<Expense> data)
+        //internal void createExpenseData(QueryModel<Expense> data)
+        //{
+        //    using (SqlConnection con = new SqlConnection(_conString))
+        //    {
+        //        con.Open();
+        //        SqlCommand command = new SqlCommand();
+
+        //        try
+        //        {
+        //            command.Connection = con;
+        //            command.CommandType = CommandType.StoredProcedure;
+        //            command.CommandText = "[createExpenseData]";
+        //            command.CommandTimeout = 1000;
+
+        //            command.Parameters.Clear();
+        //            command.Parameters.AddWithValue("@ExpenseID", data.Data.ExpenseID);
+        //            command.Parameters.AddWithValue("@AdvanceID", data.Data.AdvanceID);
+        //            command.Parameters.AddWithValue("@LocationID", data.Data.LocationID);
+        //            command.Parameters.AddWithValue("@Approver", data.Data.Approver);
+        //            command.Parameters.AddWithValue("@ExpenseDate", data.Data.ExpenseDate);
+        //            command.Parameters.AddWithValue("@DepartmentID", data.Data.DepartmentID);
+        //            command.Parameters.AddWithValue("@ExpenseNIK", data.Data.ExpenseNIK);
+        //            command.Parameters.AddWithValue("@ExpenseNote", data.Data.ExpenseNote);
+        //            command.Parameters.AddWithValue("@ExpenseType", data.Data.ExpenseType);
+        //            command.Parameters.AddWithValue("@TypeAccount", data.Data.TypeAccount);
+        //            command.Parameters.AddWithValue("@ExpenseStatus", data.Data.ExpenseStatus);
+        //            command.Parameters.AddWithValue("@AuditUser", data.userEmail);
+        //            command.Parameters.AddWithValue("@AuditAction", data.userAction);
+        //            command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
+
+        //            command.ExecuteNonQuery();
+        //        }
+        //        catch (SqlException ex)
+        //        {
+        //            throw ex;
+        //        }
+        //        finally
+        //        {
+        //            con.Close();
+        //        }
+        //    }
+        //}
+
+        //internal void createExpenseLine(DataTable data)
+        //{
+        //    using (SqlConnection con = new SqlConnection(_conString))
+        //    {
+        //        con.Open();
+        //        SqlCommand command = new SqlCommand();
+
+        //        try
+        //        {
+        //            command.Connection = con;
+        //            command.CommandType = CommandType.StoredProcedure;
+        //            command.CommandText = "[createExpenseLines]";
+        //            command.CommandTimeout = 1000;
+
+        //            command.Parameters.Clear();
+        //            command.Parameters.AddWithValue("@ExpenseLinesData", data);
+
+        //            command.ExecuteNonQuery();
+        //        }
+        //        catch (SqlException ex)
+        //        {
+        //            throw ex;
+        //        }
+        //        finally
+        //        {
+        //            con.Close();
+        //        }
+        //    }
+        //}
+
+        internal bool createPettycashExpenseDocument(QueryModel<Expense> data, DataTable lines)
         {
+            bool flag = false;
+
             using (SqlConnection con = new SqlConnection(_conString))
             {
                 con.Open();
@@ -2893,7 +2985,7 @@ namespace BPIDA.Controllers
                 {
                     command.Connection = con;
                     command.CommandType = CommandType.StoredProcedure;
-                    command.CommandText = "[createExpenseData]";
+                    command.CommandText = "[createPettycashExpenseDocument]";
                     command.CommandTimeout = 1000;
 
                     command.Parameters.Clear();
@@ -2912,7 +3004,13 @@ namespace BPIDA.Controllers
                     command.Parameters.AddWithValue("@AuditAction", data.userAction);
                     command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
 
-                    command.ExecuteNonQuery();
+                    command.Parameters.AddWithValue("@ExpenseLinesData", lines);
+
+                    int ret = command.ExecuteNonQuery();
+
+                    if (ret > 0)
+                        flag = true;
+
                 }
                 catch (SqlException ex)
                 {
@@ -2923,109 +3021,9 @@ namespace BPIDA.Controllers
                     con.Close();
                 }
             }
+
+            return flag;
         }
-
-        //internal void createExpenseLine(QueryModel<ExpenseLine> data)
-        //{
-        //    using (SqlConnection con = new SqlConnection(_conString))
-        //    {
-        //        con.Open();
-        //        SqlCommand command = new SqlCommand();
-
-        //        try
-        //        {
-        //            command.Connection = con;
-        //            command.CommandType = CommandType.StoredProcedure;
-        //            command.CommandText = "[createExpenseLines]";
-        //            command.CommandTimeout = 1000;
-
-        //            command.Parameters.Clear();
-        //            command.Parameters.AddWithValue("@ExpenseID", data.Data.ExpenseID);
-        //            command.Parameters.AddWithValue("@LineNum", data.Data.LineNo);
-        //            command.Parameters.AddWithValue("@Details", data.Data.Details);
-        //            command.Parameters.AddWithValue("@Amount", data.Data.Amount);
-        //            command.Parameters.AddWithValue("@ActualAmount", data.Data.ActualAmount);
-        //            command.Parameters.AddWithValue("@EStatus", data.Data.Status);
-        //            command.Parameters.AddWithValue("@AuditUser", data.userEmail);
-        //            command.Parameters.AddWithValue("@AuditAction", data.userAction);
-        //            command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
-
-        //            command.ExecuteNonQuery();
-        //        }
-        //        catch (SqlException ex)
-        //        {
-        //            throw ex;
-        //        }
-        //        finally
-        //        {
-        //            con.Close();
-        //        }
-        //    }
-        //}
-
-        internal void createExpenseLine(DataTable data)
-        {
-            using (SqlConnection con = new SqlConnection(_conString))
-            {
-                con.Open();
-                SqlCommand command = new SqlCommand();
-
-                try
-                {
-                    command.Connection = con;
-                    command.CommandType = CommandType.StoredProcedure;
-                    command.CommandText = "[createExpenseLines]";
-                    command.CommandTimeout = 1000;
-
-                    command.Parameters.Clear();
-                    command.Parameters.AddWithValue("@ExpenseLinesData", data);
-
-                    command.ExecuteNonQuery();
-                }
-                catch (SqlException ex)
-                {
-                    throw ex;
-                }
-                finally
-                {
-                    con.Close();
-                }
-            }
-        }
-
-        //internal void createExpenseAttachLine(QueryModel<BPIDA.Models.MainModel.Stream.FileStream> data)
-        //{
-        //    using (SqlConnection con = new SqlConnection(_conString))
-        //    {
-        //        con.Open();
-        //        SqlCommand command = new SqlCommand();
-
-        //        try
-        //        {
-        //            command.Connection = con;
-        //            command.CommandType = CommandType.StoredProcedure;
-        //            command.CommandText = "[createExpenseAttachData]";
-        //            command.CommandTimeout = 1000;
-
-        //            command.Parameters.Clear();
-        //            command.Parameters.AddWithValue("@ExpenseID", data.Data.type);
-        //            command.Parameters.AddWithValue("@PathFile", data.Data.fileName);
-        //            command.Parameters.AddWithValue("@AuditUser", data.userEmail);
-        //            command.Parameters.AddWithValue("@AuditAction", data.userAction);
-        //            command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
-
-        //            command.ExecuteNonQuery();
-        //        }
-        //        catch (SqlException ex)
-        //        {
-        //            throw ex;
-        //        }
-        //        finally
-        //        {
-        //            con.Close();
-        //        }
-        //    }
-        //}
 
         internal void createExpenseAttachLine(DataTable data)
         {
@@ -3094,46 +3092,6 @@ namespace BPIDA.Controllers
             }
         }
 
-        //internal void createReimburseLine(QueryModel<ReimburseLine> data)
-        //{
-        //    using (SqlConnection con = new SqlConnection(_conString))
-        //    {
-        //        con.Open();
-        //        SqlCommand command = new SqlCommand();
-
-        //        try
-        //        {
-        //            command.Connection = con;
-        //            command.CommandType = CommandType.StoredProcedure;
-        //            command.CommandText = "[createReimburseLines]";
-        //            command.CommandTimeout = 1000;
-
-        //            command.Parameters.Clear();
-        //            command.Parameters.AddWithValue("@ReimburseID", data.Data.ReimburseID);
-        //            command.Parameters.AddWithValue("@ExpenseID", data.Data.ExpenseID);
-        //            command.Parameters.AddWithValue("@LineNum", data.Data.LineNo);
-        //            command.Parameters.AddWithValue("@AccountNo", data.Data.AccountNo);
-        //            command.Parameters.AddWithValue("@Details", data.Data.Details);
-        //            command.Parameters.AddWithValue("@Amount", data.Data.Amount);
-        //            command.Parameters.AddWithValue("@ApprovedAmount", data.Data.ApprovedAmount);
-        //            command.Parameters.AddWithValue("@RStatus", data.Data.Status);
-        //            command.Parameters.AddWithValue("@AuditUser", data.userEmail);
-        //            command.Parameters.AddWithValue("@AuditAction", data.userAction);
-        //            command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
-
-        //            command.ExecuteNonQuery();
-        //        }
-        //        catch (SqlException ex)
-        //        {
-        //            throw ex;
-        //        }
-        //        finally
-        //        {
-        //            con.Close();
-        //        }
-        //    }
-        //}
-
         internal void createReimburseLine(DataTable data)
         {
             using (SqlConnection con = new SqlConnection(_conString))
@@ -3164,43 +3122,53 @@ namespace BPIDA.Controllers
             }
         }
 
-        //internal void createReimburseAttachLine(QueryModel<BPIDA.Models.MainModel.Stream.FileStream> data)
-        //{
-        //    using (SqlConnection con = new SqlConnection(_conString))
-        //    {
-        //        con.Open();
-        //        SqlCommand command = new SqlCommand();
+        internal bool createPettycashReimburseDocument(QueryModel<Reimburse> data, DataTable expId, DataTable lines)
+        {
+            bool flag = false;
 
-        //        try
-        //        {
-        //            string exp = data.Data.type.Split("!_!")[0];
-        //            string rmb = data.Data.type.Split("!_!")[1];
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
 
-        //            command.Connection = con;
-        //            command.CommandType = CommandType.StoredProcedure;
-        //            command.CommandText = "[createReimburseAttachData]";
-        //            command.CommandTimeout = 1000;
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[createPettycashReimburseDocument]";
+                    command.CommandTimeout = 1000;
 
-        //            command.Parameters.Clear();
-        //            command.Parameters.AddWithValue("@ReimburseID", rmb);
-        //            command.Parameters.AddWithValue("@ExpenseID", exp);
-        //            command.Parameters.AddWithValue("@PathFile", data.Data.fileName);
-        //            command.Parameters.AddWithValue("@AuditUser", data.userEmail);
-        //            command.Parameters.AddWithValue("@AuditAction", data.userAction);
-        //            command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@ReimburseID", data.Data.ReimburseID);
+                    command.Parameters.AddWithValue("@LocationID", data.Data.LocationID);
+                    command.Parameters.AddWithValue("@ReimburseNote", data.Data.ReimburseNote);
+                    command.Parameters.AddWithValue("@ReimburseDate", data.Data.ReimburseDate);
+                    command.Parameters.AddWithValue("@ReimburseStatus", data.Data.ReimburseStatus);
+                    command.Parameters.AddWithValue("@AuditUser", data.userEmail);
+                    command.Parameters.AddWithValue("@AuditAction", data.userAction);
+                    command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
 
-        //            command.ExecuteNonQuery();
-        //        }
-        //        catch (SqlException ex)
-        //        {
-        //            throw ex;
-        //        }
-        //        finally
-        //        {
-        //            con.Close();
-        //        }
-        //    }
-        //}
+                    command.Parameters.AddWithValue("@Expenses", expId);
+                    command.Parameters.AddWithValue("@ReimburseLinesData", lines);
+
+                    int ret = command.ExecuteNonQuery();
+
+                    if (ret > 0)
+                        flag = true;
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return flag;
+        }
 
         internal void createReimburseAttachLine(DataTable data)
         {
@@ -3268,8 +3236,9 @@ namespace BPIDA.Controllers
             }
         }
 
-        internal void updateSettleExpense(string Id, string user, string act, DateTime actdate)
+        internal bool updateSettleExpense(string Id, string user, string act, DateTime actdate)
         {
+            bool flag = false;
             using (SqlConnection con = new SqlConnection(_conString))
             {
                 con.Open();
@@ -3288,8 +3257,10 @@ namespace BPIDA.Controllers
                     command.Parameters.AddWithValue("@AuditAction", act);
                     command.Parameters.AddWithValue("@AuditActionDate", actdate);
 
-                    command.ExecuteNonQuery();
+                    int ret = command.ExecuteNonQuery();
 
+                    if (ret <= 0)
+                        flag = true;
                 }
                 catch (SqlException ex)
                 {
@@ -3300,6 +3271,8 @@ namespace BPIDA.Controllers
                     con.Close();
                 }
             }
+
+            return flag;
         }
 
         internal void updateSettleReimburse(QueryModel<string> data)
@@ -3362,7 +3335,7 @@ namespace BPIDA.Controllers
                     command.Parameters.AddWithValue("@AuditActionDate", actdate);
 
                     int ret = command.ExecuteNonQuery();
-                        
+
                     if (ret >= 0)
                         conBool = true;
                 }
@@ -3901,7 +3874,7 @@ namespace BPIDA.Controllers
                     command.Parameters.AddWithValue("@FilterValue", filValue);
                     command.Parameters.AddWithValue("@LocationID", loc);
                     command.Parameters.AddWithValue("@RowPerPage", RowPerPage);
-                    
+
                     var data = command.ExecuteScalar();
                     conInt = Convert.ToInt32(data);
 
@@ -4360,16 +4333,27 @@ namespace BPIDA.Controllers
 
             try
             {
-                createAdvanceData(data);
-                createAdvanceLine(CommonLibrary.ListToDataTable<AdvanceLine>(data.Data.lines, data.userEmail, data.userAction, data.userActionDate, "AdvanceLine"));
+                //createAdvanceData(data);
+                //createAdvanceLine(CommonLibrary.ListToDataTable<AdvanceLine>(data.Data.lines, data.userEmail, data.userAction, data.userActionDate, "AdvanceLine"));
 
-                res.Data = data;
-                res.isSuccess = true;
-                res.ErrorCode = "00";
-                res.ErrorMessage = "";
+                if (createPettycashAdvanceDocument(data, CommonLibrary.ListToDataTable<AdvanceLine>(data.Data.lines, data.userEmail, data.userAction, data.userActionDate, "AdvanceLine")))
+                {
+                    res.Data = data;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
 
-                actionResult = Ok(res);
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = data;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "SP Failed to Execute !";
 
+                    actionResult = Ok(res);
+                }
             }
             catch (Exception ex)
             {
@@ -4383,49 +4367,49 @@ namespace BPIDA.Controllers
             return actionResult;
         }
 
-        [HttpPost("createAdvanceLineData")]
-        public async Task<IActionResult> createAdvanceLineDataTable(QueryModel<List<AdvanceLine>> data)
-        {
-            ResultModel<QueryModel<List<AdvanceLine>>> res = new ResultModel<QueryModel<List<AdvanceLine>>>();
-            DataTable dtTable = new DataTable("Data");
-            IActionResult actionResult = null;
+        //[HttpPost("createAdvanceLineData")]
+        //public async Task<IActionResult> createAdvanceLineDataTable(QueryModel<List<AdvanceLine>> data)
+        //{
+        //    ResultModel<QueryModel<List<AdvanceLine>>> res = new ResultModel<QueryModel<List<AdvanceLine>>>();
+        //    DataTable dtTable = new DataTable("Data");
+        //    IActionResult actionResult = null;
 
-            try
-            {
-                //foreach (var dt in data.Data)
-                //{
-                //    QueryModel<AdvanceLine> line = new QueryModel<AdvanceLine>();
-                //    line.Data = new AdvanceLine();
+        //    try
+        //    {
+        //        //foreach (var dt in data.Data)
+        //        //{
+        //        //    QueryModel<AdvanceLine> line = new QueryModel<AdvanceLine>();
+        //        //    line.Data = new AdvanceLine();
 
-                //    line.Data = dt;
-                //    line.userEmail = data.userEmail;
-                //    line.userAction = data.userAction;
-                //    line.userActionDate = data.userActionDate;
+        //        //    line.Data = dt;
+        //        //    line.userEmail = data.userEmail;
+        //        //    line.userAction = data.userAction;
+        //        //    line.userActionDate = data.userActionDate;
 
-                //    createAdvanceLine(line);
-                //}
+        //        //    createAdvanceLine(line);
+        //        //}
 
-                createAdvanceLine(ListToDataTable<AdvanceLine>(data.Data, data.userEmail, data.userAction, data.userActionDate, "AdvanceLine"));
+        //        createAdvanceLine(ListToDataTable<AdvanceLine>(data.Data, data.userEmail, data.userAction, data.userActionDate, "AdvanceLine"));
 
-                res.Data = data;
-                res.isSuccess = true;
-                res.ErrorCode = "00";
-                res.ErrorMessage = "";
+        //        res.Data = data;
+        //        res.isSuccess = true;
+        //        res.ErrorCode = "00";
+        //        res.ErrorMessage = "";
 
-                actionResult = Ok(res);
+        //        actionResult = Ok(res);
 
-            }
-            catch (Exception ex)
-            {
-                res.Data = null;
-                res.isSuccess = false;
-                res.ErrorCode = "99";
-                res.ErrorMessage = ex.Message;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        res.Data = null;
+        //        res.isSuccess = false;
+        //        res.ErrorCode = "99";
+        //        res.ErrorMessage = ex.Message;
 
-                actionResult = BadRequest(res);
-            }
-            return actionResult;
-        }
+        //        actionResult = BadRequest(res);
+        //    }
+        //    return actionResult;
+        //}
 
         [HttpPost("createExpenseData")]
         public async Task<IActionResult> createExpenseDataTable(QueryModel<Expense> data)
@@ -4436,59 +4420,40 @@ namespace BPIDA.Controllers
 
             try
             {
-                createExpenseData(data);
-                createExpenseLine(CommonLibrary.ListToDataTable<ExpenseLine>(data.Data.lines, data.userEmail, data.userAction, data.userActionDate, "ExpenseLine"));
+                
+                if (createPettycashExpenseDocument(data, CommonLibrary.ListToDataTable<ExpenseLine>(data.Data.lines, data.userEmail, data.userAction, data.userActionDate, "ExpenseLine")))
+                {
+                    res.Data = data;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
 
-                res.Data = data;
-                res.isSuccess = true;
-                res.ErrorCode = "00";
-                res.ErrorMessage = "";
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = data;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "SP Failed to Execute !";
 
-                actionResult = Ok(res);
+                    actionResult = Ok(res);
+                }
 
-            }
-            catch (Exception ex)
-            {
-                res.Data = null;
-                res.isSuccess = false;
-                res.ErrorCode = "99";
-                res.ErrorMessage = ex.Message;
-
-                actionResult = BadRequest(res);
-            }
-            return actionResult;
-        }
-
-        [HttpPost("createExpenseLineData")]
-        public async Task<IActionResult> createExpenseLineDataTable(QueryModel<List<ExpenseLine>> data)
-        {
-            ResultModel<QueryModel<List<ExpenseLine>>> res = new ResultModel<QueryModel<List<ExpenseLine>>>();
-            IActionResult actionResult = null;
-
-            try
-            {
-                //foreach (var dt in data.Data)
+                //if (!data.Data.AdvanceID.IsNullOrEmpty())
                 //{
-                //    QueryModel<ExpenseLine> line = new QueryModel<ExpenseLine>();
-                //    line.Data = new ExpenseLine();
+                //    QueryModel<string> param = new();
 
-                //    line.Data = dt;
-                //    line.userEmail = data.userEmail;
-                //    line.userAction = data.userAction;
-                //    line.userActionDate = data.userActionDate;
+                //    param.Data = data.Data.AdvanceID;
+                //    param.userEmail = data.userEmail;
+                //    param.userAction = data.userAction;
+                //    param.userActionDate = data.userActionDate;
 
-                //    createExpenseLine(line);
-                //    //createExpenseAttachLine(line);
+                //    updateSettleAdvance(param);
                 //}
 
-                createExpenseLine(ListToDataTable<ExpenseLine>(data.Data, data.userEmail, data.userAction, data.userActionDate, "ExpenseLine"));
-
-                res.Data = data;
-                res.isSuccess = true;
-                res.ErrorCode = "00";
-                res.ErrorMessage = "";
-
-                actionResult = Ok(res);
+                //createExpenseData(data);
+                //createExpenseLine(CommonLibrary.ListToDataTable<ExpenseLine>(data.Data.lines, data.userEmail, data.userAction, data.userActionDate, "ExpenseLine"));
 
             }
             catch (Exception ex)
@@ -4502,6 +4467,50 @@ namespace BPIDA.Controllers
             }
             return actionResult;
         }
+
+        //[HttpPost("createExpenseLineData")]
+        //public async Task<IActionResult> createExpenseLineDataTable(QueryModel<List<ExpenseLine>> data)
+        //{
+        //    ResultModel<QueryModel<List<ExpenseLine>>> res = new ResultModel<QueryModel<List<ExpenseLine>>>();
+        //    IActionResult actionResult = null;
+
+        //    try
+        //    {
+        //        //foreach (var dt in data.Data)
+        //        //{
+        //        //    QueryModel<ExpenseLine> line = new QueryModel<ExpenseLine>();
+        //        //    line.Data = new ExpenseLine();
+
+        //        //    line.Data = dt;
+        //        //    line.userEmail = data.userEmail;
+        //        //    line.userAction = data.userAction;
+        //        //    line.userActionDate = data.userActionDate;
+
+        //        //    createExpenseLine(line);
+        //        //    //createExpenseAttachLine(line);
+        //        //}
+
+        //        createExpenseLine(ListToDataTable<ExpenseLine>(data.Data, data.userEmail, data.userAction, data.userActionDate, "ExpenseLine"));
+
+        //        res.Data = data;
+        //        res.isSuccess = true;
+        //        res.ErrorCode = "00";
+        //        res.ErrorMessage = "";
+
+        //        actionResult = Ok(res);
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        res.Data = null;
+        //        res.isSuccess = false;
+        //        res.ErrorCode = "99";
+        //        res.ErrorMessage = ex.Message;
+
+        //        actionResult = BadRequest(res);
+        //    }
+        //    return actionResult;
+        //}
 
         [HttpPost("createExpenseAttachLineData")]
         public async Task<IActionResult> createExpenseLineDataTable(QueryModel<List<BPIDA.Models.MainModel.Stream.FileStream>> data)
@@ -4565,16 +4574,45 @@ namespace BPIDA.Controllers
 
             try
             {
-                createReimburseData(data);
-                createReimburseLine(CommonLibrary.ListToDataTable<ReimburseLine>(data.Data.lines, data.userEmail, data.userAction, data.userActionDate, "ReimburseLine"));
+                //data.Data.lines.DistinctBy(y => y.ExpenseID).ToList().ForEach(x =>
+                //{
+                //    updateSettleExpense(x.ExpenseID, data.userEmail, data.userAction, data.userActionDate);
+                //});
 
-                res.Data = data;
-                res.isSuccess = true;
-                res.ErrorCode = "00";
-                res.ErrorMessage = "";
+                //createReimburseData(data);
+                //createReimburseLine(CommonLibrary.ListToDataTable<ReimburseLine>(data.Data.lines, data.userEmail, data.userAction, data.userActionDate, "ReimburseLine"));
 
-                actionResult = Ok(res);
+                List<ExpenseIds> temp = new();
+                data.Data.lines.DistinctBy(y => y.ExpenseID).ToList().ForEach(x =>
+                {
+                    temp.Add(new ExpenseIds
+                    {
+                        ExpenseID = x.ExpenseID
+                    });
+                });
 
+                if (createPettycashReimburseDocument(
+                        data
+                        , CommonLibrary.ListToDataTable<ExpenseIds>(temp, data.userEmail, data.userAction, data.userActionDate, "ExpenseId")
+                        , CommonLibrary.ListToDataTable<ReimburseLine>(data.Data.lines, data.userEmail, data.userAction, data.userActionDate, "ReimburseLine")
+                )) 
+                {
+                    res.Data = data;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = data;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "SP Failed to Execute !";
+
+                    actionResult = Ok(res);
+                }
             }
             catch (Exception ex)
             {
@@ -4706,7 +4744,7 @@ namespace BPIDA.Controllers
                 res.ErrorMessage = "";
 
                 actionResult = Ok(res);
-               
+
             }
             catch (Exception ex)
             {
@@ -4725,7 +4763,7 @@ namespace BPIDA.Controllers
         public async Task<IActionResult> updateExpenseDataSettlement(QueryModel<List<string>> data)
         {
             ResultModel<QueryModel<List<string>>> res = new ResultModel<QueryModel<List<string>>>();
-            
+
             IActionResult actionResult = null;
 
             try
@@ -4734,7 +4772,7 @@ namespace BPIDA.Controllers
                 {
                     updateSettleExpense(id, data.userEmail, data.userAction, data.userActionDate);
                 }
-                
+
                 res.Data = data;
                 res.isSuccess = true;
                 res.ErrorCode = "00";
@@ -5609,7 +5647,7 @@ namespace BPIDA.Controllers
 
         //        actionResult = BadRequest(res);
         //    }
-            
+
         //    return actionResult;
         //}
 
@@ -5837,7 +5875,7 @@ namespace BPIDA.Controllers
             _conString = _configuration.GetValue<string>("ConnectionStrings:Bpi");
             _rowPerPage = _configuration.GetValue<int>("Paging:CashierLogbook:RowPerPage");
         }
-        
+
         public static DataTable ListToDataTable<T>(List<T> list, string auditUser, string auditAction, DateTime auditDate, string _tableName)
         {
             DataTable dt = new DataTable(_tableName);
@@ -6759,7 +6797,7 @@ namespace BPIDA.Controllers
             try
             {
                 createCashierLogbookTableSchema(data.Data.LocationID);
-                
+
                 dtMainIdentity = createIDData("CashierLogbook");
 
                 if (dtMainIdentity.Rows.Count > 0)
@@ -6964,7 +7002,7 @@ namespace BPIDA.Controllers
                 res.ErrorMessage = "";
 
                 actionResult = Ok(res);
-                
+
             }
             catch (Exception ex)
             {
@@ -7037,56 +7075,56 @@ namespace BPIDA.Controllers
                 {
                     //if (hd.BrankasCategoryID.IsNullOrEmpty())
                     //{
-                        DataTable dtHeaderIdentity = new DataTable("HIdentity");
-                        dtHeaderIdentity = createIDData("CashierLogHeader");
+                    DataTable dtHeaderIdentity = new DataTable("HIdentity");
+                    dtHeaderIdentity = createIDData("CashierLogHeader");
 
-                        if (dtHeaderIdentity.Rows.Count > 0)
+                    if (dtHeaderIdentity.Rows.Count > 0)
+                    {
+                        foreach (DataRow dt in dtHeaderIdentity.Rows)
                         {
-                            foreach (DataRow dt in dtHeaderIdentity.Rows)
+                            string zero = string.Empty;
+
+                            for (int i = 0; i < (5 - Convert.ToInt32(dt["IDLength"])); i++)
                             {
-                                string zero = string.Empty;
-
-                                for (int i = 0; i < (5 - Convert.ToInt32(dt["IDLength"])); i++)
-                                {
-                                    zero = zero + "0";
-                                }
-
-                                headerID = dt["Code"].ToString() + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + zero + dt["DocNumber"].ToString() + dt["Parity"].ToString();
-
+                                zero = zero + "0";
                             }
+
+                            headerID = dt["Code"].ToString() + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + zero + dt["DocNumber"].ToString() + dt["Parity"].ToString();
+
                         }
+                    }
 
-                        CashierLogCategoryDetailConv temp2 = new();
+                    CashierLogCategoryDetailConv temp2 = new();
 
-                        temp2.LogID = data.Data.LogID;
-                        temp2.BrankasCategoryID = headerID;
-                        temp2.AmountCategoryID = hd.AmountCategoryID;
-                        temp2.HeaderAmount = hd.lines.Sum(x => x.LineAmount);
-                        temp2.ActualAmount = hd.ActualAmount;
-                        temp2.CategoryNote = hd.CategoryNote;
+                    temp2.LogID = data.Data.LogID;
+                    temp2.BrankasCategoryID = headerID;
+                    temp2.AmountCategoryID = hd.AmountCategoryID;
+                    temp2.HeaderAmount = hd.lines.Sum(x => x.LineAmount);
+                    temp2.ActualAmount = hd.ActualAmount;
+                    temp2.CategoryNote = hd.CategoryNote;
 
-                        header.Add(temp2);
+                    header.Add(temp2);
 
-                        int c = 1;
+                    int c = 1;
 
-                        foreach (var dt in hd.lines)
-                        {
-                            CashierLogLineDetailConv temp3 = new();
+                    foreach (var dt in hd.lines)
+                    {
+                        CashierLogLineDetailConv temp3 = new();
 
-                            temp3.BrankasCategoryID = headerID;
-                            temp3.LineNum = c;
-                            temp3.AmountSubCategoryID = dt.AmountSubCategoryID;
-                            temp3.AmountType = dt.AmountType;
-                            temp3.ShiftID = dt.ShiftID;
-                            temp3.LineAmount = dt.LineAmount;
+                        temp3.BrankasCategoryID = headerID;
+                        temp3.LineNum = c;
+                        temp3.AmountSubCategoryID = dt.AmountSubCategoryID;
+                        temp3.AmountType = dt.AmountType;
+                        temp3.ShiftID = dt.ShiftID;
+                        temp3.LineAmount = dt.LineAmount;
 
-                            c++;
-                            lines.Add(temp3);
-                        }
+                        c++;
+                        lines.Add(temp3);
+                    }
 
-                        //createLogHeaderData(ListToDataTable<CashierLogCategoryDetailConv>(headersNew, data.userEmail, data.userAction, data.userActionDate, "Headers"), data.Data.LocationID);
+                    //createLogHeaderData(ListToDataTable<CashierLogCategoryDetailConv>(headersNew, data.userEmail, data.userAction, data.userActionDate, "Headers"), data.Data.LocationID);
 
-                        //createLogLineData(ListToDataTable<CashierLogLineDetailConv>(linesNew, data.userEmail, data.userAction, data.userActionDate, "Lines"), data.Data.LocationID, data.Data.LogID);
+                    //createLogLineData(ListToDataTable<CashierLogLineDetailConv>(linesNew, data.userEmail, data.userAction, data.userActionDate, "Lines"), data.Data.LocationID, data.Data.LogID);
                     //}
                     //else
                     //{
@@ -7264,7 +7302,7 @@ namespace BPIDA.Controllers
             DataTable dtCashierLogbook = new DataTable("CashierLogbook");
             bool flag = true;
             IActionResult actionResult = null;
-            
+
             try
             {
                 string temp = Base64Decode(locPage);
@@ -7290,7 +7328,7 @@ namespace BPIDA.Controllers
                         temp1.LogDate = Convert.ToDateTime(dt["LogDate"]);
                         temp1.LogStatus = dt["LogStatus"].ToString();
                         temp1.LogStatusDate = dt.IsNull("LogStatusDate") ? DateTime.MinValue : Convert.ToDateTime(dt["LogStatusDate"]);
-                        
+
                         DataTable dtHeader = new DataTable("Header");
                         List<CashierLogCategoryDetail> cashierLogCategoryDetail = new();
 
@@ -7382,7 +7420,7 @@ namespace BPIDA.Controllers
                             temp1.approvals = null;
                             flag = false;
                         }
-                        
+
                         cashierLogbooks.Add(temp1);
                     }
                 }
@@ -7536,7 +7574,7 @@ namespace BPIDA.Controllers
                     actionResult = Ok(res);
                 }
 
-                
+
             }
             catch (Exception ex)
             {
@@ -8312,7 +8350,7 @@ namespace BPIDA.Controllers
                 //}
 
                 //data.Data.StandarizationID = standarizationId;
-                
+
                 List<StandarizationTag> tags = new();
 
                 foreach (var tag in data.Data.Tags)
@@ -8991,7 +9029,7 @@ namespace BPIDA.Controllers
 
                     if (ret > 0)
                         flag = true;
-                    
+
                 }
                 catch (SqlException ex)
                 {
@@ -9241,6 +9279,92 @@ namespace BPIDA.Controllers
                     command.Parameters.AddWithValue("@AuditUser", data.userEmail);
                     command.Parameters.AddWithValue("@AuditAction", data.userAction);
                     command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
+
+                    int ret = command.ExecuteNonQuery();
+
+                    if (ret > 0)
+                        flag = true;
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return flag;
+        }
+
+        internal bool deleteEPKRSItemCaseDocument(string id, string location, string user, string act, DateTime date)
+        {
+            bool flag = false;
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    // create and check schema table
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[deleteEPKRSItemCaseDocument]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@DocumentID", id);
+                    command.Parameters.AddWithValue("@LocationID", location);
+                    command.Parameters.AddWithValue("@AuditUser", user);
+                    command.Parameters.AddWithValue("@AuditAction", act);
+                    command.Parameters.AddWithValue("@AuditActionDate", date);
+
+                    int ret = command.ExecuteNonQuery();
+
+                    if (ret > 0)
+                        flag = true;
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return flag;
+        }
+
+        internal bool deleteEPKRSIncidentAccidentDocument(string id, string location, string user, string act, DateTime date)
+        {
+            bool flag = false;
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    // create and check schema table
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[deleteEPKRSIncidentAccidentDocument]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@DocumentID", id);
+                    command.Parameters.AddWithValue("@LocationID", location);
+                    command.Parameters.AddWithValue("@AuditUser", user);
+                    command.Parameters.AddWithValue("@AuditAction", act);
+                    command.Parameters.AddWithValue("@AuditActionDate", date);
 
                     int ret = command.ExecuteNonQuery();
 
@@ -9795,7 +9919,7 @@ namespace BPIDA.Controllers
 
             try
             {
-                
+
                 dtMainIdentity = createIDData("EPKRS");
                 var x = dtMainIdentity.AsEnumerable().First();
 
@@ -9806,12 +9930,12 @@ namespace BPIDA.Controllers
 
                 zero = new String('0', maxLength - idLength);
 
-                id = x["Code"].ToString() + 
-                    DateTime.Now.Year.ToString() + 
-                    DateTime.Now.ToString("MM") + 
-                    DateTime.Now.ToString("dd") + 
-                    zero + 
-                    x["DocNumber"].ToString() + 
+                id = x["Code"].ToString() +
+                    DateTime.Now.Year.ToString() +
+                    DateTime.Now.ToString("MM") +
+                    DateTime.Now.ToString("dd") +
+                    zero +
+                    x["DocNumber"].ToString() +
                     x["Parity"].ToString();
 
                 QueryModel<ItemCase> dtMain = new();
@@ -10229,6 +10353,90 @@ namespace BPIDA.Controllers
             return actionResult;
         }
 
+        [HttpPost("deleteEPKRSItemCaseDocumentData")]
+        public async Task<IActionResult> deleteEPKRSItemCaseDocumentData(QueryModel<string> data)
+        {
+            ResultModel<QueryModel<string>> res = new ResultModel<QueryModel<string>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(data.Data).Split("!_!");
+
+                if (deleteEPKRSItemCaseDocument(temp[0], temp[1], data.userEmail, data.userAction, data.userActionDate))
+                {
+                    res.Data = data;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = data;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Edit Data Failed ! SP Fail to Execute";
+
+                    actionResult = Ok(res);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpPost("deleteEPKRSIncidentAccidentDocumentData")]
+        public async Task<IActionResult> deleteEPKRSIncidentAccidentDocumentData(QueryModel<string> data)
+        {
+            ResultModel<QueryModel<string>> res = new ResultModel<QueryModel<string>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(data.Data).Split("!_!");
+
+                if (deleteEPKRSIncidentAccidentDocument(temp[0], temp[1], data.userEmail, data.userAction, data.userActionDate))
+                {
+                    res.Data = data;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = data;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Edit Data Failed ! SP Fail to Execute";
+
+                    actionResult = Ok(res);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
         [HttpGet("getEPRKSReportingType")]
         public async Task<IActionResult> getEPRKSReportingType()
         {
@@ -10413,11 +10621,11 @@ namespace BPIDA.Controllers
                 dtParam = dtItemCase.Copy();
 
                 foreach (var removedCol in new[] {
-                    "ReportingID", 
-                    "SiteReporter", 
-                    "SiteSender", 
-                    "ReportDate", 
-                    "ItemPickupDate", 
+                    "ReportingID",
+                    "SiteReporter",
+                    "SiteSender",
+                    "ReportDate",
+                    "ItemPickupDate",
                     "LoadingDocumentID",
                     "LoadingDocumentDate",
                     "VarianceDate",
@@ -11165,6 +11373,882 @@ namespace BPIDA.Controllers
                 string loc = temp[1].Equals("") ? "HO" : temp[1];
 
                 res.Data = getEPKRSModuleNumberOfPageData(temp[0], loc, temp[2], _rowPerPage);
+
+                res.isSuccess = true;
+                res.ErrorCode = "00";
+                res.ErrorMessage = "";
+
+                actionResult = Ok(res);
+            }
+            catch (Exception ex)
+            {
+                res.Data = 0;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        //
+    }
+
+    [Route("api/DA/POMF")]
+    [ApiController]
+    public class POMFController : ControllerBase
+    {
+        private readonly IConfiguration _configuration;
+        private readonly string _conString, _moduleConnection;
+        private readonly int _rowPerPage;
+
+        public POMFController(IConfiguration config)
+        {
+            _configuration = config;
+            _moduleConnection = _configuration.GetValue<string>("ModuleConnection:POMF");
+            _conString = _configuration.GetValue<string>($"ConnectionStrings:{_moduleConnection}");
+            _rowPerPage = _configuration.GetValue<int>("Paging:POMF:RowPerPage");
+        }
+
+        internal DataTable createIDData(string docType)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[createID]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@DocumentName", docType);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal bool createPOMFDocumentData(QueryModel<POMFHeader> data, DataTable dataItemLines)
+        {
+            bool flag = false;
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[createPOMFSchemaTables]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@LocationID", data.Data.LocationID);
+
+                    command.ExecuteNonQuery();
+
+                    command.CommandText = "[createPOMFDocument]";
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@POMFID", data.Data.POMFID);
+                    command.Parameters.AddWithValue("@POMFDate", data.Data.POMFDate);
+                    command.Parameters.AddWithValue("@LocationID", data.Data.LocationID);
+                    command.Parameters.AddWithValue("@CustomerName", data.Data.CustomerName);
+                    command.Parameters.AddWithValue("@ReceiptNo", data.Data.ReceiptNo);
+                    command.Parameters.AddWithValue("@NPNo", data.Data.NPNo);
+                    command.Parameters.AddWithValue("@NPTypeID", data.Data.NPTypeID);
+                    command.Parameters.AddWithValue("@ExternalRequestDocument", data.Data.ExternalRequestDocument);
+                    command.Parameters.AddWithValue("@ExternalReceiveDocument", data.Data.ExternalReceiveDocument);
+                    command.Parameters.AddWithValue("@Requester", data.Data.Requester);
+                    command.Parameters.AddWithValue("@DocumentStatus", data.Data.DocumentStatus);
+                    command.Parameters.AddWithValue("@AuditUser", data.userEmail);
+                    command.Parameters.AddWithValue("@AuditAction", data.userAction);
+                    command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
+
+                    command.Parameters.AddWithValue("@ItemLines", dataItemLines);
+
+                    int ret = command.ExecuteNonQuery();
+
+                    if (ret > 0)
+                        flag = true;
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return flag;
+        }
+
+        internal bool createPOMFApprovalData(QueryModel<POMFApproval> data, string location)
+        {
+            bool flag = false;
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[createPOMFApprovalData]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@LocationID", location);
+                    command.Parameters.AddWithValue("@POMFID", data.Data.POMFID);
+                    command.Parameters.AddWithValue("@ApprovalAction", data.Data.ApprovalAction);
+                    command.Parameters.AddWithValue("@Approver", data.Data.Approver);
+                    command.Parameters.AddWithValue("@ApproveDate", data.Data.ApproveDate);
+                    command.Parameters.AddWithValue("@AuditUser", data.userEmail);
+                    command.Parameters.AddWithValue("@AuditAction", data.userAction);
+                    command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
+
+                    int ret = command.ExecuteNonQuery();
+
+                    if (ret > 0)
+                        flag = true;
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return flag;
+        }
+
+        internal bool deletePOMFDocument(string id, string location, string user, string act, DateTime date)
+        {
+            bool flag = false;
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[deletePOMFDocument]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@POMFID", id);
+                    command.Parameters.AddWithValue("@LocationID", location);
+                    command.Parameters.AddWithValue("@AuditUser", user);
+                    command.Parameters.AddWithValue("@AuditAction", act);
+                    command.Parameters.AddWithValue("@AuditActionDate", date);
+
+                    int ret = command.ExecuteNonQuery();
+
+                    if (ret > 0)
+                        flag = true;
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return flag;
+        }
+
+        internal bool editPOMFApprovalExtendedData(QueryModel<POMFApprovalStreamExtended> data)
+        {
+            bool flag = false;
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[editPOMFDocumentExtendedData]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@LocationID", data.Data.pomfHeader.LocationID);
+                    command.Parameters.AddWithValue("@POMFID", data.Data.pomfHeader.POMFID);
+                    command.Parameters.AddWithValue("@ExternalRequestDocument", data.Data.pomfHeader.ExternalRequestDocument);
+                    command.Parameters.AddWithValue("@RequestDocumentDate", data.Data.pomfHeader.RequestDocumentDate);
+                    command.Parameters.AddWithValue("@ExternalReceiveDocument", data.Data.pomfHeader.ExternalReceiveDocument);
+                    command.Parameters.AddWithValue("@ReceiveDocumentDate", data.Data.pomfHeader.ReceiveDocumentDate);
+                    command.Parameters.AddWithValue("@ApprovalAction", data.Data.approvalData.ApprovalAction);
+                    command.Parameters.AddWithValue("@Approver", data.Data.approvalData.Approver);
+                    command.Parameters.AddWithValue("@ApproveDate", data.Data.approvalData.ApproveDate);
+                    command.Parameters.AddWithValue("@AuditUser", data.userEmail);
+                    command.Parameters.AddWithValue("@AuditAction", data.userAction);
+                    command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
+
+                    int ret = command.ExecuteNonQuery();
+
+                    if (ret > 0)
+                        flag = true;
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return flag;
+        }
+
+        internal DataTable getPOMFHeaderbyFilterData(string location, string conditions, int pageNo, int rowPerPage)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getPOMFHeaderbyFilter]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@LocationID", location);
+                    command.Parameters.AddWithValue("@Conditions", conditions);
+                    command.Parameters.AddWithValue("@PageNo", pageNo);
+                    command.Parameters.AddWithValue("@RowPerPage", rowPerPage);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getPOMFItemLinesData(string location, DataTable param)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getPOMFItemLines]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@LocationID", location);
+                    command.Parameters.AddWithValue("@POMFDocs", param);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getPOMFApprovalsData(string location, DataTable param)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getPOMFApprovals]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@LocationID", location);
+                    command.Parameters.AddWithValue("@POMFDocs", param);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getPOMFNPTypeData()
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getPOMFNPTypeData]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal int getPOMFModuleNumberOfPageData(string TbName, string loc, string conditions, int rowPerPage)
+        {
+            int conInt = 0;
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getPOMFModulePageSize]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@TbName", TbName);
+                    command.Parameters.AddWithValue("@LocationID", loc);
+                    command.Parameters.AddWithValue("@Conditions", conditions);
+                    command.Parameters.AddWithValue("@RowPerPage", rowPerPage);
+
+                    var data = command.ExecuteScalar();
+                    conInt = Convert.ToInt32(data);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+            return conInt;
+        }
+
+        [HttpPost("createPOMFDocument")]
+        public async Task<IActionResult> createPOMFDocument(QueryModel<POMFDocument> data)
+        {
+            ResultModel<QueryModel<POMFDocument>> res = new ResultModel<QueryModel<POMFDocument>>();
+            DataTable dtMainIdentity = new DataTable("Identity");
+            string id = string.Empty;
+            IActionResult actionResult = null;
+
+            try
+            {
+
+                dtMainIdentity = createIDData("POMF");
+                var x = dtMainIdentity.AsEnumerable().First();
+
+                // 8 for date yyyyMMdd
+                string zero = string.Empty;
+                int idLength = x["Code"].ToString().Length + x["DocNumber"].ToString().Length + x["Parity"].ToString().Length + 8;
+                int maxLength = 18;
+
+                zero = new String('0', maxLength - idLength);
+
+                id = x["Code"].ToString() +
+                    DateTime.Now.Year.ToString() +
+                    DateTime.Now.ToString("MM") +
+                    DateTime.Now.ToString("dd") +
+                    zero +
+                    x["DocNumber"].ToString() +
+                    x["Parity"].ToString();
+
+                QueryModel<POMFHeader> dtMain = new();
+                dtMain.Data = new();
+
+                dtMain.Data = data.Data.dataHeader;
+                dtMain.Data.POMFID = id;
+                dtMain.userEmail = data.userEmail;
+                dtMain.userAction = data.userAction;
+                dtMain.userActionDate = data.userActionDate;
+
+                List<POMFItemLine> tempItemLine = new();
+                data.Data.dataItemLines.ForEach(x =>
+                {
+                    tempItemLine.Add(new POMFItemLine
+                    {
+                        POMFID = id,
+                        LineNum = x.LineNum,
+                        ItemCode = x.ItemCode,
+                        ItemDescription = x.ItemDescription,
+                        RequestQuantity = x.RequestQuantity,
+                        NPQuantity = x.NPQuantity,
+                        ItemUOM = x.ItemUOM,
+                        ItemValue = x.ItemValue
+                    });
+                });
+
+                var dtLines = CommonLibrary.ListToDataTable<POMFItemLine>(tempItemLine, data.userEmail, data.userAction, data.userActionDate, "POMFItemLines");
+
+                if (createPOMFDocumentData(dtMain, dtLines))
+                {
+                    res.Data = data;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = data;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Create Data Failed ! SP Fail to Execute";
+
+                    actionResult = Ok(res);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpPost("createPOMFApproval")]
+        public async Task<IActionResult> createPOMFApproval(QueryModel<POMFApprovalStream> data)
+        {
+            ResultModel<QueryModel<POMFApprovalStream>> res = new ResultModel<QueryModel<POMFApprovalStream>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                QueryModel<POMFApproval> temp = new();
+                temp.Data = new();
+
+                temp.Data = data.Data.Data;
+                temp.userEmail = data.userEmail;
+                temp.userAction = data.userAction;
+                temp.userActionDate = data.userActionDate;
+
+                if (createPOMFApprovalData(temp, data.Data.LocationID))
+                {
+                    res.Data = data;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = data;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Create Data Failed ! SP Fail to Execute";
+
+                    actionResult = Ok(res);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpPost("createPOMFApprovalExtended")]
+        public async Task<IActionResult> createPOMFApprovalExtended(QueryModel<POMFApprovalStreamExtended> data)
+        {
+            ResultModel<QueryModel<POMFApprovalStreamExtended>> res = new ResultModel<QueryModel<POMFApprovalStreamExtended>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                if (editPOMFApprovalExtendedData(data))
+                {
+                    res.Data = data;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = data;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Create Data Failed ! SP Fail to Execute";
+
+                    actionResult = Ok(res);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpPost("deletePOMFDocument")]
+        public async Task<IActionResult> deletePOMFDocument(QueryModel<string> data)
+        {
+            ResultModel<QueryModel<string>> res = new ResultModel<QueryModel<string>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(data.Data).Split("!_!");
+
+                if (deletePOMFDocument(temp[0], temp[1], data.userEmail, data.userAction, data.userActionDate))
+                {
+                    res.Data = data;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = data;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Create Data Failed ! SP Fail to Execute";
+
+                    actionResult = Ok(res);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpGet("getPOMFDocuments/{param}")]
+        public async Task<IActionResult> getPOMFDocuments(string param)
+        {
+            ResultModel<List<POMFDocument>> res = new ResultModel<List<POMFDocument>>();
+            List<POMFDocument> pomfDocuments = new List<POMFDocument>();
+            DataTable dtPOMFDocument = new DataTable("POMFDocument");
+            DataTable dtPOMFItemLine = new DataTable("POMFItemLine");
+            DataTable dtPOMFApproval = new DataTable("POMFApproval");
+            DataTable dtParam = new DataTable("Parameter");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+                string loc = temp[0].Equals("") ? "HO" : temp[0];
+
+                dtPOMFDocument = getPOMFHeaderbyFilterData(loc, temp[1], Convert.ToInt32(temp[2]), _rowPerPage);
+
+                dtParam = dtPOMFDocument.Copy();
+
+                foreach (var removedCol in new[] {
+                    "POMFDate",
+                    "LocationID",
+                    "CustomerName",
+                    "ReceiptNo",
+                    "NPNo",
+                    "NPTypeID",
+                    "ExternalRequestDocument",
+                    "RequestDocumentDate",
+                    "ExternalReceiveDocument",
+                    "ReceiveDocumentDate",
+                    "Requester",
+                    "DocumentStatus",
+                    "AuditUser",
+                    "AuditAction",
+                    "AuditActionDate" })
+                {
+                    if (dtParam.Columns.Contains(removedCol))
+                        dtParam.Columns.Remove(removedCol);
+                }
+
+                if (dtPOMFDocument.Rows.Count <= 0)
+                    throw new Exception("Fail Fetch POMFHeader Data");
+
+                dtPOMFItemLine = getPOMFItemLinesData(loc, dtParam);
+
+                if (dtPOMFItemLine.Rows.Count <= 0)
+                    throw new Exception("Fail Fetch POMFItemLine Data");
+
+                dtPOMFApproval = getPOMFApprovalsData(loc, dtParam);
+
+                //if (dtPOMFApproval.Rows.Count <= 0)
+                //    throw new Exception("Fail Fetch POMFApproval Data");
+
+                if (dtPOMFDocument.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtPOMFDocument.Rows)
+                    {
+                        POMFDocument temp1 = new POMFDocument();
+
+                        temp1.dataHeader.POMFID = dt["POMFID"].ToString();
+                        temp1.dataHeader.POMFDate = Convert.ToDateTime(dt["POMFDate"]);
+                        temp1.dataHeader.LocationID = dt["LocationID"].ToString();
+                        temp1.dataHeader.CustomerName = dt["CustomerName"].ToString();
+                        temp1.dataHeader.ReceiptNo = dt["ReceiptNo"].ToString();
+                        temp1.dataHeader.NPNo = dt["NPNo"].ToString();
+                        temp1.dataHeader.NPTypeID = dt["NPTypeID"].ToString();
+                        temp1.dataHeader.ExternalRequestDocument = dt["ExternalRequestDocument"].ToString();
+                        temp1.dataHeader.RequestDocumentDate = dt.IsNull("RequestDocumentDate") ? DateTime.MinValue : Convert.ToDateTime(dt["RequestDocumentDate"]);
+                        temp1.dataHeader.ExternalReceiveDocument =  dt["ExternalReceiveDocument"].ToString();
+                        temp1.dataHeader.ReceiveDocumentDate = dt.IsNull("ReceiveDocumentDate") ? DateTime.MinValue : Convert.ToDateTime(dt["ReceiveDocumentDate"]);
+                        temp1.dataHeader.Requester = dt["Requester"].ToString();
+                        temp1.dataHeader.DocumentStatus = dt["DocumentStatus"].ToString();
+
+                        temp1.dataItemLines = dtPOMFItemLine.AsEnumerable().Where(y => y["POMFID"].ToString().Equals(dt["POMFID"].ToString())).Select(x => new POMFItemLine
+                        {
+                            POMFID = x["POMFID"].ToString(),
+                            LineNum = Convert.ToInt32(x["LineNum"]),
+                            ItemCode = x["ItemCode"].ToString(),
+                            ItemDescription = x["ItemDescription"].ToString(),
+                            RequestQuantity = Convert.ToInt32(x["RequestQuantity"]),
+                            NPQuantity = Convert.ToInt32(x["NPQuantity"]),
+                            ItemUOM = x["ItemUOM"].ToString(),
+                            ItemValue = Convert.ToDecimal(x["ItemValue"])
+                        }).ToList();
+
+                        if (dtPOMFApproval.AsEnumerable().Where(y => y["POMFID"].ToString().Equals(dt["POMFID"].ToString())).ToList().Count > 0)
+                        {
+                            temp1.dataApproval = dtPOMFApproval.AsEnumerable().Where(y => y["POMFID"].ToString().Equals(dt["POMFID"].ToString())).Select(x => new POMFApproval
+                            {
+                                POMFID = x["POMFID"].ToString(),
+                                ApprovalAction = x["ApprovalAction"].ToString(),
+                                Approver = x["Approver"].ToString(),
+                                ApproveDate = Convert.ToDateTime(x["ApproveDate"])
+                            }).ToList();
+                        }
+
+                        pomfDocuments.Add(temp1);
+                    }
+
+                    res.Data = pomfDocuments;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getPOMFNPType")]
+        public async Task<IActionResult> getPOMFNPType()
+        {
+            ResultModel<List<POMFNPType>> res = new ResultModel<List<POMFNPType>>();
+            List<POMFNPType> npTypes = new List<POMFNPType>();
+            DataTable dtNPType = new DataTable("NPTypes");
+            IActionResult actionResult = null;
+
+            try
+            {
+                dtNPType = getPOMFNPTypeData();
+
+                if (dtNPType.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtNPType.Rows)
+                    {
+                        POMFNPType temp1 = new();
+
+                        temp1.NPTypeID = dt["NPTypeID"].ToString();
+                        temp1.NPTypeDescription = dt["NPTypeDescription"].ToString();
+                        temp1.isAutomaticApproval = Convert.ToBoolean(dt["isAutomaticApproval"]);
+
+                        npTypes.Add(temp1);
+                    }
+
+                    res.Data = npTypes;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getPOMFModuleNumberOfPage/{param}")]
+        public async Task<IActionResult> getEPKRSModuleNumberOfPage(string param)
+        {
+            ResultModel<int> res = new ResultModel<int>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+                string loc = temp[1].Equals("") ? "HO" : temp[1];
+
+                res.Data = getPOMFModuleNumberOfPageData(temp[0], loc, temp[2], _rowPerPage);
 
                 res.isSuccess = true;
                 res.ErrorCode = "00";

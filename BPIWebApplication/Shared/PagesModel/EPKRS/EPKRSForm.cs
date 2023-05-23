@@ -6,13 +6,13 @@ namespace BPIWebApplication.Shared.PagesModel.EPKRS
     {
         public string RiskID { get; set; } = string.Empty;
         public string DocumentID { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Kolom Site Pelapor Kosong!")]
         public string SiteReporter { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Kolom Site Pengirim Kosong!")]
         public string SiteSender { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Kolom Tanggal Laporan Kosong!")]
         public DateTime ReportDate { get; set; } = DateTime.Now;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Kolom Tanggal Pengambilan Barang Kosong!")]
         public DateTime ItemPickupDate { get; set; } = DateTime.Now;
         public string LoadingDocumentID { get; set; } = string.Empty;
         public DateTime LoadingDocumentDate { get; set; } = DateTime.Now;
@@ -44,54 +44,53 @@ namespace BPIWebApplication.Shared.PagesModel.EPKRS
     {
         public string RiskID { get; set; } = string.Empty;
         public string DocumentID { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Tanggal Pelaporan Kosong!")]
         public DateTime ReportDate { get; set; } = DateTime.Now;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Tanggal Kejadian Kosong!")]
         public DateTime OccurenceDate { get; set; } = DateTime.Now;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Site Pelapor Kosong!")]
         public string SiteReporter { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Departemen Pelapor Kosong!")]
         public string DepartmentReporter { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Nama Risk RP Kosong!")]
         public string RiskRPName { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Data is required")]
-        [DataType(DataType.EmailAddress)]
+        [Required(ErrorMessage = "Email Risk RP Kosong!")]
+        [DataType(DataType.EmailAddress, ErrorMessage = "Format Harus EMAIL!")]
         [EmailAddress]
         public string RiskRPEmail { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Nama DORM Kosong!")]
         public string DORMName { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Data is required")]
-        [DataType(DataType.EmailAddress)]
+        [Required(ErrorMessage = "Tanggal Pelaporan Kosong!")]
+        [DataType(DataType.EmailAddress, ErrorMessage = "Format Harus EMAIL!")]
         [EmailAddress]
         public string DORMEmail { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Deskripsi Kejadian Kosong!")]
         public string CaseDescription { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Departemen Terdampak Kosong!")]
         public string DepartmentAffected { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Kronologi Kosong!")]
         public string Cronology { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Root Cause Kosong!")]
         public string RootCause { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Deskripsi Kerugian Kosong!")]
         public string LossDescription { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Data is required")]
         public decimal LossEstimation { get; set; } = decimal.Zero;
         public decimal ReturnAmount { get; set; } = decimal.Zero;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Deskripsi Risiko Kosong!")]
         public string RiskDescription { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Dampak Kejadian Kosong!")]
         public string CauseDescription { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Data is required")]
-        [DataType(DataType.EmailAddress)]
+        [Required(ErrorMessage = "Tanggal Pelaporan Kosong!")]
+        [DataType(DataType.EmailAddress, ErrorMessage = "Format Harus EMAIL!")]
         [EmailAddress]
         public string PIC { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Action Plan Kosong!")]
         public string ActionPlan { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Tanggal Target Kosong!")]
         public DateTime TargetDate { get; set; } = DateTime.Now;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Tanggal Mitigasi Kosong!")]
         public string MitigationPlan { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Data is required")]
+        [Required(ErrorMessage = "Tanggal Mitigasi Kosong!")]
         public DateTime MitigationDate { get; set; } = DateTime.Now;
         public string ExtendedRootCause { get; set; } = string.Empty;
         public string ExtendedMitigationPlan { get; set; } = string.Empty;

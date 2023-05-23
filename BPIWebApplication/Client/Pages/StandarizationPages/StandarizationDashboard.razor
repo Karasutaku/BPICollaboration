@@ -213,7 +213,7 @@ else
                                 <div class="col">: @previewData.StandarizationDate.ToString("dd MMMM yyyy")</div>
                             </div>
                             <div class="row">
-                                <div class="col">Document Date</div>
+                                <div class="col">Document Name</div>
                                 <div class="col">: @previewData.StandarizationDetails</div>
                             </div>
 
@@ -283,9 +283,9 @@ else
         </div>
     }
 }
-
+@*
 <BPIWebApplication.Client.Shared.CustomLayout.FileViewer fileName="@filetextname" fileExtension="@fileext" fileContent="@filecont" />
-
+*@
 @if (isLoading)
 {
     <div class="modal show" id="splashLoading" tabindex="-5" role="dialog" aria-labelledby="splashLoadingDialog" aria-hidden="true" style="display:block; background: rgba(0,0,0, 0.7);">

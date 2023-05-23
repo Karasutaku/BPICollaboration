@@ -1,0 +1,858 @@
+﻿@page "/pomf/dashboard"
+@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
+@inject Blazored.SessionStorage.ISyncSessionStorageService syncSessionStorage
+@inject IPOMFService POMFService
+@inject ILoginService LoginService
+@inject IManagementService ManagementService
+@inject IJSRuntime JS
+
+<PageTitle>EPKRS - Add POMF</PageTitle>
+
+@if (LoginService.activeUser == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    if (LoginService.activeUser.userPrivileges != null)
+    {
+        @if (!LoginService.activeUser.userPrivileges.Contains("VW"))
+        {
+            <div class="container-fluid">
+                <div class="d-flex align-items-center">
+                    <h3>User Require Elevation</h3>
+                </div>
+            </div>
+        }
+        else
+        {
+            <h3>Purchase Order Monitoring Form (POMF)</h3>
+            <small><i>Add POMF Document</i></small>
+
+            @if (alertTrigger)
+            {
+                <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
+                    <strong>@alertMessage</strong> @alertBody
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close" @onclick="(() => alertTrigger = false)">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            }
+
+
+            @if (successAlert)
+            {
+                <div class="alert alert-success alert-dismissible fade show my-3" role="alert">
+                    <strong>@alertMessage</strong> @alertBody
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close" @onclick="(() => successAlert = false)">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            }
+
+
+            <div class="container-fluid">
+
+                <div class="border border-2 p-2 my-4">
+                    <div class="row mb-2">
+                        <div class="col px-3">
+                            <h5><b>POMF Documents</b></h5>
+                        </div>
+                    </div>
+
+                    @*Table*@
+                    @if (checkPOMFDocuments())
+                    {
+                        <div class="mb-3">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover" style="width: 100%">
+                                    <thead>
+                                        <tr title="Click to view">
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 17%; font-size: 15px;">POMF ID</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 14%; font-size: 15px;">POMF Date</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 14%; font-size: 15px;">NP No</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 14%; font-size: 15px;">Receipt No</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 16%; font-size: 15px;">Customer Name</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 15%; font-size: 15px;">Requester</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Document Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyDashboard">
+                                        @foreach (var pomf in POMFService.pomfDocuments)
+                                        {
+                                            <tr data-toggle="modal" data-target="#previewPOMFModal" @onclick="(() => setPOMFDocument(pomf))">
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@pomf.dataHeader.POMFID</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@pomf.dataHeader.POMFDate.ToString("dd MMMM yyyy HH:mm:ss")</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@pomf.dataHeader.NPNo</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@pomf.dataHeader.ReceiptNo</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@pomf.dataHeader.CustomerName</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@pomf.dataHeader.Requester</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@pomf.dataHeader.DocumentStatus</td>
+                                            </tr>
+                                        }
+
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+
+                        <nav aria-label="POMF Pagination">
+                            <ul class="pagination pagination-sm justify-content-center my-2">
+                                @if ((pomfPageActive - 1) > 0)
+                                {
+                                    <li class="page-item px-1 paging-style" @onclick="(() => pomfPageSelect((pomfPageActive - 1)))"><span class="page-link">Previous</span></li>
+                                    <li class="page-item paging-style" @onclick="(() => pomfPageSelect((pomfPageActive - 1)))"><span class="page-link">@(pomfPageActive - 1)</span></li>
+                                }
+                                else
+                                {
+                                    <li class="page-item px-1 disabled dis-paging-style"><span class="page-link">Previous</span></li>
+                                    <li class="page-item disabled dis-paging-style"><span class="page-link">. . .</span></li>
+                                }
+
+                                <li class="page-item active dis-paging-style"><span class="page-link">@pomfPageActive</span></li>
+
+                                @if (pomfPageActive < pomfNumberofPage)
+                                {
+                                    <li class="page-item paging-style" @onclick="(() => pomfPageSelect((pomfPageActive + 1)))"><span class="page-link">@(pomfPageActive + 1)</span></li>
+                                    <li class="page-item px-1 paging-style" @onclick="(() => pomfPageSelect((pomfPageActive + 1)))"><span class="page-link">Next</span></li>
+                                }
+                                else
+                                {
+                                    <li class="page-item disabled dis-paging-style"><span class="page-link">. . .</span></li>
+                                    <li class="page-item px-1 disabled dis-paging-style"><span class="page-link">Next</span></li>
+                                }
+                            </ul>
+                        </nav>
+                    }
+                    else
+                    {
+                        <p class="fw-bold text-center">. . . There is no Document . . .</p>
+                    }
+                </div>
+
+                <div class="border border-2 p-2 my-4">
+                    <div class="row mb-2">
+                        <div class="col px-3">
+                            <h5><b>Export POMF to CSV</b></h5>
+                            <small>Confirmed POMF Only</small>
+                        </div>
+                    </div>
+
+                    @*Table*@
+                    @if (checkPOMFConfirmedDocuments())
+                    {
+                        <div class="row mb-1 mt-4">
+                            <div class="col">
+                                <button type="button" class="btn btn-sm btn-danger" @onclick="(() => selectedPOMFDocument.Clear())"><b>Reset</b></button>
+                                <button type="button" class="btn btn-sm btn-warning" @onclick="exportCSV"><b>Export</b></button>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover" style="width: 100%">
+                                    <thead>
+                                        <tr title="Click to view">
+                                            @{
+                                                var deter = POMFService.pomfConfirmedDocuments.ExceptBy(selectedPOMFDocument.Select(x => x.dataHeader.POMFID), f => f.dataHeader.POMFID).ToList();
+                                            }
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">
+                                                <input class="form-check-input" type="checkbox" id="checkall" @onclick="(() => selectAllPOMFConfirmed())" checked="@(deter.Count > 0 ? null : "checked")" />
+                                            </th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 16%; font-size: 15px;">POMF ID</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 13%; font-size: 15px;">POMF Date</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 13%; font-size: 15px;">NP No</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 13%; font-size: 15px;">Receipt No</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 15%; font-size: 15px;">Customer Name</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 15%; font-size: 15px;">Requester</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Document Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyDashboard">
+
+                                        @foreach (var pomf in POMFService.pomfConfirmedDocuments)
+                                        {
+                                            <tr>
+                                                <td class="text-center align-middle text-wrap">
+                                                    <input class="form-check-input" type="checkbox" id="@pomf.dataHeader.POMFID" @onclick="(() => appendPOMFConfirmed(pomf))" checked="@(selectedPOMFDocument.Any(x => x.dataHeader.POMFID.Equals(pomf.dataHeader.POMFID)) ? "checked" : null)" disabled="@(isLoading ? "disabled" : null)" />
+                                                </td>
+                                                <td data-toggle="modal" data-target="#previewPOMFConfirmedModal" @onclick="(() => setPOMFConfirmDocument(pomf))" class="text-center align-middle text-wrap" style="font-size:14px;">@pomf.dataHeader.POMFID</td>
+                                                <td data-toggle="modal" data-target="#previewPOMFConfirmedModal" @onclick="(() => setPOMFConfirmDocument(pomf))" class="text-center align-middle text-wrap" style="font-size:14px;">@pomf.dataHeader.POMFDate.ToString("dd MMMM yyyy HH:mm:ss")</td>
+                                                <td data-toggle="modal" data-target="#previewPOMFConfirmedModal" @onclick="(() => setPOMFConfirmDocument(pomf))" class="text-center align-middle text-wrap" style="font-size:14px;">@pomf.dataHeader.NPNo</td>
+                                                <td data-toggle="modal" data-target="#previewPOMFConfirmedModal" @onclick="(() => setPOMFConfirmDocument(pomf))" class="text-center align-middle text-wrap" style="font-size:14px;">@pomf.dataHeader.ReceiptNo</td>
+                                                <td data-toggle="modal" data-target="#previewPOMFConfirmedModal" @onclick="(() => setPOMFConfirmDocument(pomf))" class="text-center align-middle text-wrap" style="font-size:14px;">@pomf.dataHeader.CustomerName</td>
+                                                <td data-toggle="modal" data-target="#previewPOMFConfirmedModal" @onclick="(() => setPOMFConfirmDocument(pomf))" class="text-center align-middle text-wrap" style="font-size:14px;">@pomf.dataHeader.Requester</td>
+                                                <td data-toggle="modal" data-target="#previewPOMFConfirmedModal" @onclick="(() => setPOMFConfirmDocument(pomf))" class="text-center align-middle text-wrap" style="font-size:14px;">@pomf.dataHeader.DocumentStatus</td>
+                                            </tr>
+                                        }
+
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+
+                        <nav aria-label="POMF Pagination">
+                            <ul class="pagination pagination-sm justify-content-center my-2">
+                                @if ((pomfConfirmedPageActive - 1) > 0)
+                                {
+                                    <li class="page-item px-1 paging-style" @onclick="(() => pomfConfirmedPageSelect((pomfConfirmedPageActive - 1)))"><span class="page-link">Previous</span></li>
+                                    <li class="page-item paging-style" @onclick="(() => pomfConfirmedPageSelect((pomfConfirmedPageActive - 1)))"><span class="page-link">@(pomfConfirmedPageActive - 1)</span></li>
+                                }
+                                else
+                                {
+                                    <li class="page-item px-1 disabled dis-paging-style"><span class="page-link">Previous</span></li>
+                                    <li class="page-item disabled dis-paging-style"><span class="page-link">. . .</span></li>
+                                }
+
+                                <li class="page-item active dis-paging-style"><span class="page-link">@pomfConfirmedPageActive</span></li>
+
+                                @if (pomfConfirmedPageActive < pomfConfirmedNumberofPage)
+                                {
+                                    <li class="page-item paging-style" @onclick="(() => pomfConfirmedPageSelect((pomfConfirmedPageActive + 1)))"><span class="page-link">@(pomfConfirmedPageActive + 1)</span></li>
+                                    <li class="page-item px-1 paging-style" @onclick="(() => pomfConfirmedPageSelect((pomfConfirmedPageActive + 1)))"><span class="page-link">Next</span></li>
+                                }
+                                else
+                                {
+                                    <li class="page-item disabled dis-paging-style"><span class="page-link">. . .</span></li>
+                                    <li class="page-item px-1 disabled dis-paging-style"><span class="page-link">Next</span></li>
+                                }
+                            </ul>
+                        </nav>
+                    }
+                    else
+                    {
+                        <p class="fw-bold text-center">. . . There is no Document . . .</p>
+                    }
+                </div>
+
+            </div>
+        }
+    }
+    else
+    {
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col align-middle text-center">
+                    <h3>Fetch Data Privileges in Process</h3>
+                    <small>Refresh Page Using Button Below If There is No Response</small>
+                    <br />
+                    <button type="button" class="btn btn-primary my-4" @onclick="(() => StateHasChanged())"><b>Refresh Page</b></button>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@if (isLoading)
+{
+    <div class="modal show" id="splashLoading" tabindex="-5" role="dialog" aria-labelledby="splashLoadingDialog" aria-hidden="true" style="display:block; background: rgba(0,0,0, 0.7);">
+        <BPIWebApplication.Client.Shared.CustomLayout.SplashScreen></BPIWebApplication.Client.Shared.CustomLayout.SplashScreen>
+    </div>
+}
+
+@*Document Preview Modal*@
+<div class="modal fade" id="previewPOMFModal" tabindex="-2" role="dialog" aria-labelledby="previewPOMFModalLabel" aria-hidden="true" style="background: rgba(0,0,0, 0.2);">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header cus-bg">
+                <h5 class="modal-title fw-bold" id="previewPOMFModalLabel"><i class="oi oi-file"></i> Preview POMF Document</h5>
+                <button type="button" class="close" data-dismiss="modal" data-target="#previewPOMFModal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col fw-bold">POMF ID</div>
+                    <div class="col">: @previewPOMFDocument.dataHeader.POMFID</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">POMF Date</div>
+                    <div class="col">: @previewPOMFDocument.dataHeader.POMFDate.ToString("dddd, dd MMMM yyyy")</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Location</div>
+                    <div class="col">: @previewPOMFDocument.dataHeader.LocationID</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Customer Name</div>
+                    <div class="col">: @previewPOMFDocument.dataHeader.CustomerName</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Receipt No</div>
+                    <div class="col">: @previewPOMFDocument.dataHeader.ReceiptNo</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">NP No</div>
+                    <div class="col">: @previewPOMFDocument.dataHeader.NPNo</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">NP Type</div>
+                    <div class="col">: @((POMFService.npTypes.SingleOrDefault(x => x.NPTypeID.Equals(previewPOMFDocument.dataHeader.NPTypeID)) == null) ? "NaN" : POMFService.npTypes.SingleOrDefault(x => x.NPTypeID.Equals(previewPOMFDocument.dataHeader.NPTypeID)).NPTypeDescription)</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col fw-bold">Document Status</div>
+                    <div class="col">: @previewPOMFDocument.dataHeader.DocumentStatus</div>
+                </div>
+
+                @if (previewPOMFDocument.dataHeader.DocumentStatus.Equals("Released"))
+                {
+                    <div class="row mt-2">
+                        <div class="col fw-bold">Document Request</div>
+                        <div class="col">: @previewPOMFDocument.dataHeader.ExternalRequestDocument</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col fw-bold">Document Request Date</div>
+                        <div class="col">: @previewPOMFDocument.dataHeader.RequestDocumentDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")</div>
+                    </div>
+                }
+
+                @if (previewPOMFDocument.dataHeader.DocumentStatus.Equals("Received"))
+                {
+                    <div class="row mt-2">
+                        <div class="col fw-bold">Document Request</div>
+                        <div class="col">: @previewPOMFDocument.dataHeader.ExternalRequestDocument</div>
+                    </div>
+                    <div class="row">
+                        <div class="col fw-bold">Document Request Date</div>
+                        <div class="col">: @previewPOMFDocument.dataHeader.RequestDocumentDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")</div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col fw-bold">Document Received</div>
+                        <div class="col">: @previewPOMFDocument.dataHeader.ExternalReceiveDocument</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col fw-bold">Document Received Date</div>
+                        <div class="col">: @previewPOMFDocument.dataHeader.ReceiveDocumentDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")</div>
+                    </div>
+                }
+
+                @if (checkPreviewPOMFApprovalLine())
+                {
+                    <div id="accordion" style="width: 100%;">
+
+                        <div class="card" style="width: 100%;">
+                            <div class="card-header" id="pomfAccordionHeader">
+                                <div class="border border-1">
+                                    <button id="pomftitle" class="btn w-100" data-toggle="collapse" data-target="#pomfApprovalLists" aria-expanded="true" aria-controls="pomfApprovalLists">
+                                        <b>POMF Approval List(s)</b>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="pomfApprovalLists" class="collapse bg-special" aria-labelledby="pomftitle" data-parent="#accordion">
+                                <div class="card-body">
+                                    @foreach (var apv in previewPOMFDocument.dataApproval)
+                                    {
+                                        <div class="row">
+                                            <div class="col">
+                                                <label class="fw-bold" for="@(apv.ApprovalAction)_user">@apv.ApprovalAction User :</label>
+                                                <input type="text" id="@(@apv.ApprovalAction)_user" value="@apv.Approver" class="form-control-sm w-100 border-1" readonly />
+                                            </div>
+                                            <div class="col">
+                                                <label class="fw-bold" for="@(@apv.ApprovalAction)_date">@apv.ApprovalAction Date :</label>
+                                                <input type="text" id="@(@apv.ApprovalAction)_date" value="@apv.ApproveDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")" class="form-control-sm w-100 border-1" readonly />
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                }
+
+                <div class="row mt-4">
+                    <div class="col">
+                        <p class="fw-bold text-center align-middle"><i class="oi oi-list"></i> Item List(s) </p>
+
+                        @if (checkPreviewPOMFItemLine())
+                        {
+                            <div class="table-responsive my-0">
+                                <table class="table table-sm table-hover" style="width: 100%">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center align-middle text-wrap" style="width: 19%; font-size: 15px;">Item Code</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 32%; font-size: 15px;">Item Description</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Request Qty</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">NP Qty</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 11%; font-size: 15px;">UOM</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 18%; font-size: 15px;">Item Value (Rp.)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in previewPOMFDocument.dataItemLines)
+                                        {
+                                            <tr>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemCode</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemDescription</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.RequestQuantity</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.NPQuantity</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemUOM</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemValue.ToString("N0")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="fw-bold text-center align-middle">. . . There is no Document . . .</p>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer cus-bg">
+                @{
+                    var doc = POMFService.npTypes.FirstOrDefault(x => x.NPTypeID.Equals(previewPOMFDocument.dataHeader.NPTypeID));
+                }
+                @if (doc != null)
+                {
+                    @if (doc.isAutomaticApproval)
+                    {
+                        <button type="button" class="btn btn-warning fw-bold" data-toggle="modal" data-target="#pomfApprovalModal"
+                        @onclick="@(() => setPOMFApproval("Release"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Confirmed") ? null : "disabled")">
+                            <i class="oi oi-document"></i> Release POMF
+                        </button>
+
+                        <button type="button" class="btn btn-success fw-bold" data-toggle="modal" data-target="#pomfApprovalModal"
+                        @onclick="@(() => setPOMFApproval("Receive"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Released") ? null : "disabled")">
+                            <i class="oi oi-check"></i> Received
+                        </button>
+
+                        <button type="button" class="btn btn-danger fw-bold" data-toggle="modal" data-target="#pomfApprovalModal" 
+                        @onclick="@(() => setPOMFApproval("Delete"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Confirmed") ? null : "disabled")"><i class="oi oi-basket"></i> Delete</button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-warning fw-bold" data-toggle="modal" data-target="#pomfApprovalModal" 
+                        @onclick="@(() => setPOMFApproval("Verify"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-clipboard"></i> Verify POMF</button>
+                
+                        <button type="button" class="btn btn-warning fw-bold" data-toggle="modal" data-target="#pomfApprovalModal" 
+                        @onclick="@(() => setPOMFApproval("Confirm"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Verified") ? null : "disabled")"><i class="oi oi-task"></i> Confirm POMF</button>
+                
+                        <button type="button" class="btn btn-warning fw-bold" data-toggle="modal" data-target="#pomfApprovalModal" 
+                        @onclick="@(() => setPOMFApproval("Release"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Confirmed") ? null : "disabled")"><i class="oi oi-document"></i> Release POMF</button>
+                
+                        <button type="button" class="btn btn-success fw-bold" data-toggle="modal" data-target="#pomfApprovalModal" 
+                        @onclick="@(() => setPOMFApproval("Receive"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Released") ? null : "disabled")"><i class="oi oi-check"></i> Received</button>
+
+                        <button type="button" class="btn btn-danger fw-bold" data-toggle="modal" data-target="#pomfApprovalModal"
+                        @onclick="@(() => setPOMFApproval("Delete"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-basket"></i> Delete</button>
+                    }
+                }
+
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#previewPOMFModal"><i class="oi oi-x"></i> Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*Document Preview Modal*@
+<div class="modal fade" id="previewPOMFConfirmedModal" tabindex="-2" role="dialog" aria-labelledby="previewPOMFConfirmedModalLabel" aria-hidden="true" style="background: rgba(0,0,0, 0.2);">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header cus-bg">
+                <h5 class="modal-title fw-bold" id="previewPOMFConfirmedModalLabel"><i class="oi oi-file"></i> Preview POMF Document</h5>
+                <button type="button" class="close" data-dismiss="modal" data-target="#previewPOMFConfirmedModal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col fw-bold">POMF ID</div>
+                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.POMFID</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">POMF Date</div>
+                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.POMFDate.ToString("dddd, dd MMMM yyyy")</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Location</div>
+                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.LocationID</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Customer Name</div>
+                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.CustomerName</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Receipt No</div>
+                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.ReceiptNo</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">NP No</div>
+                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.NPNo</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">NP Type</div>
+                    <div class="col">: @((POMFService.npTypes.SingleOrDefault(x => x.NPTypeID.Equals(previewPOMFConfirmDocument.dataHeader.NPTypeID)) == null) ? "NaN" : POMFService.npTypes.SingleOrDefault(x => x.NPTypeID.Equals(previewPOMFConfirmDocument.dataHeader.NPTypeID)).NPTypeDescription)</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col fw-bold">Document Status</div>
+                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.DocumentStatus</div>
+                </div>
+
+                @if (previewPOMFConfirmDocument.dataHeader.DocumentStatus.Equals("Released"))
+                {
+                    <div class="row mt-2">
+                        <div class="col fw-bold">Document Request</div>
+                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.ExternalRequestDocument</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col fw-bold">Document Request Date</div>
+                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.RequestDocumentDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")</div>
+                    </div>
+                }
+
+                @if (previewPOMFConfirmDocument.dataHeader.DocumentStatus.Equals("Received"))
+                {
+                    <div class="row mt-2">
+                        <div class="col fw-bold">Document Request</div>
+                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.ExternalRequestDocument</div>
+                    </div>
+                    <div class="row">
+                        <div class="col fw-bold">Document Request Date</div>
+                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.RequestDocumentDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")</div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col fw-bold">Document Received</div>
+                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.ExternalReceiveDocument</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col fw-bold">Document Received Date</div>
+                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.ReceiveDocumentDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")</div>
+                    </div>
+                }
+
+                @if (checkPreviewPOMFConfirmedApprovalLine())
+                {
+                    <div id="accordion" style="width: 100%;">
+
+                        <div class="card" style="width: 100%;">
+                            <div class="card-header" id="pomfAccordionHeader">
+                                <div class="border border-1">
+                                    <button id="pomftitle" class="btn w-100" data-toggle="collapse" data-target="#pomfApprovalLists" aria-expanded="true" aria-controls="pomfApprovalLists">
+                                        <b>POMF Approval List(s)</b>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="pomfApprovalLists" class="collapse bg-special" aria-labelledby="pomftitle" data-parent="#accordion">
+                                <div class="card-body">
+                                    @foreach (var apv in previewPOMFConfirmDocument.dataApproval)
+                                    {
+                                        <div class="row">
+                                            <div class="col">
+                                                <label class="fw-bold" for="@(apv.ApprovalAction)_user">@apv.ApprovalAction User :</label>
+                                                <input type="text" id="@(@apv.ApprovalAction)_user" value="@apv.Approver" class="form-control-sm w-100 border-1" readonly />
+                                            </div>
+                                            <div class="col">
+                                                <label class="fw-bold" for="@(@apv.ApprovalAction)_date">@apv.ApprovalAction Date :</label>
+                                                <input type="text" id="@(@apv.ApprovalAction)_date" value="@apv.ApproveDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")" class="form-control-sm w-100 border-1" readonly />
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                }
+
+                <div class="row mt-4">
+                    <div class="col">
+                        <p class="fw-bold text-center align-middle"><i class="oi oi-list"></i> Item List(s) </p>
+
+                        @if (checkPreviewPOMFConfirmedItemLine())
+                        {
+                            <div class="table-responsive my-0">
+                                <table class="table table-sm table-hover" style="width: 100%">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center align-middle text-wrap" style="width: 19%; font-size: 15px;">Item Code</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 32%; font-size: 15px;">Item Description</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Request Qty</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">NP Qty</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 11%; font-size: 15px;">UOM</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 18%; font-size: 15px;">Item Value (Rp.)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in previewPOMFConfirmDocument.dataItemLines)
+                                        {
+                                            <tr>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemCode</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemDescription</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.RequestQuantity</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.NPQuantity</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemUOM</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemValue.ToString("N0")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="fw-bold text-center align-middle">. . . There is no Document . . .</p>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer cus-bg">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#previewPOMFConfirmedModal"><i class="oi oi-x"></i> Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="pomfApprovalModal" tabindex="-3" role="dialog" aria-labelledby="pomfApprovalModalLabel" aria-hidden="true" style="background: rgba(0,0,0, 0.2);">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header cus-bg">
+                <h5 class="modal-title fw-bold" id="pomfApprovalModalLabel"><i class="oi oi-pin"></i> Confirm Process Reconfirmation</h5>
+                <button type="button" class="close" data-dismiss="modal" data-target="#pomfApprovalModal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col fw-bold text-wrap">Process POMF Document as follow below, Are you sure ?</div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col fw-bold">POMF ID</div>
+                    <div class="col">: @previewPOMFApproval.POMFID</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Action</div>
+                    <div class="col">: @previewPOMFApproval.ApprovalAction</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">User</div>
+                    <div class="col">: @previewPOMFApproval.Approver</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Action Date</div>
+                    <div class="col">: @previewPOMFApproval.ApproveDate.ToString("dddd, dd MMMM yyyy")</div>
+                </div>
+
+                @if (previewPOMFApproval.ApprovalAction.Equals("Release") || previewPOMFApproval.ApprovalAction.Equals("Receive"))
+                {
+                    @**@
+                    <EditForm Model="@editPOMFDocumentHeader" class="my-3">
+                        <div class="row">
+                            <div class="col">
+                                <label for="ext_requestdoc">Request Document :</label>
+                                <InputText id="ext_requestdoc" @bind-Value="editPOMFDocumentHeader.ExternalRequestDocument" class="form-control" disabled="@(previewPOMFApproval.ApprovalAction.Equals("Release") ? null : "disabled")"></InputText>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <label for="ext_requestdoc">Receive Document :</label>
+                                <InputText id="ext_requestdoc" @bind-Value="editPOMFDocumentHeader.ExternalReceiveDocument" class="form-control" disabled="@(previewPOMFApproval.ApprovalAction.Equals("Receive") ? null : "disabled")"></InputText>
+                            </div>
+                        </div>
+                    </EditForm>
+                }
+
+            </div>
+            <div class="modal-footer cus-bg">
+                @if (previewPOMFApproval.ApprovalAction.Equals("Verify"))
+                {
+                    <button type="button" class="btn btn-success fw-bold" @onclick="@(() => createDocumentApprove("Verify"))">
+                        <i class="oi oi-thumb-up"></i> Verify !
+                    </button>
+                }
+                else if (previewPOMFApproval.ApprovalAction.Equals("Confirm"))
+                {
+                    <button type="button" class="btn btn-success fw-bold" @onclick="@(() => createDocumentApprove("Confirm"))">
+                        <i class="oi oi-thumb-up"></i> Confirm !
+                    </button>
+                }
+                else if (previewPOMFApproval.ApprovalAction.Equals("Release"))
+                {
+                    <button type="button" class="btn btn-success fw-bold" @onclick="@(() => createDocumentApprove("Release"))">
+                        <i class="oi oi-thumb-up"></i> Release !
+                    </button>
+                }
+                else if (previewPOMFApproval.ApprovalAction.Equals("Receive"))
+                {
+                    <button type="button" class="btn btn-success fw-bold" @onclick="@(() => createDocumentApprove("Receive"))">
+                        <i class="oi oi-thumb-up"></i> Receive !
+                    </button>
+                }
+                else if (previewPOMFApproval.ApprovalAction.Equals("Delete"))
+                {
+                    <button type="button" class="btn btn-success fw-bold" @onclick="deleteDocument">
+                        <i class="oi oi-thumb-up"></i> Delete !
+                    </button>
+                }
+
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#pomfApprovalModal"><i class="oi oi-thumb-down"></i> Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*Document Confirm Preview Modal*@
+<div class="modal fade" id="previewPOMFConfirmedModal" tabindex="-2" role="dialog" aria-labelledby="previewPOMFConfirmedModalLabel" aria-hidden="true" style="background: rgba(0,0,0, 0.2);">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header cus-bg">
+                <h5 class="modal-title fw-bold" id="previewPOMFConfirmedModalLabel"><i class="oi oi-file"></i> Preview POMF Document</h5>
+                <button type="button" class="close" data-dismiss="modal" data-target="#previewPOMFConfirmedModal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col fw-bold">POMF ID</div>
+                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.POMFID</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">POMF Date</div>
+                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.POMFDate.ToString("dddd, dd MMMM yyyy")</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Location</div>
+                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.LocationID</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Customer Name</div>
+                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.CustomerName</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Receipt No</div>
+                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.ReceiptNo</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">NP No</div>
+                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.NPNo</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">NP Type</div>
+                    <div class="col">: @((POMFService.npTypes.SingleOrDefault(x => x.NPTypeID.Equals(previewPOMFConfirmDocument.dataHeader.NPTypeID)) == null) ? "NaN" : POMFService.npTypes.SingleOrDefault(x => x.NPTypeID.Equals(previewPOMFConfirmDocument.dataHeader.NPTypeID)).NPTypeDescription)</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col fw-bold">Document Status</div>
+                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.DocumentStatus</div>
+                </div>
+
+                @if (previewPOMFConfirmDocument.dataHeader.DocumentStatus.Equals("Released"))
+                {
+                    <div class="row mt-2">
+                        <div class="col fw-bold">Document Request</div>
+                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.ExternalRequestDocument</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col fw-bold">Document Request Date</div>
+                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.RequestDocumentDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")</div>
+                    </div>
+                }
+
+                @if (previewPOMFConfirmDocument.dataHeader.DocumentStatus.Equals("Received"))
+                {
+                    <div class="row mt-2">
+                        <div class="col fw-bold">Document Request</div>
+                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.ExternalRequestDocument</div>
+                    </div>
+                    <div class="row">
+                        <div class="col fw-bold">Document Request Date</div>
+                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.RequestDocumentDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")</div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col fw-bold">Document Received</div>
+                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.ExternalReceiveDocument</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col fw-bold">Document Received Date</div>
+                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.ReceiveDocumentDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")</div>
+                    </div>
+                }
+
+                @if (checkPreviewPOMFConfirmedApprovalLine())
+                {
+                    <div id="accordion" style="width: 100%;">
+
+                        <div class="card" style="width: 100%;">
+                            <div class="card-header" id="pomfAccordionHeader">
+                                <div class="border border-1">
+                                    <button id="pomftitle" class="btn w-100" data-toggle="collapse" data-target="#pomfApprovalLists" aria-expanded="true" aria-controls="pomfApprovalLists">
+                                        <b>POMF Approval List(s)</b>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="pomfApprovalLists" class="collapse bg-special" aria-labelledby="pomftitle" data-parent="#accordion">
+                                <div class="card-body">
+                                    @foreach (var apv in previewPOMFConfirmDocument.dataApproval)
+                                    {
+                                        <div class="row">
+                                            <div class="col">
+                                                <label class="fw-bold" for="@(apv.ApprovalAction)_user">@apv.ApprovalAction User :</label>
+                                                <input type="text" id="@(@apv.ApprovalAction)_user" value="@apv.Approver" class="form-control-sm w-100 border-1" readonly />
+                                            </div>
+                                            <div class="col">
+                                                <label class="fw-bold" for="@(@apv.ApprovalAction)_date">@apv.ApprovalAction Date :</label>
+                                                <input type="text" id="@(@apv.ApprovalAction)_date" value="@apv.ApproveDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")" class="form-control-sm w-100 border-1" readonly />
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                }
+
+                <div class="row mt-4">
+                    <div class="col">
+                        <p class="fw-bold text-center align-middle"><i class="oi oi-basket"></i> Item List(s) </p>
+
+                        @if (checkPreviewPOMFConfirmedItemLine())
+                        {
+                            <div class="table-responsive my-0">
+                                <table class="table table-sm table-hover" style="width: 100%">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center align-middle text-wrap" style="width: 19%; font-size: 15px;">Item Code</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 32%; font-size: 15px;">Item Description</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Request Qty</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">NP Qty</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 11%; font-size: 15px;">UOM</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 18%; font-size: 15px;">Item Value (Rp.)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in previewPOMFConfirmDocument.dataItemLines)
+                                        {
+                                            <tr>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemCode</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemDescription</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.RequestQuantity</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.NPQuantity</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemUOM</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemValue.ToString("N0")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="fw-bold text-center align-middle">. . . There is no Document . . .</p>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer cus-bg">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#previewPOMFConfirmedModal"><i class="oi oi-x"></i> Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+

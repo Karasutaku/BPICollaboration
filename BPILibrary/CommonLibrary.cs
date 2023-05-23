@@ -2,6 +2,7 @@
 using System.Data;
 using System.IO.Compression;
 using System.Reflection;
+using System.Text;
 
 namespace BPILibrary
 {
@@ -63,7 +64,7 @@ namespace BPILibrary
             stream.CopyTo(fs);
         }
 
-        public static async Task saveFiletoDirectoryAsZip(string path, string originalName, byte[] content)
+        public static void saveFiletoDirectoryAsZip(string path, string originalName, byte[] content)
         {
             string dir = Path.GetDirectoryName(path);
 
@@ -95,7 +96,7 @@ namespace BPILibrary
         }
 
         // data processing
-        public static async Task<byte[]> compressData(byte[] data)
+        public static byte[] compressData(byte[] data)
         {
             byte[] compressedData = new byte[0];
 
@@ -110,7 +111,7 @@ namespace BPILibrary
             return compressedData;
         }
 
-        public static async Task<byte[]> decompressData(byte[] data)
+        public static byte[] decompressData(byte[] data)
         {
             byte[] decompressedData = new byte[0];
 
@@ -189,6 +190,26 @@ namespace BPILibrary
 
             return new string(Enumerable.Repeat(chars, length)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
+        public static MemoryStream ListToCSV<T>(List<T> list, string separator)
+        {
+            MemoryStream res = new();
+
+            using (StreamWriter sw = new(res, new UTF8Encoding(false), 8192, true))
+            {
+                var info = typeof(T).GetProperties();
+                // header
+                sw.WriteLine(string.Join(separator, info.Select(x => x.Name)));
+                // data
+                foreach (var dt in list)
+                {
+                    sw.WriteLine(string.Join(separator, info.Select(prop => prop.GetValue(dt))));
+                }
+            }
+
+            res.Position = 0;
+            return res;
         }
 
         //

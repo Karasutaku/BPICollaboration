@@ -241,11 +241,14 @@ else
                                                                 <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#itemCasePreviewModal" @onclick="(() => setItemCasePreviewData(itemCase))"><i class="oi oi-document"></i> Preview Document</button>
                                                                 <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal" @onclick="(async () => await setDocumentDiscussionPreviewData(itemCase.itemCase.DocumentID, itemCase.itemCase.SiteReporter))"><i class="oi oi-chat"></i> Discussion Panel
                                                                     @{
-                                                                        var unreadCountA = EPKRSService.documentDiscussions.ExceptBy(EPKRSService.documentDiscussionReadHistories.Select(f => f.rowGuid), g => g.rowGuid).Where(h => h.DocumentID.Equals(itemCase.itemCase.DocumentID)).ToList().Count;
+                                                                        int? unreadCountA = null;
+
+                                                                        if (EPKRSService.documentDiscussions.Count > 0 && EPKRSService.documentDiscussionReadHistories.Count > 0)
+                                                                            unreadCountA = EPKRSService.documentDiscussions.ExceptBy(EPKRSService.documentDiscussionReadHistories.Select(f => f.rowGuid), g => g.rowGuid).Where(h => h.DocumentID.Equals(itemCase.itemCase.DocumentID)).ToList().Count;
                                                                     }
-                                                                    @if (unreadCountA > 0)
+                                                                    @if (unreadCountA != null)
                                                                     {   
-                                                                        <span class="badge bg-danger text-white">@unreadCountA.ToString("N0")</span>
+                                                                        <span class="badge bg-danger text-white">@unreadCountA.Value.ToString("N0")</span>
                                                                     }
                                                                 </button>
                                                             </div>
@@ -319,11 +322,14 @@ else
                                                                 <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#incidentAccidentPreviewModal" @onclick="(() => setIncidentAccidentPreviewData(incidentAccident))"><i class="oi oi-document"></i> Preview Document</button>
                                                                 <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal" @onclick="(async () => await setDocumentDiscussionPreviewData(incidentAccident.incidentAccident.DocumentID, incidentAccident.incidentAccident.SiteReporter))"><i class="oi oi-chat"></i> Discussion Panel
                                                                     @{
-                                                                        var unreadCountB = EPKRSService.documentDiscussions.ExceptBy(EPKRSService.documentDiscussionReadHistories.Select(f => f.rowGuid), g => g.rowGuid).Where(h => h.DocumentID.Equals(incidentAccident.incidentAccident.DocumentID)).ToList().Count;
+                                                                        int? unreadCountB = null;
+
+                                                                        if (EPKRSService.documentDiscussions.Count > 0 && EPKRSService.documentDiscussionReadHistories.Count > 0)
+                                                                            unreadCountB = EPKRSService.documentDiscussions.ExceptBy(EPKRSService.documentDiscussionReadHistories.Select(f => f.rowGuid), g => g.rowGuid).Where(h => h.DocumentID.Equals(incidentAccident.incidentAccident.DocumentID)).ToList().Count;
                                                                     }
                                                                     @if (unreadCountB > 0)
                                                                     {
-                                                                        <span class="badge bg-danger text-white">@unreadCountB.ToString("N0")</span>
+                                                                        <span class="badge bg-danger text-white">@unreadCountB.Value.ToString("N0")</span>
                                                                     }
                                                                 </button>
                                                             </div>
@@ -560,6 +566,10 @@ else
                 {
                     <button type="button" class="btn btn-dark mt-1 fw-bold" data-dismiss="modal" data-target="#itemCasePreviewModal" @onclick="@(() => redirectDocumentEdit("ITEMC"))"><i class="oi oi-pencil"></i> Edit</button>
                 }
+                @if (LoginService.activeUser.userPrivileges.Contains("DL"))
+                {
+                    <button type="button" class="btn btn-danger mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Delete"))"><i class="oi oi-basket"></i> Delete</button>
+                }
                 <button type="button" class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal"><i class="oi oi-chat"></i> Discussion Panel 
                     @{
                         var unreadCountC = EPKRSService.documentDiscussions.ExceptBy(EPKRSService.documentDiscussionReadHistories.Select(f => f.rowGuid), g => g.rowGuid).Where(h => h.DocumentID.Equals(previewItemCase.DocumentID)).ToList().Count;
@@ -751,6 +761,10 @@ else
                 {
                     <button type="button" class="btn btn-dark mt-1 fw-bold" data-dismiss="modal" data-target="#incidentAccidentPreviewModal" @onclick="@(() => redirectDocumentEdit("INCAC"))"><i class="oi oi-pencil"></i> Edit</button>
                 }
+                @if (LoginService.activeUser.userPrivileges.Contains("DL"))
+                {
+                    <button type="button" class="btn btn-danger mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Delete"))"><i class="oi oi-basket"></i> Delete</button>
+                }
                 <button type="button" class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal" @onclick="(async () => await setDocumentDiscussionPreviewData(previewIncidentAccident.DocumentID, previewIncidentAccident.SiteReporter))"><i class="oi oi-chat"></i> Discussion Panel 
                     @{
                         var unreadCountD = EPKRSService.documentDiscussions.ExceptBy(EPKRSService.documentDiscussionReadHistories.Select(f => f.rowGuid), g => g.rowGuid).Where(h => h.DocumentID.Equals(previewIncidentAccident.DocumentID)).ToList().Count;
@@ -911,7 +925,7 @@ else
                     <div class="col">: @previewDocumentApproval.DocumentID</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Approval Action</div>
+                    <div class="col fw-bold">Action</div>
                     <div class="col">: @previewDocumentApproval.ApprovalAction</div>
                 </div>
                 <div class="row">
@@ -924,20 +938,37 @@ else
                 </div>
             </div>
             <div class="modal-footer cus-bg">
-                <button type="button" class="btn btn-success fw-bold"
-                    disabled="@(EPKRSService.itemCases.SingleOrDefault(x => x.itemCase.DocumentID.Equals(previewDocumentApproval.DocumentID)) != null ?
-                                EPKRSService.itemCases.SingleOrDefault(x => x.itemCase.DocumentID.Equals(previewDocumentApproval.DocumentID)).itemCase.DocumentStatus.Equals("Open") ? null : "disabled" :
-                                EPKRSService.incidentAccidents.SingleOrDefault(x => x.incidentAccident.DocumentID.Equals(previewDocumentApproval.DocumentID)) != null ?
-                                EPKRSService.incidentAccidents.SingleOrDefault(x => x.incidentAccident.DocumentID.Equals(previewDocumentApproval.DocumentID)).incidentAccident.DocumentStatus.Equals("Open") ? null : "disabled" :
-                                "disabled")"
-                    @onclick="@(() => createDocumentApprove("Approve"))"><i class="oi oi-thumb-up"></i> Approve !</button>
-                <button type="button" class="btn btn-danger fw-bold"
-                        disabled="@(EPKRSService.itemCases.SingleOrDefault(x => x.itemCase.DocumentID.Equals(previewDocumentApproval.DocumentID)) != null ?
-                                EPKRSService.itemCases.SingleOrDefault(x => x.itemCase.DocumentID.Equals(previewDocumentApproval.DocumentID)).itemCase.DocumentStatus.Equals("OnProgress") ? null : "disabled" :
-                                EPKRSService.incidentAccidents.SingleOrDefault(x => x.incidentAccident.DocumentID.Equals(previewDocumentApproval.DocumentID)) != null ?
-                                EPKRSService.incidentAccidents.SingleOrDefault(x => x.incidentAccident.DocumentID.Equals(previewDocumentApproval.DocumentID)).incidentAccident.DocumentStatus.Equals("OnProgress") ? null : "disabled" :
-                                "disabled")"
-                        @onclick="@(() => createDocumentApprove("Close"))"><i class="oi oi-thumb-up"></i> Close !</button>
+                @{
+                    var itemCasedt = EPKRSService.itemCases.SingleOrDefault(x => x.itemCase.DocumentID.Equals(previewDocumentApproval.DocumentID));
+                    var incAccdt = EPKRSService.incidentAccidents.SingleOrDefault(x => x.incidentAccident.DocumentID.Equals(previewDocumentApproval.DocumentID));
+                }
+                @if (LoginService.activeUser.userPrivileges.Contains("AP"))
+                {
+                    <button type="button" class="btn btn-success fw-bold"
+                            disabled="@(previewDocumentApproval.ApprovalAction.Equals("Approve") ? null : "disabled")"
+                            @onclick="@(() => createDocumentApprove("Approve"))"><i class="oi oi-thumb-up"></i> Approve !</button>
+                }
+                @if (LoginService.activeUser.userPrivileges.Contains("RL"))
+                {
+                    <button type="button" class="btn btn-danger fw-bold"
+                            disabled="@(previewDocumentApproval.ApprovalAction.Equals("Close") ? null : "disabled")"
+                            @onclick="@(() => createDocumentApprove("Close"))"><i class="oi oi-thumb-up"></i> Close !</button>
+                }
+                @if (LoginService.activeUser.userPrivileges.Contains("DL"))
+                {
+                    if (itemCasedt != null)
+                    {
+                        <button type="button" class="btn btn-danger fw-bold"
+                            disabled="@(previewDocumentApproval.ApprovalAction.Equals("Delete") ? null : "disabled")"
+                            @onclick="@(() => deleteEPKRSDocument("ITCASE"))"><i class="oi oi-thumb-up"></i> Delete !</button>
+                    }
+                    if (incAccdt != null) 
+                    {
+                        <button type="button" class="btn btn-danger fw-bold"
+                            disabled="@(previewDocumentApproval.ApprovalAction.Equals("Delete") ? null : "disabled")"
+                            @onclick="@(() => deleteEPKRSDocument("INCAC"))"><i class="oi oi-thumb-up"></i> Delete !</button>
+                    }
+                }
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#approvalModal"><i class="oi oi-thumb-down"></i> Cancel</button>
             </div>
         </div>
@@ -1008,11 +1039,7 @@ else
             </div>
             <div class="modal-footer cus-bg">
                 <button type="button" class="btn btn-success fw-bold"
-                        disabled="@(EPKRSService.itemCases.SingleOrDefault(x => x.itemCase.DocumentID.Equals(previewDocumentApproval.DocumentID)) != null ?
-                                EPKRSService.itemCases.SingleOrDefault(x => x.itemCase.DocumentID.Equals(previewDocumentApproval.DocumentID)).itemCase.DocumentStatus.Equals("Approved") ? null : "disabled" :
-                                EPKRSService.incidentAccidents.SingleOrDefault(x => x.incidentAccident.DocumentID.Equals(previewDocumentApproval.DocumentID)) != null ?
-                                EPKRSService.incidentAccidents.SingleOrDefault(x => x.incidentAccident.DocumentID.Equals(previewDocumentApproval.DocumentID)).incidentAccident.DocumentStatus.Equals("Approved") ? null : "disabled" :
-                                "disabled")"
+                        disabled="@(previewDocumentApproval.ApprovalAction.Equals("OnProgress") ? null : "disabled")"
                         @onclick="@(() => createDocumentApproveExtended("OnProgress"))">
                     <i class="oi oi-thumb-up"></i> On Progress !
                 </button>

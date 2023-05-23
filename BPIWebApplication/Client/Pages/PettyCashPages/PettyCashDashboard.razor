@@ -1393,7 +1393,7 @@ else
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @foreach (var line in reimburse.lines)
+                                                @foreach (var line in reimburse.lines.OrderBy(x => x.LineNo))
                                                 {
                                                     <tr>
                                                         <td style="text-align: center;">

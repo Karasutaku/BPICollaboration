@@ -25,6 +25,7 @@ using BPILibrary;
 using DocumentFormat.OpenXml.Office2013.Excel;
 using BPIBR.Models.MainModel.EPKRS;
 using DocumentFormat.OpenXml.Wordprocessing;
+using BPIBR.Models.MainModel.POMF;
 
 namespace BPIBR.Controllers
 {
@@ -1513,7 +1514,7 @@ namespace BPIBR.Controllers
         {
             ResultModel<QueryModel<Advance>> finRes = new ResultModel<QueryModel<Advance>>();
             IActionResult actionResult = null;
-            
+
             try
             {
                 var result1 = await _http.PostAsJsonAsync<QueryModel<Advance>>($"api/DA/PettyCash/createAdvanceData", data);
@@ -1545,11 +1546,12 @@ namespace BPIBR.Controllers
                 }
                 else
                 {
-                    finRes.Data = data;
+                    var respBody = await result1.Content.ReadFromJsonAsync<ResultModel<QueryModel<Advance>>>();
 
-                    finRes.isSuccess = false;
-                    finRes.ErrorCode = "01";
-                    finRes.ErrorMessage = "createAdvance Connect to DA API Fail";
+                    finRes.Data = respBody.Data;
+                    finRes.isSuccess = respBody.isSuccess;
+                    finRes.ErrorCode = respBody.ErrorCode;
+                    finRes.ErrorMessage = respBody.ErrorMessage;
 
                     actionResult = Ok(finRes);
                 }
@@ -1840,11 +1842,11 @@ namespace BPIBR.Controllers
 
                 //                System.IO.File.Delete(upPath);
                 //            }
-                            
+
                 //        }
                 //    }
                 //}
-                
+
                 // settling
                 var result = await _http.PostAsJsonAsync<QueryModel<List<string>>>($"api/DA/PettyCash/ExpenseSettlement", data);
 
@@ -2049,9 +2051,9 @@ namespace BPIBR.Controllers
                             taskResult.isSuccess = respBody.isSuccess;
                             taskResult.ErrorCode = respBody.ErrorCode;
                             taskResult.ErrorMessage = respBody.ErrorMessage;
-                        
+
                             res.Add(taskResult);
-                            
+
                             string emailParam = "PettyCash!_!StatusRelease!_!" + dt.documentLocation + "!_!" + dt.approver + "!_!" + dt.documentID;
                             await getMailingDetailsData(Base64Encode(emailParam));
                         }
@@ -3430,108 +3432,13 @@ namespace BPIBR.Controllers
             return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
         }
 
-        // save file
-        internal async Task saveFiletoDirectory(string path, Byte[] content)
-        {
-            string dir = Path.GetDirectoryName(path);
-
-            if (!Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-
-            await using FileStream fs = new(path, FileMode.Create);
-            Stream stream = new MemoryStream(content);
-            await stream.CopyToAsync(fs);
-        }
-
-        internal async Task saveFiletoDirectoryAsZip(string path, string originalName, Byte[] content)
-        {
-            string dir = Path.GetDirectoryName(path);
-
-            if (!Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-
-            using (var compressedStream = new MemoryStream())
-            {
-                using (ZipArchive archive = new ZipArchive(compressedStream, ZipArchiveMode.Create, false))
-                {
-                    FileInfo fi = new FileInfo(originalName);
-                    var entry = archive.CreateEntry(fi.Name);
-
-                    using (var original = new MemoryStream(content))
-                    {
-                        using (var zipEntryStream = entry.Open())
-                        {
-                            original.CopyTo(zipEntryStream);
-                        }
-                    }
-                }
-
-                using FileStream fs = new(path, FileMode.Create);
-                Stream stream = new MemoryStream(compressedStream.ToArray());
-                stream.CopyTo(fs);
-            }
-        }
-
         // data processing
-        private async Task<Byte[]> compressData(byte[] data)
-        {
-            byte[] compressedData = new byte[0];
-
-            using (var compressedStream = new MemoryStream())
-            using (var zipStream = new GZipStream(compressedStream, CompressionMode.Compress))
-            {
-                zipStream.Write(data, 0, data.Length);
-                zipStream.Close();
-                compressedData = compressedStream.ToArray();
-            }
-
-            return compressedData;
-        }
-
-        private async Task<Byte[]> decompressData(byte[] data)
-        {
-            byte[] decompressedData = new byte[0];
-
-            using (var compressedStream = new MemoryStream(data))
-            using (var zipStream = new GZipStream(compressedStream, CompressionMode.Decompress))
-            using (var resultStream = new MemoryStream())
-            {
-                zipStream.CopyTo(resultStream);
-                decompressedData = resultStream.ToArray();
-            }
-
-            return decompressedData;
-        }
-
-        internal async Task<Byte[]> getFileStream(string type, string filename, DateTime date)
+        
+        internal byte[] getFileStream(string type, string filename, DateTime date)
         {
             string path = Path.Combine(_uploadPath, type, date.Year.ToString(), date.Month.ToString(), date.Day.ToString(), Path.GetFileName(filename));
 
-            return await System.IO.File.ReadAllBytesAsync(path);
-        }
-
-        private async Task<Byte[]> getFileStreamfromZip(string filename, string originalName, byte[] data)
-        {
-            byte[] compressedData = new byte[0];
-
-            Stream stream = new MemoryStream(data);
-            ZipArchive archive = new ZipArchive(stream);
-
-            FileInfo fi = new FileInfo(originalName);
-            var entryData = archive.GetEntry(fi.Name);
-            var content = entryData.Open();
-
-            using (var ms = new MemoryStream())
-            {
-                await content.CopyToAsync(ms);
-                compressedData = ms.ToArray();
-            }
-
-            return compressedData;
+            return System.IO.File.ReadAllBytes(path);
         }
 
         internal bool deleteFilefromDirectory(string type, string filename, DateTime date)
@@ -3571,15 +3478,15 @@ namespace BPIBR.Controllers
                             string oriPath = Path.Combine(_uploadPath, data.standarizationDetails.Data.TypeID, DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), file.fileName);
                             string zipPath = Path.ChangeExtension(oriPath, ".zip");
 
-                            tempContent = await decompressData(file.content);
+                            tempContent = CommonLibrary.decompressData(file.content);
 
-                            await saveFiletoDirectoryAsZip(zipPath, oriPath, tempContent);
+                            CommonLibrary.saveFiletoDirectoryAsZip(zipPath, oriPath, tempContent);
                         }
                         else
                         {
                             string path = Path.Combine(_uploadPath, data.standarizationDetails.Data.TypeID, DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), file.fileName);
 
-                            await saveFiletoDirectory(path, file.content);
+                            CommonLibrary.saveFiletoDirectory(path, file.content);
                         }
                     }
 
@@ -3660,15 +3567,15 @@ namespace BPIBR.Controllers
                             string oriPath = Path.Combine(_uploadPath, data.standarizationDetails.Data.TypeID, DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), file.fileName);
                             string zipPath = Path.ChangeExtension(oriPath, ".zip");
 
-                            tempContent = await decompressData(file.content);
+                            tempContent = CommonLibrary.decompressData(file.content);
 
-                            await saveFiletoDirectoryAsZip(zipPath, oriPath, tempContent);
+                            CommonLibrary.saveFiletoDirectoryAsZip(zipPath, oriPath, tempContent);
                         }
                         else
                         {
                             string path = Path.Combine(_uploadPath, data.standarizationDetails.Data.TypeID, DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), file.fileName);
 
-                            await saveFiletoDirectory(path, file.content);
+                            CommonLibrary.saveFiletoDirectory(path, file.content);
                         }
                     }
 
@@ -3727,7 +3634,12 @@ namespace BPIBR.Controllers
                 }
                 else
                 {
-                    throw new Exception("Fail Fetch File Data Path");
+                    res.Data = null;
+                    res.isSuccess = false;
+                    res.ErrorCode = "99";
+                    res.ErrorMessage = "Fail Fetch File Data Path";
+
+                    actionResult = BadRequest(res);
                 }
 
                 var result = await _http.PostAsJsonAsync<QueryModel<string>>($"api/DA/Standarization/deleteStandarizationData", data);
@@ -3889,14 +3801,14 @@ namespace BPIBR.Controllers
                             string zipPath = Path.ChangeExtension(oriPath, ".zip");
 
                             byte[] tempContent = new byte[0];
-                            tempContent = await getFileStream(dcParam.Split("!_!")[1], zipPath, dt.UploadDate);
+                            tempContent = getFileStream(dcParam.Split("!_!")[1], zipPath, dt.UploadDate);
 
-                            temp.content = await getFileStreamfromZip(zipPath, oriPath, tempContent);
-                            temp.content = await compressData(temp.content);
+                            temp.content = CommonLibrary.getFileStreamfromZip(zipPath, oriPath, tempContent);
+                            temp.content = CommonLibrary.compressData(temp.content);
                         }
                         else
                         {
-                            temp.content = await getFileStream(dcParam.Split("!_!")[1], dt.FilePath, dt.UploadDate);
+                            temp.content = getFileStream(dcParam.Split("!_!")[1], dt.FilePath, dt.UploadDate);
                         }
 
                         res.Data.Add(temp);
@@ -4409,6 +4321,102 @@ namespace BPIBR.Controllers
                 else
                 {
                     var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<IncidentAccident>>>();
+
+                    res.Data = null;
+
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpPost("deleteEPKRSItemCaseDocumentData")]
+        public async Task<IActionResult> deleteEPKRSItemCaseDocumentData(QueryModel<string> data)
+        {
+            ResultModel<QueryModel<string>> res = new ResultModel<QueryModel<string>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>($"api/DA/EPKRS/deleteEPKRSItemCaseDocumentData", data);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<string>>>();
+
+                    res.Data = respBody.Data;
+
+                    res.isSuccess = respBody.isSuccess;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<string>>>();
+
+                    res.Data = null;
+
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpPost("deleteEPKRSIncidentAccidentDocumentData")]
+        public async Task<IActionResult> deleteEPKRSIncidentAccidentDocumentData(QueryModel<string> data)
+        {
+            ResultModel<QueryModel<string>> res = new ResultModel<QueryModel<string>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>($"api/DA/EPKRS/deleteEPKRSIncidentAccidentDocumentData", data);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<string>>>();
+
+                    res.Data = respBody.Data;
+
+                    res.isSuccess = respBody.isSuccess;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<string>>>();
 
                     res.Data = null;
 
@@ -5053,7 +5061,7 @@ namespace BPIBR.Controllers
             try
             {
                 var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/DA/EPKRS/getEPKRSModuleNumberOfPage/{param}");
-                
+
                 if (result.isSuccess)
                 {
                     res.Data = result.Data;
@@ -5091,4 +5099,386 @@ namespace BPIBR.Controllers
         //
     }
 
+    [Route("api/BR/POMF")]
+    [ApiController]
+    public class POMFController : ControllerBase
+    {
+        private readonly HttpClient _http;
+        private readonly IConfiguration _configuration;
+        //private readonly string _uploadPath;
+
+        public POMFController(HttpClient http, IConfiguration config)
+        {
+            _http = http;
+            _configuration = config;
+            _http.BaseAddress = new Uri(_configuration.GetValue<string>("BaseUri:BpiDA"));
+            //_uploadPath = _configuration.GetValue<string>("File:EPKRS:UploadPath");
+        }
+
+        [HttpPost("createPOMFDocument")]
+        public async Task<IActionResult> createPOMFDocument(QueryModel<POMFDocument> data)
+        {
+            ResultModel<QueryModel<POMFDocument>> res = new ResultModel<QueryModel<POMFDocument>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<QueryModel<POMFDocument>>("api/DA/POMF/createPOMFDocument", data);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<POMFDocument>>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                    else
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<POMFDocument>>>();
+
+                    res.Data = null;
+
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpPost("createPOMFApproval")]
+        public async Task<IActionResult> createPOMFApproval(QueryModel<POMFApprovalStream> data)
+        {
+            ResultModel<QueryModel<POMFApprovalStream>> res = new ResultModel<QueryModel<POMFApprovalStream>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<QueryModel<POMFApprovalStream>>("api/DA/POMF/createPOMFApproval", data);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<POMFApprovalStream>>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                    else
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<POMFApprovalStream>>>();
+
+                    res.Data = null;
+
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpPost("createPOMFApprovalExtended")]
+        public async Task<IActionResult> createPOMFApprovalExtended(QueryModel<POMFApprovalStreamExtended> data)
+        {
+            ResultModel<QueryModel<POMFApprovalStreamExtended>> res = new ResultModel<QueryModel<POMFApprovalStreamExtended>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<QueryModel<POMFApprovalStreamExtended>>("api/DA/POMF/createPOMFApprovalExtended", data);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<POMFApprovalStreamExtended>>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                    else
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<POMFApprovalStreamExtended>>>();
+
+                    res.Data = null;
+
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpPost("deletePOMFDocument")]
+        public async Task<IActionResult> deletePOMFDocument(QueryModel<string> data)
+        {
+            ResultModel<QueryModel<string>> res = new ResultModel<QueryModel<string>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/DA/POMF/deletePOMFDocument", data);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<string>>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                    else
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<string>>>();
+
+                    res.Data = null;
+
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpGet("getPOMFDocuments/{param}")]
+        public async Task<IActionResult> getPOMFDocuments(string param)
+        {
+            ResultModel<List<POMFDocument>> res = new ResultModel<List<POMFDocument>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<POMFDocument>>>($"api/DA/POMF/getPOMFDocuments/{param}");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getPOMFNPType")]
+        public async Task<IActionResult> getPOMFNPType()
+        {
+            ResultModel<List<POMFNPType>> res = new ResultModel<List<POMFNPType>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<POMFNPType>>>("api/DA/POMF/getPOMFNPType");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getPOMFModuleNumberOfPage/{param}")]
+        public async Task<IActionResult> getPOMFModuleNumberOfPage(string param)
+        {
+            ResultModel<int> res = new ResultModel<int>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/DA/POMF/getPOMFModuleNumberOfPage/{param}");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = 0;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = 0;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        //
+    }
 }

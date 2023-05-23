@@ -391,6 +391,98 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
             return resData;
         }
 
+        public async Task<ResultModel<QueryModel<string>>> deleteEPKRSItemCaseDocumentData(QueryModel<string> data)
+        {
+            ResultModel<QueryModel<string>> resData = new ResultModel<QueryModel<string>>();
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/endUser/EPKRS/deleteEPKRSItemCaseDocumentData", data);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<string>>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                    else
+                    {
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                }
+                else
+                {
+                    resData.Data = null;
+                    resData.isSuccess = false;
+                    resData.ErrorCode = "01";
+                    resData.ErrorMessage = "Failure from deleteEPKRSItemCaseDocumentData endUser";
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
+        public async Task<ResultModel<QueryModel<string>>> deleteEPKRSIncidentAccidentDocumentData(QueryModel<string> data)
+        {
+            ResultModel<QueryModel<string>> resData = new ResultModel<QueryModel<string>>();
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/endUser/EPKRS/deleteEPKRSIncidentAccidentDocumentData", data);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<string>>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                    else
+                    {
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                }
+                else
+                {
+                    resData.Data = null;
+                    resData.isSuccess = false;
+                    resData.ErrorCode = "01";
+                    resData.ErrorMessage = "Failure from deleteEPKRSIncidentAccidentDocumentData endUser";
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
         public async Task<ResultModel<List<ReportingType>>> getEPRKSReportingType()
         {
             ResultModel<List<ReportingType>> resData = new ResultModel<List<ReportingType>>();

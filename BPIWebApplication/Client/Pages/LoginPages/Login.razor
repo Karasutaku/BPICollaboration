@@ -47,8 +47,8 @@
                                             <label class="form-label" ><b>Company</b></label>
                                         </div>
                                         <div class="col-sm-12 col-md-8">
-                                            <select id="form_comp" class="form-select-sm w-100" @onchange="getLocationsByCompany">
-                                                <option hidden>Select Company</option>
+                                            <select id="form_comp" class="form-select-sm w-100" value="@user.companyId" @onchange="getLocationsByCompany">
+                                                <option hidden value="BLANK">Select Company</option>
                                                 <option value="1">PT. Catur Mitra Sejati Sentosa</option>
                                             </select>
                                         </div>
@@ -60,7 +60,7 @@
                                         </div>
                                         <div class="col-sm-12 col-md-8">
                                             <InputSelect @bind-Value="user.locationId" id="form_loc" class="form-select-sm w-100" >
-                                                <option hidden value="99999">Select Location</option>
+                                                <option hidden value="BLANK">Select Location</option>
                                                 @if (ManagementService.locations.Any())
                                                 {
                                                     <option value="">HO - HEAD OFFICE</option>

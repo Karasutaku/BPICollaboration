@@ -262,10 +262,12 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
                         }
                         else
                         {
-                            alertTrigger = false;
-                            successAlert = true;
+                            alertTrigger = true;
+                            successAlert = false;
                             alertMessage = "Create Advance Failed !";
-                            alertBody = $"Please Check Your Connection";
+                            alertBody = "";
+
+                            await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage}");
 
                             isUserHaventSettled = false;
                             isLoading = false;

@@ -4,7 +4,7 @@
     {
         public string userName { get; set; } = string.Empty;
         public string password { get; set; } = string.Empty;
-        public int companyId { get; set; } = 0;
+        public string companyId { get; set; } = string.Empty;
         public string locationId { get; set; } = string.Empty;
     }
 }

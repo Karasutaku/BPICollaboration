@@ -3,6 +3,7 @@
 
     const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
+
     window.open(url);
 
     //const anchorElement = document.createElement('a');

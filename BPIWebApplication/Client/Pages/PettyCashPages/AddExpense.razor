@@ -93,7 +93,7 @@ else
                             <div class="row my-3">
                                 <div class="col">
                                     <label for="user_aprv">Approver Email :</label>
-                                    <InputText id="user_aprv" @bind-Value="expense.Approver" class="form-control"></InputText>
+                                    <InputText id="user_aprv" @bind-Value="expense.Approver" class="form-control" readonly="@(isSettlement.Equals(true) ? "readonly" : null)" disabled="@(successUpload.Equals(true) ? "disabled" : null)"></InputText>
                                 </div>
                             </div>
                         }
