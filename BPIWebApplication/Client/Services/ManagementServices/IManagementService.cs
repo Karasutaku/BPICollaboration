@@ -1,5 +1,6 @@
 ﻿using BPIWebApplication.Shared.DbModel;
 using BPIWebApplication.Shared.MainModel;
+using BPIWebApplication.Shared.MainModel.Company;
 using BPIWebApplication.Shared.MainModel.Procedure;
 using BPIWebApplication.Shared.PagesModel.AddEditProject;
 using BPIWebApplication.Shared.PagesModel.AddEditUser;
@@ -14,12 +15,14 @@ namespace BPIWebApplication.Client.Services.ManagementServices
         List<UserAdmin> users { get; set; }
         List<Project> projects { get; set; }
         List<LocationResp> locations { get; set; }
+        List<BPIWebApplication.Shared.MainModel.Company.Category> categories { get; set; }
 
         // get
         Task<ResultModel<List<BisnisUnit>>> GetAllBisnisUnit(string param);
         Task<ResultModel<List<Department>>> GetAllDepartment(string param);
         Task<ResultModel<List<UserAdmin>>> GetAllUserAdmin();
         Task<ResultModel<List<Project>>> GetAllProject();
+        Task<ResultModel<List<BPIWebApplication.Shared.MainModel.Company.Category>>> getAllCategories();
         Task<ResultModel<List<LocationResp>>> GetCompanyLocations(Location data);
 
         // create

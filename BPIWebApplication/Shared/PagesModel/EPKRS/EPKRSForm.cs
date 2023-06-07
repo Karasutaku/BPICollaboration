@@ -4,7 +4,7 @@ namespace BPIWebApplication.Shared.PagesModel.EPKRS
 {
     public class ItemCaseForm
     {
-        public string RiskID { get; set; } = string.Empty;
+        public string SubRiskID { get; set; } = string.Empty;
         public string DocumentID { get; set; } = string.Empty;
         [Required(ErrorMessage = "Kolom Site Pelapor Kosong!")]
         public string SiteReporter { get; set; } = string.Empty;
@@ -42,7 +42,7 @@ namespace BPIWebApplication.Shared.PagesModel.EPKRS
 
     public class IncidentAccidentForm
     {
-        public string RiskID { get; set; } = string.Empty;
+        public string SubRiskID { get; set; } = string.Empty;
         public string DocumentID { get; set; } = string.Empty;
         [Required(ErrorMessage = "Tanggal Pelaporan Kosong!")]
         public DateTime ReportDate { get; set; } = DateTime.Now;

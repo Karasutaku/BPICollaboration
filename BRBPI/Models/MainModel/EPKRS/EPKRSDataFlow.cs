@@ -14,6 +14,8 @@ namespace BPIBR.Models.MainModel.EPKRS
     {
         public IncidentAccident incidentAccident { get; set; } = new();
         public List<CaseAttachment> attachment { get; set; } = new();
+        public List<DocumentApproval> Approval { get; set; } = new();
+        public List<IncidentAccidentInvolver> Involver { get; set; } = new();
     }
 
     public class EPKRSUploadDiscussion
@@ -46,6 +48,7 @@ namespace BPIBR.Models.MainModel.EPKRS
         public string reportingType { get; set; } = string.Empty;
         public DocumentApproval approval { get; set; } = new();
         public ReportingExtended extendedData { get; set; } = new();
+        public List<IncidentAccidentInvolver> involver { get; set; } = new();
     }
 
     public class DocumentDiscussionReadStream

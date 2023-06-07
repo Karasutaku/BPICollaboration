@@ -21,6 +21,7 @@ namespace BPIDA.Models.MainModel.PettyCash
         public string Applicant { get; set; } = string.Empty; // from audit
 
         public List<ExpenseLine> lines { get; set; } = new();
+        public List<ExpenseAttachmentLine> attach { get; set; } = new();
         public ExpenseDocumentStatus statusDetails { get; set; } = new();
     }
 

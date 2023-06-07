@@ -21,6 +21,7 @@ namespace BPIWebApplication.Client.Services.ManagementServices
         public List<UserAdmin> users { get; set; } = new List<UserAdmin>();
         public List<Project> projects { get; set; } = new List<Project>();
         public List<LocationResp> locations { get; set; } = new List<LocationResp>();
+        public List<BPIWebApplication.Shared.MainModel.Company.Category> categories { get; set; } = new();
 
         // encode decode base 64
 
@@ -37,40 +38,6 @@ namespace BPIWebApplication.Client.Services.ManagementServices
         }
 
         // get
-
-        public async Task<ResultModel<List<LocationResp>>> GetCompanyLocations(Location data)
-        {
-            ResultModel<List<LocationResp>> resData = new ResultModel<List<LocationResp>>();
-
-            try
-            {
-                var result = await _http.PostAsJsonAsync<Location>("api/endUser/BPIBase/getCompanyLocation", data);
-
-                if (result.IsSuccessStatusCode)
-                {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<LocationResp>>>();
-
-                    if (respBody.isSuccess)
-                    {
-                        locations = respBody.Data;
-
-                        resData.Data = respBody.Data;
-                        resData.isSuccess = respBody.isSuccess;
-                        resData.ErrorCode = respBody.ErrorCode;
-                        resData.ErrorMessage = respBody.ErrorMessage;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                resData.Data = null;
-                resData.isSuccess = false;
-                resData.ErrorCode = "99";
-                resData.ErrorMessage = ex.Message;
-            }
-
-            return resData;
-        }
 
         public async Task<ResultModel<List<BisnisUnit>>> GetAllBisnisUnit(string param)
         {
@@ -182,6 +149,77 @@ namespace BPIWebApplication.Client.Services.ManagementServices
                 resData.ErrorCode = "99";
                 resData.ErrorMessage = ex.Message;
             }
+            return resData;
+        }
+
+        public async Task<ResultModel<List<BPIWebApplication.Shared.MainModel.Company.Category>>> getAllCategories()
+        {
+            ResultModel<List<BPIWebApplication.Shared.MainModel.Company.Category>> resData = new();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<BPIWebApplication.Shared.MainModel.Company.Category>>>("api/endUser/BPIBase/getAllCategories");
+
+                if (result.isSuccess)
+                {
+                    categories.Clear();
+                    categories = result.Data;
+
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
+        public async Task<ResultModel<List<LocationResp>>> GetCompanyLocations(Location data)
+        {
+            ResultModel<List<LocationResp>> resData = new ResultModel<List<LocationResp>>();
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<Location>("api/endUser/BPIBase/getCompanyLocation", data);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<LocationResp>>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        locations = respBody.Data;
+
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
             return resData;
         }
 

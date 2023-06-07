@@ -2,7 +2,7 @@
 {
     public class ItemCase
     {
-        public string RiskID { get; set; } = string.Empty;
+        public string SubRiskID { get; set; } = string.Empty;
         public string DocumentID { get; set; } = string.Empty;
         public string SiteReporter { get; set; } = string.Empty;
         public string SiteSender { get; set; } = string.Empty;
@@ -36,7 +36,7 @@
 
     public class IncidentAccident
     {
-        public string RiskID { get; set; } = string.Empty;
+        public string SubRiskID { get; set; } = string.Empty;
         public string DocumentID { get; set; } = string.Empty;
         public DateTime ReportDate { get; set; } = DateTime.Now;
         public DateTime OccurenceDate { get; set; } = DateTime.Now;
@@ -106,5 +106,14 @@
         public string DocumentID { get; set; } = string.Empty;
         public string ExtendedRootCause { get; set; } = string.Empty;
         public string ExtendedMitigationPlan { get; set; } = string.Empty;
+    }
+
+    public class IncidentAccidentInvolver
+    {
+        public string DocumentID { get; set; } = string.Empty;
+        public string InvolverName { get; set; } = string.Empty;
+        public string InvolverDept { get; set; } = string.Empty;
+        public string InvolverPosition { get; set; } = string.Empty;
+        public string InvolverTypeID { get; set; } = string.Empty;
     }
 }

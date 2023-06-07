@@ -59,13 +59,14 @@ else
 
                     <div class="row mt-3">
                     
-                        <div class="col p-3">
+                        <div class="col">
+
                             <div id="accordionStats" style="width: 100%;">
 
                                 <div class="card" style="width: 100%;">
                                     <div class="card-header" id="epkrsstats">
                                         <div class="border border-1">
-                                            <button id="epkrsstatstitle" class="btn w-100" data-toggle="collapse" data-target="#epkrsstatsdata" aria-expanded="true" aria-controls="epkrsstatsdata" @onclick="initializeChart">
+                                            <button id="epkrsstatstitle" class="btn w-100" data-toggle="collapse" data-target="#epkrsstatsdata" aria-expanded="true" aria-controls="epkrsstatsdata">
                                                 <b>EPKRS General Statistics</b>
                                             </button>
                                         </div>
@@ -74,70 +75,247 @@ else
                                     <div id="epkrsstatsdata" class="collapse" aria-labelledby="epkrsstatstitle" data-parent="#accordionStats">
                                         <div class="card-body">
 
-                                            @if (previewGeneralStatistics != null)
-                                            {
-                                                <div class="table-responsive">
-                                                    <table class="table table-sm table-hover" style="width: 100%;">
-                                                        <thead>
-                                                            <tr>
-                                                                <th class="text-center align-middle text-wrap" style="width: 17%;">Reporting Type</th>
-                                                                <th class="text-center align-middle text-wrap" style="width: 17%;">Risk Type</th>
-                                                                <th class="text-center align-middle text-wrap" style="width: 8%;">Total Reports</th>
-                                                                <th class="text-center align-middle text-wrap" style="width: 8%;">Open Reports</th>
-                                                                <th class="text-center align-middle text-wrap" style="width: 8%;">Approved Reports</th>
-                                                                <th class="text-center align-middle text-wrap" style="width: 8%;">On Progress Reports</th>
-                                                                <th class="text-center align-middle text-wrap" style="width: 8%;">Closed Reports</th>
-                                                                <th class="text-center align-middle text-wrap" style="width: 13%;">Report Total Value (Rp.)</th>
-                                                                <th class="text-center align-middle text-wrap" style="width: 13%;">Report Return Value (Rp.)</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            @foreach (var stat in previewGeneralStatistics)
-                                                            {
-                                                                <tr>
-                                                                    <td class="text-center align-middle text-wrap">
-                                                                        @if (EPKRSService.reportingTypes.SingleOrDefault(x => x.ReportingID.Equals(stat.ReportingID)) != null)
-                                                                            @(EPKRSService.reportingTypes.SingleOrDefault(x => x.ReportingID.Equals(stat.ReportingID)).ReportingDescription)
-                                                                        else
-                                                                            @stat.ReportingID
-                                                                    </td>
-                                                                    <td class="text-center align-middle text-wrap">
-                                                                        @if (EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(stat.RiskID)) != null)
-                                                                            @(EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(stat.RiskID)).RiskDescription)
-                                                                        else
-                                                                            @stat.ReportingID
-                                                                    </td>
-                                                                    <td class="text-center align-middle text-wrap">@stat.ReportTotalDocuments.ToString("N0")</td>
-                                                                    <td class="text-center align-middle text-wrap">@stat.ReportTotalOpenDocuments.ToString("N0")</td>
-                                                                    <td class="text-center align-middle text-wrap">@stat.ReportTotalApprovedDocuments.ToString("N0")</td>
-                                                                    <td class="text-center align-middle text-wrap">@stat.ReportTotalOnProgressDocuments.ToString("N0")</td>
-                                                                    <td class="text-center align-middle text-wrap">@stat.ReportTotalClosedDocuments.ToString("N0")</td>
-                                                                    <td class="text-center align-middle text-wrap">Rp. @stat.ReportTotalValue.ToString("N0") ,-</td>
-                                                                    <td class="text-center align-middle text-wrap">Rp. @stat.ReportReturnValue.ToString("N0") ,-</td>
-                                                                </tr>
-                                                            }
-                                                        </tbody>
-                                                        <tfoot>
-                                                            <tr>
-                                                                <td class="text-center align-middle text-wrap fw-bold" colspan="2">Grand Total</td>
-                                                                <td class="text-center align-middle text-wrap fw-bold">@previewGeneralStatistics.Sum(x => x.ReportTotalDocuments).ToString("N0")</td>
-                                                                <td class="text-center align-middle text-wrap fw-bold">@previewGeneralStatistics.Sum(x => x.ReportTotalOpenDocuments).ToString("N0")</td>
-                                                                <td class="text-center align-middle text-wrap fw-bold">@previewGeneralStatistics.Sum(x => x.ReportTotalApprovedDocuments).ToString("N0")</td>
-                                                                <td class="text-center align-middle text-wrap fw-bold">@previewGeneralStatistics.Sum(x => x.ReportTotalOnProgressDocuments).ToString("N0")</td>
-                                                                <td class="text-center align-middle text-wrap fw-bold">@previewGeneralStatistics.Sum(x => x.ReportTotalClosedDocuments).ToString("N0")</td>
-                                                                <td class="text-center align-middle text-wrap fw-bold">Rp. @previewGeneralStatistics.Sum(x => x.ReportTotalValue).ToString("N0") ,-</td>
-                                                                <td class="text-center align-middle text-wrap fw-bold">Rp. @previewGeneralStatistics.Sum(x => x.ReportReturnValue).ToString("N0") ,-</td>
-                                                            </tr>
-                                                        </tfoot>
-                                                    </table>
+                                            <ul class="nav nav-pills nav-fill my-1">
+                                                <li class="nav-item">
+                                                    <button type="button" class="nav-link" @onclick="(() => generalStatisticsFilterbyYear(selectedYearFilter - 2, false))">@(selectedYearFilter - 2)</button>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <button type="button" class="nav-link" @onclick="(() => generalStatisticsFilterbyYear(selectedYearFilter - 1, false))">@(selectedYearFilter - 1)</button>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <button type="button" class="nav-link active">@(selectedYearFilter)</button>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <button type="button" class="nav-link" @onclick="(() => generalStatisticsFilterbyYear(selectedYearFilter + 1, false))">@(selectedYearFilter + 1)</button>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <button type="button" class="nav-link" @onclick="(() => generalStatisticsFilterbyYear(selectedYearFilter + 2, false))">@(selectedYearFilter + 2)</button>
+                                                </li>
+                                            </ul>
+                                            
+                                            <ul class="nav nav-pills nav-fill my-1">
+                                                @foreach (var month in monthSelector)
+                                                {
+                                                    <li class="nav-item mx-1" @onclick="(() => { monthSelector[month.Key] = !monthSelector[month.Key]; StateHasChanged(); })">
+                                                        <button type="button" class="nav-link @(month.Value ? "active" : null)">@(new DateTime(selectedYearFilter, month.Key, 1).ToString("MMM"))</button>
+                                                    </li>
+                                                }
+                                            </ul>
+
+                                            <div class="row mb-2">
+                                                <div class="col">
+                                                    <button type="button" class="btn btn-sm btn-primary-cus w-100" disabled="@(generalStatisticsFiltered)" @onclick="generalStatisticsFilterbyMonth">Filter</button>
                                                 </div>
-                                            }
+                                                <div class="col">
+                                                    <button type="button" class="btn btn-sm btn-dark w-100" disabled="@(!generalStatisticsFiltered)" @onclick="(() => generalStatisticsFilterbyYear(DateTime.Now.Year, true))">Reset</button>
+                                                </div>
+                                            </div>
+
+                                            <div class="separator">General Data</div>
+
+                                            <div class="row my-2">
+                                                <div class="col">
+
+                                                    @if (previewGeneralStatistics != null)
+                                                    {
+                                                        <div class="table-responsive">
+                                                            <table class="table table-sm table-hover" style="width: 100%;">
+                                                                <thead>
+                                                                    <tr class="@(generalStatisticsRiskTypeFilterActive ? "table-success" : "table-primary")">
+                                                                        <th class="text-center align-middle text-wrap" style="width: 17%;">Reporting Type</th>
+                                                                        <th class="text-center align-middle text-wrap" style="width: 17%;">Risk Type</th>
+                                                                        <th class="text-center align-middle text-wrap" style="width: 8%;">Total Reports</th>
+                                                                        <th class="text-center align-middle text-wrap" style="width: 8%;">Open Reports</th>
+                                                                        <th class="text-center align-middle text-wrap" style="width: 8%;">Approved Reports</th>
+                                                                        <th class="text-center align-middle text-wrap" style="width: 8%;">On Progress Reports</th>
+                                                                        <th class="text-center align-middle text-wrap" style="width: 8%;">Closed Reports</th>
+                                                                        <th class="text-center align-middle text-wrap" style="width: 13%;">Report Total Value (Rp.)</th>
+                                                                        <th class="text-center align-middle text-wrap" style="width: 13%;">Report Return Value (Rp.)</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @foreach (var stat in previewGeneralStatistics)
+                                                                    {
+                                                                        var repId = EPKRSService.reportingTypes.SingleOrDefault(x => x.ReportingID.Equals(stat.ReportingID));
+                                                                        var riskId = EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(stat.RiskID));
+                                                                        
+                                                                        <tr>
+                                                                            <td class="text-center align-middle text-wrap">
+                                                                                @if (repId != null) { @repId.ReportingDescription } else { @stat.ReportingID }
+                                                                            </td>
+                                                                                <td class="text-center align-middle text-wrap" id="filterSelector" @onclick="@(() => generalStatisticsFilterbyRiskType(stat.RiskID))">
+                                                                                @if (riskId != null) { @riskId.RiskDescription } else { @stat.ReportingID }
+                                                                            </td>
+                                                                            <td class="text-center align-middle text-wrap">@stat.ReportTotalDocuments.ToString("N0")</td>
+                                                                            <td class="text-center align-middle text-wrap">@stat.ReportTotalOpenDocuments.ToString("N0")</td>
+                                                                            <td class="text-center align-middle text-wrap">@stat.ReportTotalApprovedDocuments.ToString("N0")</td>
+                                                                            <td class="text-center align-middle text-wrap">@stat.ReportTotalOnProgressDocuments.ToString("N0")</td>
+                                                                            <td class="text-center align-middle text-wrap">@stat.ReportTotalClosedDocuments.ToString("N0")</td>
+                                                                            <td class="text-center align-middle text-wrap">Rp. @stat.ReportTotalValue.ToString("N0") ,-</td>
+                                                                            <td class="text-center align-middle text-wrap">Rp. @stat.ReportReturnValue.ToString("N0") ,-</td>
+                                                                        </tr>
+                                                                    }
+                                                                </tbody>
+                                                                <tfoot>
+                                                                    <tr>
+                                                                        <td class="text-center align-middle text-wrap fw-bold" colspan="2">Grand Total</td>
+                                                                        <td class="text-center align-middle text-wrap fw-bold">@previewGeneralStatistics.Sum(x => x.ReportTotalDocuments).ToString("N0")</td>
+                                                                        <td class="text-center align-middle text-wrap fw-bold">@previewGeneralStatistics.Sum(x => x.ReportTotalOpenDocuments).ToString("N0")</td>
+                                                                        <td class="text-center align-middle text-wrap fw-bold">@previewGeneralStatistics.Sum(x => x.ReportTotalApprovedDocuments).ToString("N0")</td>
+                                                                        <td class="text-center align-middle text-wrap fw-bold">@previewGeneralStatistics.Sum(x => x.ReportTotalOnProgressDocuments).ToString("N0")</td>
+                                                                        <td class="text-center align-middle text-wrap fw-bold">@previewGeneralStatistics.Sum(x => x.ReportTotalClosedDocuments).ToString("N0")</td>
+                                                                        <td class="text-center align-middle text-wrap fw-bold">Rp. @previewGeneralStatistics.Sum(x => x.ReportTotalValue).ToString("N0") ,-</td>
+                                                                        <td class="text-center align-middle text-wrap fw-bold">Rp. @previewGeneralStatistics.Sum(x => x.ReportReturnValue).ToString("N0") ,-</td>
+                                                                    </tr>
+                                                                </tfoot>
+                                                            </table>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="alert alert-primary" role="alert">
+                                                            <b>Data Empty !</b>
+                                                        </div>                                                        
+                                                    }
+
+                                                </div>
+                                            </div>
+
+                                            <div class="separator">Incident Accident Regional Statistics</div>
+
+                                            <div class="row my-2">
+                                                <div class="col">
+                                                    @if (previewRegionalStatistics != null)
+                                                    {
+                                                        <div class="table-responsive">
+                                                            <table class="table table-sm table-hover" style="width: 100%;">
+                                                                <thead>
+                                                                        <tr class="@(generalStatisticsRegionalFilterActive ? "table-success" : "table-primary")">
+                                                                        <th class="text-center align-middle text-wrap" style="width: 35%;">DORM</th>
+                                                                        <th class="text-center align-middle text-wrap" style="width: 15%;">Total Document(s) Reported</th>
+                                                                        <th class="text-center align-middle text-wrap" style="width: 25%;">Loss Estimation (Rp.)</th>
+                                                                        <th class="text-center align-middle text-wrap" style="width: 25%;">Return Values (Rp.)</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @foreach (var stat in previewRegionalStatistics)
+                                                                    {
+                                                                        <tr>
+                                                                            <td class="text-center align-middle text-wrap" id="filterSelector" @onclick="(() => generalStatisticsFilterbyRegion(stat.DORMEmail))">@stat.DORMEmail</td>
+                                                                            <td class="text-center align-middle text-wrap">@stat.TotalDocuments.ToString("N0")</td>
+                                                                            <td class="text-center align-middle text-wrap">Rp. @stat.TotalValues.ToString("N0") ,-</td>
+                                                                            <td class="text-center align-middle text-wrap">Rp. @stat.ReturnValues.ToString("N0") ,-</td>
+                                                                        </tr>
+                                                                    }
+                                                                </tbody>
+                                                                <tfoot>
+                                                                    <tr>
+                                                                        <td class="text-center align-middle text-wrap fw-bold">Total</td>
+                                                                        <td class="text-center align-middle text-wrap fw-bold">@previewRegionalStatistics.Sum(x => x.TotalDocuments).ToString("N0")</td>
+                                                                        <td class="text-center align-middle text-wrap fw-bold">Rp. @previewRegionalStatistics.Sum(x => x.TotalValues).ToString("N0") ,-</td>
+                                                                        <td class="text-center align-middle text-wrap fw-bold">Rp. @previewRegionalStatistics.Sum(x => x.ReturnValues).ToString("N0") ,-</td>
+                                                                    </tr>
+                                                                </tfoot>
+                                                            </table>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="alert alert-primary" role="alert">
+                                                            <b>Data Empty !</b>
+                                                        </div>                                                        
+                                                    }
+                                                </div>
+                                            </div>
+
+                                            <div class="separator">Incident Accident Involved Person Statistics</div>
+
+                                            <div class="row my-2">
+                                                <div class="col">
+                                                    @if (previewInvolvedbyPosStatistics != null)
+                                                    {
+                                                        <div class="table-responsive">
+                                                            <table class="table table-sm table-hover" style="width: 100%;">
+                                                                <thead>
+                                                                    <tr class="@(generalStatisticsPositionFilterActive ? "table-success" : "table-primary")">
+                                                                        <th class="text-center align-middle text-wrap" style="width: 50%;">Position</th>
+                                                                        <th class="text-center align-middle text-wrap" style="width: 25%;">Total Document(s) Reported</th>
+                                                                        <th class="text-center align-middle text-wrap" style="width: 25%;"># Person(s) Involved</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @foreach (var stat in previewInvolvedbyPosStatistics)
+                                                                    {
+                                                                        <tr>
+                                                                            <td class="text-center align-middle text-wrap" id="filterSelector" @onclick="@(() => generalStatisticsFilterbyPosition(stat.InvolverPosition))">@stat.InvolverPosition</td>
+                                                                            <td class="text-center align-middle text-wrap">@stat.TotalDocuments.ToString("N0")</td>
+                                                                            <td class="text-center align-middle text-wrap">@stat.TotalInvolver.ToString("N0")</td>
+                                                                        </tr>
+                                                                    }
+                                                                </tbody>
+                                                                <tfoot>
+                                                                    <tr>
+                                                                        <td class="text-center align-middle text-wrap fw-bold" colspan="2">Total</td>
+                                                                    <td class="text-center align-middle text-wrap fw-bold">@previewInvolvedbyPosStatistics.Sum(x => x.TotalInvolver).ToString("N0")</td>
+                                                                    </tr>
+                                                                </tfoot>
+                                                            </table>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="alert alert-primary" role="alert">
+                                                            <b>Data Empty !</b>
+                                                        </div>                                                        
+                                                    }
+                                                </div>
+
+                                                <div class="col">
+                                                    @if (previewInvolvedbyDeptStatistics != null)
+                                                    {
+                                                        <div class="table-responsive">
+                                                            <table class="table table-sm table-hover" style="width: 100%;">
+                                                                <thead>
+                                                                    <tr class="@(generalStatisticsDepartmentFilterActive ? "table-success" : "table-primary")">
+                                                                        <th class="text-center align-middle text-wrap" style="width: 50%;">Department</th>
+                                                                        <th class="text-center align-middle text-wrap" style="width: 25%;">Total Document(s) Reported</th>
+                                                                        <th class="text-center align-middle text-wrap" style="width: 25%;"># Person(s) Involved</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @foreach (var stat in previewInvolvedbyDeptStatistics)
+                                                                    {
+                                                                        <tr>
+                                                                            <td class="text-center align-middle text-wrap" id="filterSelector" @onclick="@(() => generalStatisticsFilterbyDept(stat.InvolverDept))">@stat.InvolverDept</td>
+                                                                            <td class="text-center align-middle text-wrap">@stat.TotalDocuments.ToString("N0")</td>
+                                                                            <td class="text-center align-middle text-wrap">@stat.TotalInvolver.ToString("N0")</td>
+                                                                        </tr>
+                                                                    }
+                                                                </tbody>
+                                                                <tfoot>
+                                                                    <tr>
+                                                                        <td class="text-center align-middle text-wrap fw-bold" colspan="2">Total</td>
+                                                                    <td class="text-center align-middle text-wrap fw-bold">@previewInvolvedbyDeptStatistics.Sum(x => x.TotalInvolver).ToString("N0")</td>
+                                                                    </tr>
+                                                                </tfoot>
+                                                            </table>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="alert alert-primary" role="alert">
+                                                            <b>Data Empty !</b>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
 
                                         </div>
                                     </div>
                                 </div>
 
                             </div>
+
                         </div>
 
                     </div>
@@ -159,21 +337,69 @@ else
                                     <div id="epkrsmpaneldata" class="collapse" aria-labelledby="epkrsmpaneltitle" data-parent="#accordionPanel">
                                         <div class="card-body">
 
+                                            <ul class="nav nav-pills nav-fill my-1">
+                                                <li class="nav-item">
+                                                    <button type="button" class="nav-link" @onclick="(() => monitoringPanelFilterbyYear(selectedYearFilterChart - 2, false))">@(selectedYearFilterChart - 2)</button>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <button type="button" class="nav-link" @onclick="(() => monitoringPanelFilterbyYear(selectedYearFilterChart - 1, false))">@(selectedYearFilterChart - 1)</button>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <button type="button" class="nav-link active">@(selectedYearFilterChart)</button>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <button type="button" class="nav-link" @onclick="(() => monitoringPanelFilterbyYear(selectedYearFilterChart + 1, false))">@(selectedYearFilterChart + 1)</button>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <button type="button" class="nav-link" @onclick="(() => monitoringPanelFilterbyYear(selectedYearFilterChart + 2, false))">@(selectedYearFilterChart + 2)</button>
+                                                </li>
+                                            </ul>
+
+                                            <ul class="nav nav-pills nav-fill my-1">
+                                                @foreach (var month in monthSelectorChart)
+                                                {
+                                                    <li class="nav-item mx-1" @onclick="(() => { monthSelectorChart[month.Key] = !monthSelectorChart[month.Key]; StateHasChanged(); })">
+                                                        <button type="button" class="nav-link @(month.Value ? "active" : null)">@(new DateTime(selectedYearFilterChart, month.Key, 1).ToString("MMM"))</button>
+                                                    </li>
+                                                }
+                                            </ul>
+
+                                            <div class="row mb-2">
+                                                <div class="col">
+                                                    <button type="button" class="btn btn-sm btn-primary-cus w-100" disabled="@(monitoringPanelFiltered)" @onclick="monitoringPanelFilterbyMonth">Filter</button>
+                                                </div>
+                                                <div class="col">
+                                                    <button type="button" class="btn btn-sm btn-dark w-100" disabled="@(!monitoringPanelFiltered)" @onclick="(() => monitoringPanelFilterbyYear(DateTime.Now.Year, true))">Reset</button>
+                                                </div>
+                                            </div>
+
                                             <div class="row">
                                                 <div class="col align-middle text-center">
-                                                    <canvas id="topLocationReportStats" class="border border-2 p-1 w-100"></canvas>
+                                                    @if (previewTopLocationReportStatistics != null)
+                                                    {
+                                                        <canvas @ref="topLocationReportStatsRef" id="topLocationReportStats" class="border border-2 p-1 w-100"></canvas>
+                                                    }
                                                 </div>
                                                 <div class="col align-middle text-center">
-                                                    <canvas id="itemCategoryStats" class="border border-2 p-1 w-100"></canvas>
+                                                    @if (previewItemCategoryStatistics != null)
+                                                    {
+                                                        <canvas @ref="itemCategoryStatsRef" id="itemCategoryStats" class="border border-2 p-1 w-100"></canvas>
+                                                    }
                                                 </div>
                                             </div>
 
                                             <div class="row my-2">
                                                 <div class="col align-middle text-center">
-                                                    <canvas id="itemCaseValueStats" class="border border-2 p-1 w-100"></canvas>
+                                                    @if (previewItemCaseCategoryStatistics != null)
+                                                    {
+                                                        <canvas @ref="itemCaseValueStatsRef" id="itemCaseValueStats" class="border border-2 p-1 w-100"></canvas>
+                                                    }
                                                 </div>
                                                 <div class="col align-middle text-center">
-                                                    <canvas id="itemCaseCategoryStats" class="border border-2 p-1 w-100"></canvas>
+                                                    @if (previewItemCaseCategoryStatistics != null)
+                                                    {
+                                                        <canvas @ref="itemCaseCategoryStatsRef" id="itemCaseCategoryStats" class="border border-2 p-1 w-100"></canvas>
+                                                    }
                                                 </div>
                                             </div>
 
@@ -213,7 +439,15 @@ else
                                                         <div class="row">
                                                             <div class="col align-middle my-auto" style="text-align: center;">
                                                                 <h5 class="card-title mb-2 text-muted">@itemCase.itemCase.DocumentID</h5>
-                                                                <h6 class="card-subtitle">@EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(itemCase.itemCase.RiskID)).RiskDescription</h6>
+                                                                @{
+                                                                    var itcRiskSubType = EPKRSService.riskSubTypes.SingleOrDefault(x => x.SubRiskID.Equals(itemCase.itemCase.SubRiskID));
+                                                                    var itcRiskType = EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(itcRiskSubType.RiskID));
+                                                                }
+                                                                <h6 class="card-subtitle">
+                                                                    @(itcRiskType != null ? itcRiskType.RiskDescription : "")
+                                                                    <br />
+                                                                    @(itcRiskSubType != null ? itcRiskSubType.SubRiskDescription : "")
+                                                                </h6>
                                                                 <br />
                                                                 @if (ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(itemCase.itemCase.SiteReporter)) != null)
                                                                 {
@@ -294,7 +528,15 @@ else
                                                         <div class="row">
                                                             <div class="col align-middle my-auto" style="text-align: center;">
                                                                 <h5 class="card-title mb-2 text-muted">@incidentAccident.incidentAccident.DocumentID</h5>
-                                                                <h6 class="card-subtitle">@EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(incidentAccident.incidentAccident.RiskID)).RiskDescription</h6>
+                                                                @{
+                                                                    var incRiskSubType = EPKRSService.riskSubTypes.SingleOrDefault(x => x.SubRiskID.Equals(incidentAccident.incidentAccident.SubRiskID));
+                                                                    var incRiskType = EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(incRiskSubType.RiskID));
+                                                                }
+                                                                <h6 class="card-subtitle">
+                                                                    @(incRiskType != null ? incRiskType.RiskDescription : "")
+                                                                    <br />
+                                                                    @(incRiskSubType != null ? incRiskSubType.SubRiskDescription : "")
+                                                                </h6>
                                                                 <br />
                                                                 @if (ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(incidentAccident.incidentAccident.SiteReporter)) != null)
                                                                 {
@@ -420,6 +662,18 @@ else
                 <div class="row">
                     <div class="col fw-bold">Report Date</div>
                     <div class="col">: @previewItemCase.ReportDate.ToString("dd MMMM yyyy")</div>
+                </div>
+                @{
+                    var ariskSubType = EPKRSService.riskSubTypes.SingleOrDefault(x => x.SubRiskID.Equals(previewItemCase.SubRiskID));
+                    var ariskType = (ariskSubType != null ? EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(ariskSubType.RiskID)) : null);
+                }
+                <div class="row mb-4">
+                    <div class="col fw-bold">Risk Type</div>
+                    <div class="col">: @(ariskType != null ? ariskType.RiskDescription : "")</div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col fw-bold">Risk Sub Type</div>
+                    <div class="col">: @(ariskSubType != null ? ariskSubType.SubRiskDescription : "")</div>
                 </div>
                 <div class="row">
                     <div class="col fw-bold">Site Reporter</div>
@@ -637,9 +891,17 @@ else
                     <div class="col fw-bold">Department Affected</div>
                     <div class="col">: @((ManagementService.departments.SingleOrDefault(x => x.DepartmentID.Equals(previewIncidentAccident.DepartmentAffected)) == null) ? previewIncidentAccident.DepartmentAffected : ManagementService.departments.SingleOrDefault(x => x.DepartmentID.Equals(previewIncidentAccident.DepartmentAffected)).DepartmentName) </div>
                 </div>
-                <div class="row mb-4">
+                @{
+                    var briskSubType = EPKRSService.riskSubTypes.SingleOrDefault(x => x.SubRiskID.Equals(previewIncidentAccident.SubRiskID));
+                    var briskType = (briskSubType != null ? EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(briskSubType.RiskID)) : null);
+                }
+                <div class="row">
                     <div class="col fw-bold">Risk Type</div>
-                    <div class="col">: @((EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(previewIncidentAccident.RiskID)) == null) ? "NaN" : EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(previewIncidentAccident.RiskID)).RiskDescription)</div>
+                    <div class="col">: @(briskType != null ? briskType.RiskDescription : "")</div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col fw-bold">Risk Sub Type</div>
+                    <div class="col">: @(briskSubType != null ? briskSubType.SubRiskDescription : "")</div>
                 </div>
 
                 @*split*@
@@ -705,6 +967,92 @@ else
                     <div class="row">
                         <div class="col fw-bold">RISK Mitigation Plan</div>
                         <div class="col">: @previewIncidentAccident.ExtendedMitigationPlan</div>
+                    </div>
+                }
+
+                @if (checkPreviewApproval())
+                {
+                    <div id="accordionApproval" class="my-2" style="width: 100%;">
+
+                        <div class="card" style="width: 100%;">
+                            <div class="card-header" id="epkrsAccordionHeaderApr">
+                                <div class="border border-1">
+                                    <button id="epkrstitleapr" class="btn w-100" data-toggle="collapse" data-target="#epkrsApprovalLists" aria-expanded="true" aria-controls="epkrsApprovalLists">
+                                        <b>EPKRS Approval List(s)</b>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="epkrsApprovalLists" class="collapse bg-special" aria-labelledby="epkrstitleapr" data-parent="#accordionApproval">
+                                <div class="card-body">
+                                    @foreach (var apv in previewDocumentListApproval)
+                                    {
+                                        <div class="row my-1">
+                                            <div class="col">
+                                                <label class="fw-bold" for="@(apv.ApprovalAction)_user">@apv.ApprovalAction User :</label>
+                                                <input type="text" id="@(@apv.ApprovalAction)_user" value="@apv.Approver" class="form-control-sm w-100 border-1" readonly />
+                                            </div>
+                                            <div class="col">
+                                                <label class="fw-bold" for="@(@apv.ApprovalAction)_date">@apv.ApprovalAction Date :</label>
+                                                <input type="text" id="@(@apv.ApprovalAction)_date" value="@apv.ApproveDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")" class="form-control-sm w-100 border-1" readonly />
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                }
+
+                @if (checkPreviewPartyInvolved())
+                {
+                    <div id="accordionInvolver" class="my-2" style="width: 100%;">
+
+                        <div class="card" style="width: 100%;">
+                            <div class="card-header" id="epkrsAccordionHeaderInv">
+                                <div class="border border-1">
+                                    <button id="epkrstitleinv" class="btn w-100" data-toggle="collapse" data-target="#epkrsInvolverLists" aria-expanded="true" aria-controls="epkrsInvolverLists">
+                                        <b>EPKRS Person Involved List(s)</b>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="epkrsInvolverLists" class="collapse bg-special" aria-labelledby="epkrstitleinv" data-parent="#accordionInvolver">
+                                <div class="card-body">
+                                    @foreach (var type in previewIncidentAccidentInvolver.DistinctBy(x => x.InvolverTypeID))
+                                    {
+                                        var invType = EPKRSService.involverType.SingleOrDefault(x => x.InvolverTypeID.Equals(type.InvolverTypeID));
+                                        
+                                        <p class="p-0 m-0 text-center fw-bold">
+                                            @(invType != null ? invType.InvolverTypeDescription : "NaN")
+                                        </p>
+
+                                        @foreach (var involver in previewIncidentAccidentInvolver.Where(y => y.InvolverTypeID.Equals(type.InvolverTypeID)))
+                                        {
+                                            
+                                            var dept = ManagementService.departments.SingleOrDefault(x => x.DepartmentID.Equals(involver.InvolverDept));
+                                            
+                                            <div class="row mb-2">
+                                                <div class="col">
+                                                    <label class="fw-bold">Name :</label>
+                                                    <input type="text" value="@involver.InvolverName" class="form-control-sm w-100 border-1" readonly />
+                                                </div>
+                                                <div class="col">
+                                                    <label class="fw-bold">Department :</label>
+                                                    <input type="text" value="@(dept != null ? dept.DepartmentName : "NaN")" class="form-control-sm w-100 border-1" readonly />
+                                                </div>
+                                                <div class="col">
+                                                    <label class="fw-bold">Position :</label>
+                                                    <input type="text" value="@involver.InvolverPosition" class="form-control-sm w-100 border-1" readonly />
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 }
                 
@@ -1034,6 +1382,69 @@ else
                             </div>
                         </div>
                     </EditForm>
+
+                    <div class="row mb-3">
+                        <div class="col">
+                            <button type="button" title="Add New Line" class="btn btn-sm btn-warning" @onclick="(() => partyInvolved.Add(new()))"><b>Add Person Involved</b></button>
+                        </div>
+                    </div>
+
+                    @if (checkPartyInvolved())
+                    {
+                        <table class="table table-sm table-bordered" style="width: 100%">
+                            <thead>
+                                <tr>
+                                    <th class="text-center align-middle text-wrap" style="width: 5%;">Action</th>
+                                    <th class="text-center align-middle text-wrap" style="width: 20%;">Type</th>
+                                    <th class="text-center align-middle text-wrap" style="width: 30%;">Name</th>
+                                    <th class="text-center align-middle text-wrap" style="width: 25%;">Department</th>
+                                    <th class="text-center align-middle text-wrap" style="width: 20%;">Position</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var person in partyInvolved)
+                                {
+                                    <tr>
+                                        <td class="text-center align-middle text-wrap">
+                                            <button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="(() => partyInvolved.Remove(person))"><i class="oi oi-delete"></i></button>
+                                        </td>
+                                        <td class="text-center align-middle text-wrap">
+                                            <select id="dept_id" @bind="person.InvolverTypeID" class="form-select">
+                                                <option hidden value="BLANK">Select Type</option>   
+
+                                                @foreach (var type in EPKRSService.involverType)
+                                                {
+                                                    <option value="@type.InvolverTypeID">@type.InvolverTypeDescription</option>
+                                                }
+                                            </select>
+                                        </td>
+                                        <td class="text-center align-middle text-wrap">
+                                            <input type="text" class="form-control-sm w-100" @bind-value="person.InvolverName" />
+                                        </td>
+                                        <td class="text-center align-middle text-wrap">
+                                            <select id="dept_id" @bind="person.InvolverDept" class="form-select">
+                                                <option hidden value="BLANK">Select Department</option>
+
+                                                @foreach (var dept in ManagementService.departments)
+                                                {
+                                                    <option value="@dept.DepartmentID">@dept.DepartmentName</option>
+                                                }
+                                            </select>
+                                        </td>
+                                        <td class="text-center align-middle text-wrap">
+                                            <input type="text" class="form-control-sm w-100" @bind-value="person.InvolverPosition" />
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
+                            <strong>No Party Involved !</strong>
+                        </div>
+                    }
                 }
 
             </div>

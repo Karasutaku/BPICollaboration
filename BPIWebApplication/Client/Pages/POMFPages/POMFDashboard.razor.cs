@@ -33,10 +33,10 @@ namespace BPIWebApplication.Client.Pages.POMFPages
         private string previousDocumentLocation = string.Empty;
         private string previousDocumentID = string.Empty;
 
-        private bool isPOMFDocumentFilterActive = false;
-
         private string pomfDocumentFilterType { get; set; } = string.Empty;
         private string pomfDocumentFilterValue { get; set; } = string.Empty;
+
+        private bool pomfFilterActive { get; set; } = false;
 
         private bool isLoading = false;
         private bool successUpload = false;
@@ -211,28 +211,36 @@ namespace BPIWebApplication.Client.Pages.POMFPages
         {
             try
             {
-                List<POMFExportCSVModel> exportData = new();
-
-                foreach (var dt in selectedPOMFDocument.SelectMany(x => x.dataItemLines))
+                if (selectedPOMFDocument.Count > 0)
                 {
-                    exportData.Add(new POMFExportCSVModel
+                    List<POMFExportCSVModel> exportData = new();
+
+                    foreach (var dt in selectedPOMFDocument.SelectMany(x => x.dataItemLines))
                     {
-                        ItemCode = dt.ItemCode,
-                        ItemBonus = 0,
-                        Quantity = dt.RequestQuantity,
-                        UOM = dt.ItemUOM,
-                        Price = decimal.Zero,
-                        Discount = 0,
-                        VAT = "PPN11"
-                    });
+                        exportData.Add(new POMFExportCSVModel
+                        {
+                            ItemCode = dt.ItemCode,
+                            ItemBonus = 0,
+                            Quantity = dt.RequestQuantity,
+                            UOM = dt.ItemUOM,
+                            Price = decimal.Zero,
+                            Discount = 0,
+                            VAT = "PPN11"
+                        });
+                    }
+
+                    var streamdt = CommonLibrary.ListToCSV<POMFExportCSVModel>(exportData, ";");
+                    using var streamRef = new DotNetStreamReference(stream: streamdt);
+
+                    await _jsModule.InvokeVoidAsync("downloadFileFromStream", $"POMF Export {DateTime.Now.ToString("ddMMyyyy")}.csv", streamRef);
+
+                    selectedPOMFDocument.Clear();
+                    StateHasChanged();
                 }
-
-                var streamdt = CommonLibrary.ListToCSV<POMFExportCSVModel>(exportData, ";");
-                using var streamRef = new DotNetStreamReference(stream: streamdt);
-
-                await _jsModule.InvokeVoidAsync("downloadFileFromStream", $"POMF Export {DateTime.Now.ToString("ddMMyyyy")}.csv", streamRef);
-
-                StateHasChanged();
+                else
+                {
+                    await _jsModule.InvokeVoidAsync("showAlert", "Select Document to Export !");
+                }
             }
             catch (Exception ex)
             {
@@ -271,6 +279,11 @@ namespace BPIWebApplication.Client.Pages.POMFPages
                         previewPOMFDocument.dataHeader.DocumentStatus = param;
                         previewPOMFDocument.dataApproval.Add(res.Data.Data.Data);
                         POMFService.pomfDocuments.SingleOrDefault(x => x.dataHeader.POMFID.Equals(previewPOMFApproval.POMFID)).dataHeader.DocumentStatus = param;
+
+                        var dt = POMFService.pomfDocuments.SingleOrDefault(x => x.dataHeader.POMFID.Equals(previewPOMFApproval.POMFID));
+
+                        if (approveType.Equals("Confirm") && dt != null)
+                            POMFService.pomfConfirmedDocuments.Add(dt);
 
                         await _jsModule.InvokeVoidAsync("showAlert", "Update Status Success !");
                     }
@@ -337,7 +350,6 @@ namespace BPIWebApplication.Client.Pages.POMFPages
                     }
                 }
 
-
                 isLoading = false;
                 StateHasChanged();
 
@@ -395,9 +407,33 @@ namespace BPIWebApplication.Client.Pages.POMFPages
             isLoading = true;
             string getPOMFDocumentParam = string.Empty;
 
-            if (isPOMFDocumentFilterActive)
+            if (pomfFilterActive)
             {
-
+                if (pomfDocumentFilterType.Equals("ID"))
+                {
+                    string paramGetPOMF = activeUser.location + $"!_!WHERE POMFID LIKE \'%{pomfDocumentFilterValue}%\'!_!{pomfPageActive.ToString()}!_!";
+                    await POMFService.getPOMFDocuments(CommonLibrary.Base64Encode(paramGetPOMF));
+                }
+                else if (pomfDocumentFilterType.Equals("NPN"))
+                {
+                    string paramGetPOMF = activeUser.location + $"!_!WHERE NPNo LIKE \'%{pomfDocumentFilterValue}%\'!_!{pomfPageActive.ToString()}!_!";
+                    await POMFService.getPOMFDocuments(CommonLibrary.Base64Encode(paramGetPOMF));
+                }
+                else if (pomfDocumentFilterType.Equals("RCN"))
+                {
+                    string paramGetPOMF = activeUser.location + $"!_!WHERE ReceiptNo LIKE \'%{pomfDocumentFilterValue}%\'!_!{pomfPageActive.ToString()}!_!";
+                    await POMFService.getPOMFDocuments(CommonLibrary.Base64Encode(paramGetPOMF));
+                }
+                else if (pomfDocumentFilterType.Equals("CUST"))
+                {
+                    string paramGetPOMF = activeUser.location + $"!_!WHERE CustomerName LIKE \'%{pomfDocumentFilterValue}%\'!_!{pomfPageActive.ToString()}!_!";
+                    await POMFService.getPOMFDocuments(CommonLibrary.Base64Encode(paramGetPOMF));
+                }
+                else if (pomfDocumentFilterType.Equals("STATUS"))
+                {
+                    string paramGetPOMF = activeUser.location + $"!_!WHERE DocumentStatus LIKE \'%{pomfDocumentFilterValue}%\'!_!{pomfPageActive.ToString()}!_!";
+                    await POMFService.getPOMFDocuments(CommonLibrary.Base64Encode(paramGetPOMF));
+                }
             }
             else
             {
@@ -420,6 +456,87 @@ namespace BPIWebApplication.Client.Pages.POMFPages
 
             await POMFService.getPOMFDocuments(CommonLibrary.Base64Encode(getPOMFDocumentParam));
 
+            isLoading = false;
+            StateHasChanged();
+        }
+
+        private async void pomfFilter()
+        {
+            if (pomfDocumentFilterType.Length > 0)
+            {
+                pomfFilterActive = true;
+                isLoading = true;
+                POMFService.pomfDocuments.Clear();
+                pomfPageActive = 1;
+
+                if (pomfDocumentFilterType.Equals("ID"))
+                {
+                    string pomfParampz = $"POMFHeader!_!{activeUser.location}!_!WHERE POMFID LIKE \'%{pomfDocumentFilterValue}%\'";
+                    var pomfpz = await POMFService.getPOMFModuleNumberOfPage(CommonLibrary.Base64Encode(pomfParampz));
+                    pomfNumberofPage = pomfpz.Data;
+
+                    string paramGetPOMF = activeUser.location + $"!_!WHERE POMFID LIKE \'%{pomfDocumentFilterValue}%\'!_!1!_!";
+                    await POMFService.getPOMFDocuments(CommonLibrary.Base64Encode(paramGetPOMF));
+                }
+                else if (pomfDocumentFilterType.Equals("NPN"))
+                {
+                    string pomfParampz = $"POMFHeader!_!{activeUser.location}!_!WHERE NPNo LIKE \'%{pomfDocumentFilterValue}%\'";
+                    var pomfpz = await POMFService.getPOMFModuleNumberOfPage(CommonLibrary.Base64Encode(pomfParampz));
+                    pomfNumberofPage = pomfpz.Data;
+
+                    string paramGetPOMF = activeUser.location + $"!_!WHERE NPNo LIKE \'%{pomfDocumentFilterValue}%\'!_!1!_!";
+                    await POMFService.getPOMFDocuments(CommonLibrary.Base64Encode(paramGetPOMF));
+                }
+                else if (pomfDocumentFilterType.Equals("RCN"))
+                {
+                    string pomfParampz = $"POMFHeader!_!{activeUser.location}!_!WHERE ReceiptNo LIKE \'%{pomfDocumentFilterValue}%\'";
+                    var pomfpz = await POMFService.getPOMFModuleNumberOfPage(CommonLibrary.Base64Encode(pomfParampz));
+                    pomfNumberofPage = pomfpz.Data;
+
+                    string paramGetPOMF = activeUser.location + $"!_!WHERE ReceiptNo LIKE \'%{pomfDocumentFilterValue}%\'!_!1!_!";
+                    await POMFService.getPOMFDocuments(CommonLibrary.Base64Encode(paramGetPOMF));
+                }
+                else if (pomfDocumentFilterType.Equals("CUST"))
+                {
+                    string pomfParampz = $"POMFHeader!_!{activeUser.location}!_!WHERE CustomerName LIKE \'%{pomfDocumentFilterValue}%\'";
+                    var pomfpz = await POMFService.getPOMFModuleNumberOfPage(CommonLibrary.Base64Encode(pomfParampz));
+                    pomfNumberofPage = pomfpz.Data;
+
+                    string paramGetPOMF = activeUser.location + $"!_!WHERE CustomerName LIKE \'%{pomfDocumentFilterValue}%\'!_!1!_!";
+                    await POMFService.getPOMFDocuments(CommonLibrary.Base64Encode(paramGetPOMF));
+                }
+                else if (pomfDocumentFilterType.Equals("STATUS"))
+                {
+                    string pomfParampz = $"POMFHeader!_!{activeUser.location}!_!WHERE DocumentStatus LIKE \'%{pomfDocumentFilterValue}%\'";
+                    var pomfpz = await POMFService.getPOMFModuleNumberOfPage(CommonLibrary.Base64Encode(pomfParampz));
+                    pomfNumberofPage = pomfpz.Data;
+
+                    string paramGetPOMF = activeUser.location + $"!_!WHERE DocumentStatus LIKE \'%{pomfDocumentFilterValue}%\'!_!1!_!";
+                    await POMFService.getPOMFDocuments(CommonLibrary.Base64Encode(paramGetPOMF));
+                }
+
+                isLoading = false;
+                StateHasChanged();
+            }
+            else
+            {
+                await _jsModule.InvokeVoidAsync("showAlert", "Please Select Filter Type !");
+            }
+        }
+
+        private async void resetPOMFFilter()
+        {
+            isLoading = true;
+            pomfPageActive = 1;
+
+            string getPOMFDocumentParam = activeUser.location + "!_!!_!1!_!";
+            await POMFService.getPOMFDocuments(CommonLibrary.Base64Encode(getPOMFDocumentParam));
+
+            string getPOMFDocumentpz = "POMFHeader!_!" + activeUser.location + "!_!";
+            var pomfpz = await POMFService.getPOMFModuleNumberOfPage(CommonLibrary.Base64Encode(getPOMFDocumentpz));
+            pomfNumberofPage = pomfpz.Data;
+
+            pomfFilterActive = false;
             isLoading = false;
             StateHasChanged();
         }

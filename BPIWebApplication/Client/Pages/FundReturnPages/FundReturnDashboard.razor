@@ -1,0 +1,82 @@
+﻿@page "/fundreturn/dashboard"
+@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
+@inject Blazored.SessionStorage.ISyncSessionStorageService syncSessionStorage
+@inject IFundReturnService FundReturnService
+@inject ILoginService LoginService
+@inject IManagementService ManagementService
+@inject IJSRuntime JS
+
+<PageTitle>Fund Return - Dashboard</PageTitle>
+
+@if (LoginService.activeUser == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    if (LoginService.activeUser.userPrivileges != null)
+    {
+        @if (!LoginService.activeUser.userPrivileges.Contains("VW"))
+        {
+            <div class="container-fluid">
+                <div class="d-flex align-items-center">
+                    <h3>User Require Elevation</h3>
+                </div>
+            </div>
+        }
+        else
+        {
+            <h3>Fund Return (Pengembalian Dana)</h3>
+            <small><i>Dashboard</i></small>
+
+            @if (alertTrigger)
+            {
+                <div id="warningAlert" class="alert alert-warning show" role="alert">
+                    <h5 class="alert-heading fw-bold">@alertMessage</h5>
+                    @alertBody
+                    <button type="button" class="btn btn-close" aria-label="Close">
+                    </button>
+                </div>
+            }
+
+            @if (successAlert)
+            {
+                <div id="successAlert" class="alert alert-success show" role="alert">
+                    <h5 class="alert-heading fw-bold">@alertMessage</h5>
+                    @alertBody
+                    <button type="button" class="btn btn-close" aria-label="Close">
+                    </button>
+                </div>
+            }
+
+
+            <div class="container-fluid">
+
+                <div class="border border-2 p-2 my-4">
+                    
+                </div>
+
+            </div>
+        }
+    }
+    else
+    {
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col align-middle text-center">
+                    <h3>Fetch Data Privileges in Process</h3>
+                    <small>Refresh Page Using Button Below If There is No Response</small>
+                    <br />
+                    <button type="button" class="btn btn-primary my-4" @onclick="(() => StateHasChanged())"><b>Refresh Page</b></button>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@if (isLoading)
+{
+    <div class="modal show" id="splashLoading" tabindex="-5" role="dialog" aria-labelledby="splashLoadingDialog" aria-hidden="true" style="display:block; background: rgba(0,0,0, 0.7);">
+        <BPIWebApplication.Client.Shared.CustomLayout.SplashScreen></BPIWebApplication.Client.Shared.CustomLayout.SplashScreen>
+    </div>
+}

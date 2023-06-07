@@ -23,6 +23,7 @@ using System.Collections.Immutable;
 using System.Reflection.Metadata;
 using BPIDA.Models.MainModel.POMF;
 using System.Linq;
+using BPIDA.Models.MainModel.FundReturn;
 
 namespace BPIDA.Controllers
 {
@@ -162,6 +163,42 @@ namespace BPIDA.Controllers
                     con.Close();
                 }
             }
+            return dt;
+        }
+
+        internal DataTable getAllCategoriesData()
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getCategories]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
             return dt;
         }
 
@@ -545,6 +582,56 @@ namespace BPIDA.Controllers
                     res.isSuccess = false;
                     res.ErrorCode = "00";
                     res.ErrorMessage = "No Data";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getAllCategories")]
+        public async Task<IActionResult> getAllCategories()
+        {
+            ResultModel<List<Category>> res = new ResultModel<List<Category>>();
+            List<Category> categoryLines = new List<Category>();
+            DataTable dtCategory = new DataTable("Category");
+            IActionResult actionResult = null;
+
+            try
+            {
+                dtCategory = getAllCategoriesData();
+
+                if (dtCategory.Rows.Count > 0)
+                {
+                    categoryLines = dtCategory.AsEnumerable().Select(x => new Category
+                    {
+                        CategoryID = x["CategoryID"].ToString(),
+                        CategoryDescription = x["CategoryDescription"].ToString()
+                    }).ToList();
+
+                    res.Data = categoryLines;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
 
                     actionResult = Ok(res);
                 }
@@ -2972,7 +3059,7 @@ namespace BPIDA.Controllers
         //    }
         //}
 
-        internal bool createPettycashExpenseDocument(QueryModel<Expense> data, DataTable lines)
+        internal bool createPettycashExpenseDocument(QueryModel<Expense> data, DataTable lines, DataTable attach)
         {
             bool flag = false;
 
@@ -3005,6 +3092,7 @@ namespace BPIDA.Controllers
                     command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
 
                     command.Parameters.AddWithValue("@ExpenseLinesData", lines);
+                    command.Parameters.AddWithValue("@ExpenseAttachData", attach);
 
                     int ret = command.ExecuteNonQuery();
 
@@ -3122,7 +3210,7 @@ namespace BPIDA.Controllers
             }
         }
 
-        internal bool createPettycashReimburseDocument(QueryModel<Reimburse> data, DataTable expId, DataTable lines)
+        internal bool createPettycashReimburseDocument(QueryModel<Reimburse> data, DataTable expId, DataTable lines, DataTable attach)
         {
             bool flag = false;
 
@@ -3150,6 +3238,7 @@ namespace BPIDA.Controllers
 
                     command.Parameters.AddWithValue("@Expenses", expId);
                     command.Parameters.AddWithValue("@ReimburseLinesData", lines);
+                    command.Parameters.AddWithValue("@ReimburseAttachData", attach);
 
                     int ret = command.ExecuteNonQuery();
 
@@ -4420,8 +4509,11 @@ namespace BPIDA.Controllers
 
             try
             {
-                
-                if (createPettycashExpenseDocument(data, CommonLibrary.ListToDataTable<ExpenseLine>(data.Data.lines, data.userEmail, data.userAction, data.userActionDate, "ExpenseLine")))
+                if (createPettycashExpenseDocument(
+                    data
+                    , CommonLibrary.ListToDataTable<ExpenseLine>(data.Data.lines, data.userEmail, data.userAction, data.userActionDate, "ExpenseLine")
+                    , CommonLibrary.ListToDataTable<ExpenseAttachmentLine>(data.Data.attach, data.userEmail, data.userAction, data.userActionDate, "ExpenseAttach"))
+                )
                 {
                     res.Data = data;
                     res.isSuccess = true;
@@ -4592,9 +4684,10 @@ namespace BPIDA.Controllers
                 });
 
                 if (createPettycashReimburseDocument(
-                        data
-                        , CommonLibrary.ListToDataTable<ExpenseIds>(temp, data.userEmail, data.userAction, data.userActionDate, "ExpenseId")
-                        , CommonLibrary.ListToDataTable<ReimburseLine>(data.Data.lines, data.userEmail, data.userAction, data.userActionDate, "ReimburseLine")
+                    data
+                    , CommonLibrary.ListToDataTable<ExpenseIds>(temp, data.userEmail, data.userAction, data.userActionDate, "ExpenseId")
+                    , CommonLibrary.ListToDataTable<ReimburseLine>(data.Data.lines, data.userEmail, data.userAction, data.userActionDate, "ReimburseLine")
+                    , CommonLibrary.ListToDataTable<ReimburseAttachmentLine>(data.Data.attach, data.userEmail, data.userAction, data.userActionDate, "ReimburseAttach")
                 )) 
                 {
                     res.Data = data;
@@ -8879,7 +8972,7 @@ namespace BPIDA.Controllers
                     command.CommandTimeout = 1000;
 
                     command.Parameters.Clear();
-                    command.Parameters.AddWithValue("@RiskID", data.Data.RiskID);
+                    command.Parameters.AddWithValue("@SubRiskID", data.Data.SubRiskID);
                     command.Parameters.AddWithValue("@DocumentID", data.Data.DocumentID);
                     command.Parameters.AddWithValue("@SiteReporter", data.Data.SiteReporter);
                     command.Parameters.AddWithValue("@SiteSender", data.Data.SiteSender);
@@ -8936,7 +9029,7 @@ namespace BPIDA.Controllers
                     command.CommandTimeout = 1000;
 
                     command.Parameters.Clear();
-                    command.Parameters.AddWithValue("@RiskID", data.Data.RiskID);
+                    command.Parameters.AddWithValue("@SubRiskID", data.Data.SubRiskID);
                     command.Parameters.AddWithValue("@DocumentID", data.Data.DocumentID);
                     command.Parameters.AddWithValue("@ReportDate", data.Data.ReportDate);
                     command.Parameters.AddWithValue("@OccurenceDate", data.Data.OccurenceDate);
@@ -9173,7 +9266,7 @@ namespace BPIDA.Controllers
             return flag;
         }
 
-        internal bool editEPKRSDocumentExtendedData(QueryModel<ReportingExtended> data, string type)
+        internal bool editEPKRSDocumentExtendedandApprovalData(QueryModel<RISKApprovalExtended> data)
         {
             bool flag = false;
 
@@ -9187,17 +9280,22 @@ namespace BPIDA.Controllers
                     // create and check schema table
                     command.Connection = con;
                     command.CommandType = CommandType.StoredProcedure;
-                    command.CommandText = "[editEPKRSDocumentExtendedData]";
+                    command.CommandText = "[editEPKRSDocumentExtendedandApprovalData]";
                     command.CommandTimeout = 1000;
 
                     command.Parameters.Clear();
-                    command.Parameters.AddWithValue("@ReportingType", type);
-                    command.Parameters.AddWithValue("@DocumentID", data.Data.DocumentID);
-                    command.Parameters.AddWithValue("@ExtendedRootCause", data.Data.ExtendedRootCause);
-                    command.Parameters.AddWithValue("@ExtendedMitigationPlan", data.Data.ExtendedMitigationPlan);
+                    command.Parameters.AddWithValue("@ReportingType", data.Data.reportingType);
+                    command.Parameters.AddWithValue("@DocumentID", data.Data.extendedData.DocumentID);
+                    command.Parameters.AddWithValue("@ExtendedRootCause", data.Data.extendedData.ExtendedRootCause);
+                    command.Parameters.AddWithValue("@ExtendedMitigationPlan", data.Data.extendedData.ExtendedMitigationPlan);
+                    command.Parameters.AddWithValue("@ApprovalAction", data.Data.approval.ApprovalAction);
+                    command.Parameters.AddWithValue("@Approver", data.Data.approval.Approver);
+                    command.Parameters.AddWithValue("@ApproveDate", data.Data.approval.ApproveDate);
                     command.Parameters.AddWithValue("@AuditUser", data.userEmail);
                     command.Parameters.AddWithValue("@AuditAction", data.userAction);
                     command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
+
+                    command.Parameters.AddWithValue("@Involvers", CommonLibrary.ListToDataTable<IncidentAccidentInvolver>(data.Data.involver, data.userEmail, data.userAction, data.userActionDate, "Involver"));
 
                     int ret = command.ExecuteNonQuery();
 
@@ -9236,7 +9334,7 @@ namespace BPIDA.Controllers
                     command.CommandTimeout = 1000;
 
                     command.Parameters.Clear();
-                    command.Parameters.AddWithValue("@RiskID", data.Data.RiskID);
+                    command.Parameters.AddWithValue("@SubRiskID", data.Data.SubRiskID);
                     command.Parameters.AddWithValue("@DocumentID", data.Data.DocumentID);
                     command.Parameters.AddWithValue("@SiteReporter", data.Data.SiteReporter);
                     command.Parameters.AddWithValue("@SiteSender", data.Data.SiteSender);
@@ -9291,7 +9389,7 @@ namespace BPIDA.Controllers
                     command.CommandTimeout = 1000;
 
                     command.Parameters.Clear();
-                    command.Parameters.AddWithValue("@RiskID", data.Data.RiskID);
+                    command.Parameters.AddWithValue("@SubRiskID", data.Data.SubRiskID);
                     command.Parameters.AddWithValue("@DocumentID", data.Data.DocumentID);
                     command.Parameters.AddWithValue("@ReportDate", data.Data.ReportDate);
                     command.Parameters.AddWithValue("@OccurenceDate", data.Data.OccurenceDate);
@@ -9499,6 +9597,42 @@ namespace BPIDA.Controllers
             return dt;
         }
 
+        internal DataTable getEPKRSRiskSubTypeData()
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSSubRiskType]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
         internal DataTable getEPKRSItemRiskCategoryData()
         {
             DataTable dt = new DataTable("Data");
@@ -9513,6 +9647,42 @@ namespace BPIDA.Controllers
                     command.Connection = con;
                     command.CommandType = CommandType.StoredProcedure;
                     command.CommandText = "[getEPKRSItemRiskCategory]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getEPKRSIncidentAccidentInvolerTypeData()
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSIncidentAccidentInvolerType]";
                     command.CommandTimeout = 1000;
 
                     command.Parameters.Clear();
@@ -9689,6 +9859,80 @@ namespace BPIDA.Controllers
             return dt;
         }
 
+        internal DataTable getEPKRSApprovalData(DataTable itemCaseData)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSDocumentApprovalData]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@ItemCases", itemCaseData);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getEPKRSIncidentAccidentInvolverData(DataTable itemCaseData)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSIncidentAccidentInvolverData]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@ItemCases", itemCaseData);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
         internal DataTable getEPKRSDiscussionData(string location, string documentId)
         {
             DataTable dt = new DataTable("Data");
@@ -9802,7 +10046,45 @@ namespace BPIDA.Controllers
             return dt;
         }
 
-        internal DataTable getEPKRSItemCaseCategoryStatisticsData(string conditions)
+        internal DataTable getEPKRSGeneralIncidentAccidentStatisticsData(string conditions, string ext)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSGeneralIncidentAccidentStatisticsData]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@Conditions", conditions);
+                    command.Parameters.AddWithValue("@ConditionsExt", ext);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getEPKRSItemCaseCategoryStatisticsData(string conditions, string ext)
         {
             DataTable dt = new DataTable("Data");
 
@@ -9820,6 +10102,7 @@ namespace BPIDA.Controllers
 
                     command.Parameters.Clear();
                     command.Parameters.AddWithValue("@Conditions", conditions);
+                    command.Parameters.AddWithValue("@ConditionsExt", ext);
 
                     SqlDataAdapter da = new SqlDataAdapter();
                     da.SelectCommand = command;
@@ -9839,7 +10122,7 @@ namespace BPIDA.Controllers
             return dt;
         }
 
-        internal DataTable getEPKRSTopLocationReportStatisticsData(string conditions)
+        internal DataTable getEPKRSTopLocationReportStatisticsData(string conditions, string ext)
         {
             DataTable dt = new DataTable("Data");
 
@@ -9857,6 +10140,7 @@ namespace BPIDA.Controllers
 
                     command.Parameters.Clear();
                     command.Parameters.AddWithValue("@Conditions", conditions);
+                    command.Parameters.AddWithValue("@ConditionsExt", ext);
 
                     SqlDataAdapter da = new SqlDataAdapter();
                     da.SelectCommand = command;
@@ -9876,7 +10160,7 @@ namespace BPIDA.Controllers
             return dt;
         }
 
-        internal DataTable getEPKRSItemCategoriesStatisticsData(string conditions)
+        internal DataTable getEPKRSItemCategoriesStatisticsData(string conditions, string ext)
         {
             DataTable dt = new DataTable("Data");
 
@@ -9894,6 +10178,120 @@ namespace BPIDA.Controllers
 
                     command.Parameters.Clear();
                     command.Parameters.AddWithValue("@Conditions", conditions);
+                    command.Parameters.AddWithValue("@ConditionsExt", ext);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmailData(string conditions)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@Conditions", conditions);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPositionData(string conditions, string ext)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@Conditions", conditions);
+                    command.Parameters.AddWithValue("@ConditionsExt", ext);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDeptData(string conditions, string ext)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@Conditions", conditions);
+                    command.Parameters.AddWithValue("@ConditionsExt", ext);
 
                     SqlDataAdapter da = new SqlDataAdapter();
                     da.SelectCommand = command;
@@ -10269,21 +10667,21 @@ namespace BPIDA.Controllers
 
             try
             {
-                QueryModel<DocumentApproval> param1 = new();
-                param1.Data = new();
-                param1.Data = data.Data.approval;
-                param1.userEmail = data.userEmail;
-                param1.userAction = data.userAction;
-                param1.userActionDate = data.userActionDate;
+                //QueryModel<DocumentApproval> param1 = new();
+                //param1.Data = new();
+                //param1.Data = data.Data.approval;
+                //param1.userEmail = data.userEmail;
+                //param1.userAction = data.userAction;
+                //param1.userActionDate = data.userActionDate;
 
-                QueryModel<ReportingExtended> param2 = new();
-                param2.Data = new();
-                param2.Data = data.Data.extendedData;
-                param2.userEmail = data.userEmail;
-                param2.userAction = data.userAction;
-                param2.userActionDate = data.userActionDate;
+                //QueryModel<ReportingExtended> param2 = new();
+                //param2.Data = new();
+                //param2.Data = data.Data.extendedData;
+                //param2.userEmail = data.userEmail;
+                //param2.userAction = data.userAction;
+                //param2.userActionDate = data.userActionDate;
 
-                if (createEPKRSDocumentApproval(param1) && editEPKRSDocumentExtendedData(param2, data.Data.reportingType))
+                if (editEPKRSDocumentExtendedandApprovalData(data))
                 {
                     res.Data = data;
                     res.isSuccess = true;
@@ -10588,6 +10986,61 @@ namespace BPIDA.Controllers
             return actionResult;
         }
 
+        [HttpGet("getEPKRSRiskSubType")]
+        public async Task<IActionResult> getEPKRSRiskSubType()
+        {
+            ResultModel<List<RiskSubType>> res = new ResultModel<List<RiskSubType>>();
+            List<RiskSubType> riskSubTypeLines = new List<RiskSubType>();
+            DataTable dtRiskSubType = new DataTable("RiskSubType");
+            IActionResult actionResult = null;
+
+            try
+            {
+                dtRiskSubType = getEPKRSRiskSubTypeData();
+
+                if (dtRiskSubType.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtRiskSubType.Rows)
+                    {
+                        RiskSubType temp = new RiskSubType();
+                        
+                        temp.RiskID = dt["RiskID"].ToString();
+                        temp.SubRiskID = dt["SubRiskID"].ToString();
+                        temp.SubRiskDescription = dt["SubRiskDescription"].ToString();
+
+                        riskSubTypeLines.Add(temp);
+                    }
+
+                    res.Data = riskSubTypeLines;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
         [HttpGet("getEPKRSItemRiskCategory")]
         public async Task<IActionResult> getEPKRSItemRiskCategory()
         {
@@ -10613,6 +11066,60 @@ namespace BPIDA.Controllers
                     }
 
                     res.Data = itemRiskCategoryLines;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSIncidentAccidentInvolverType")]
+        public async Task<IActionResult> getEPKRSIncidentAccidentInvolverType()
+        {
+            ResultModel<List<IncidentAccidentInvolverType>> res = new ResultModel<List<IncidentAccidentInvolverType>>();
+            List<IncidentAccidentInvolverType> involverLines = new List<IncidentAccidentInvolverType>();
+            DataTable dtInvolver = new DataTable("IncidentAccidentInvolverType");
+            IActionResult actionResult = null;
+
+            try
+            {
+                dtInvolver = getEPKRSIncidentAccidentInvolerTypeData();
+
+                if (dtInvolver.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtInvolver.Rows)
+                    {
+                        IncidentAccidentInvolverType temp = new IncidentAccidentInvolverType();
+
+                        temp.InvolverTypeID = dt["InvolverTypeID"].ToString();
+                        temp.InvolverTypeDescription = dt["InvolverTypeDescription"].ToString();
+
+                        involverLines.Add(temp);
+                    }
+
+                    res.Data = involverLines;
                     res.isSuccess = true;
                     res.ErrorCode = "00";
                     res.ErrorMessage = "";
@@ -10699,7 +11206,7 @@ namespace BPIDA.Controllers
                     {
                         EPKRSUploadItemCase temp1 = new EPKRSUploadItemCase();
 
-                        temp1.itemCase.RiskID = dt["RiskID"].ToString();
+                        temp1.itemCase.SubRiskID = dt["SubRiskID"].ToString();
                         temp1.itemCase.DocumentID = dt["DocumentID"].ToString();
                         temp1.itemCase.SiteReporter = dt["SiteReporter"].ToString();
                         temp1.itemCase.SiteSender = dt["SiteSender"].ToString();
@@ -10778,6 +11285,8 @@ namespace BPIDA.Controllers
             List<EPKRSUploadIncidentAccident> incidentAccidentLines = new List<EPKRSUploadIncidentAccident>();
             DataTable dtIncidentAccident = new DataTable("EPKRSUploadIncidentAccident");
             DataTable dtCaseAttachment = new DataTable("CaseAttachment");
+            DataTable dtCaseApproval = new DataTable("CaseApproval");
+            DataTable dtCaseInvolver = new DataTable("CaseInvolver");
             DataTable dtParam = new DataTable("Parameter");
             IActionResult actionResult = null;
 
@@ -10830,13 +11339,17 @@ namespace BPIDA.Controllers
                 if (dtCaseAttachment.Rows.Count <= 0)
                     throw new Exception("Fail Fetch Attachment Data");
 
+                dtCaseApproval = getEPKRSApprovalData(dtParam);
+
+                dtCaseInvolver = getEPKRSIncidentAccidentInvolverData(dtParam);
+
                 if (dtIncidentAccident.Rows.Count > 0)
                 {
                     foreach (DataRow dt in dtIncidentAccident.Rows)
                     {
                         EPKRSUploadIncidentAccident temp1 = new EPKRSUploadIncidentAccident();
 
-                        temp1.incidentAccident.RiskID = dt["RiskID"].ToString();
+                        temp1.incidentAccident.SubRiskID = dt["SubRiskID"].ToString();
                         temp1.incidentAccident.DocumentID = dt["DocumentID"].ToString();
                         temp1.incidentAccident.ReportDate = Convert.ToDateTime(dt["ReportDate"]);
                         temp1.incidentAccident.OccurenceDate = Convert.ToDateTime(dt["OccurenceDate"]);
@@ -10872,6 +11385,29 @@ namespace BPIDA.Controllers
                             FileExtension = x["FileExtention"].ToString(),
                             FilePath = x["FilePath"].ToString()
                         }).ToList();
+
+                        if (dtCaseApproval.Rows.Count > 0)
+                        {
+                            temp1.Approval = dtCaseApproval.AsEnumerable().Where(y => y["DocumentID"].ToString().Equals(dt["DocumentID"].ToString())).Select(x => new DocumentApproval
+                            {
+                                DocumentID = x["DocumentID"].ToString(),
+                                ApprovalAction = x["ApprovalAction"].ToString(),
+                                Approver = x["Approver"].ToString(),
+                                ApproveDate = Convert.ToDateTime(x["ApproveDate"])
+                            }).ToList();
+                        }
+
+                        if (dtCaseInvolver.Rows.Count > 0)
+                        {
+                            temp1.Involver = dtCaseInvolver.AsEnumerable().Where(y => y["DocumentID"].ToString().Equals(dt["DocumentID"].ToString())).Select(x => new IncidentAccidentInvolver
+                            {
+                                DocumentID = x["DocumentID"].ToString(),
+                                InvolverName = x["InvolverName"].ToString(),
+                                InvolverDept = x["InvolverDept"].ToString(),
+                                InvolverPosition = x["InvolverPosition"].ToString(),
+                                InvolverTypeID = x["InvolverTypeID"].ToString()
+                            }).ToList();
+                        }
 
                         incidentAccidentLines.Add(temp1);
                     }
@@ -11234,6 +11770,69 @@ namespace BPIDA.Controllers
             return actionResult;
         }
 
+        [HttpGet("getEPKRSGeneralIncidentAccidentStatistics/{param}")]
+        public async Task<IActionResult> getEPKRSGeneralIncidentAccidentStatistics(string param)
+        {
+            ResultModel<List<EPKRSDocumentStatistics>> res = new ResultModel<List<EPKRSDocumentStatistics>>();
+            List<EPKRSDocumentStatistics> documentStatistics = new List<EPKRSDocumentStatistics>();
+            DataTable dtDocumentStatistics = new DataTable("documentStatistics");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+
+                dtDocumentStatistics = getEPKRSGeneralIncidentAccidentStatisticsData(temp[0], temp[1]);
+
+                if (dtDocumentStatistics.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtDocumentStatistics.Rows)
+                    {
+                        EPKRSDocumentStatistics temp1 = new EPKRSDocumentStatistics();
+
+                        temp1.RiskID = dt["RiskID"].ToString();
+                        temp1.ReportTotalDocuments = Convert.ToInt32(dt["TotalDocuments"]);
+                        temp1.ReportTotalOpenDocuments = Convert.ToInt32(dt["OpenDocuments"]);
+                        temp1.ReportTotalApprovedDocuments = Convert.ToInt32(dt["ApprovedDocuments"]);
+                        temp1.ReportTotalOnProgressDocuments = Convert.ToInt32(dt["OnProgressDocuments"]);
+                        temp1.ReportTotalClosedDocuments = Convert.ToInt32(dt["ClosedDocuments"]);
+                        temp1.ReportTotalValue = Convert.ToDecimal(dt["TotalValues"]);
+                        temp1.ReportingID = dt["ReportingType"].ToString();
+                        temp1.ReportReturnValue = Convert.ToDecimal(dt["ReturnValues"]);
+
+                        documentStatistics.Add(temp1);
+                    }
+
+                    res.Data = documentStatistics;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
         [HttpGet("getEPKRSItemCaseCategoryStatistics/{param}")]
         public async Task<IActionResult> getEPKRSItemCaseCategoryStatistics(string param)
         {
@@ -11244,9 +11843,9 @@ namespace BPIDA.Controllers
 
             try
             {
-                string temp = CommonLibrary.Base64Decode(param);
+                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
 
-                dtItemCaseCategoryStats = getEPKRSItemCaseCategoryStatisticsData(temp);
+                dtItemCaseCategoryStats = getEPKRSItemCaseCategoryStatisticsData(temp[0], temp[1]);
 
                 if (dtItemCaseCategoryStats.Rows.Count > 0)
                 {
@@ -11301,9 +11900,9 @@ namespace BPIDA.Controllers
 
             try
             {
-                string temp = CommonLibrary.Base64Decode(param);
+                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
 
-                dtTopLocationReports = getEPKRSTopLocationReportStatisticsData(temp);
+                dtTopLocationReports = getEPKRSTopLocationReportStatisticsData(temp[0], temp[1]);
 
                 if (dtTopLocationReports.Rows.Count > 0)
                 {
@@ -11357,9 +11956,9 @@ namespace BPIDA.Controllers
 
             try
             {
-                string temp = CommonLibrary.Base64Decode(param);
+                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
 
-                dtItemCategoryStats = getEPKRSItemCategoriesStatisticsData(temp);
+                dtItemCategoryStats = getEPKRSItemCategoriesStatisticsData(temp[0], temp[1]);
 
                 if (dtItemCategoryStats.Rows.Count > 0)
                 {
@@ -11374,6 +11973,178 @@ namespace BPIDA.Controllers
                     }
 
                     res.Data = itemCategoryStats;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail/{param}")]
+        public async Task<IActionResult> getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(string param)
+        {
+            ResultModel<List<EPKRSIncidentAccidentRegionalStatistics>> res = new ResultModel<List<EPKRSIncidentAccidentRegionalStatistics>>();
+            List<EPKRSIncidentAccidentRegionalStatistics> regionalStats = new List<EPKRSIncidentAccidentRegionalStatistics>();
+            DataTable dtRegionalStats = new DataTable("EPKRSIncidentAccidentRegionalStatistics");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string temp = CommonLibrary.Base64Decode(param);
+
+                dtRegionalStats = getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmailData(temp);
+
+                if (dtRegionalStats.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtRegionalStats.Rows)
+                    {
+                        EPKRSIncidentAccidentRegionalStatistics temp1 = new();
+
+                        temp1.DORMEmail = dt["DORMEmail"].ToString();
+                        temp1.TotalDocuments = Convert.ToInt32(dt["TotalDocuments"]);
+                        temp1.TotalValues = Convert.ToDecimal(dt["TotalValues"]);
+                        temp1.ReturnValues = Convert.ToDecimal(dt["ReturnValues"]);
+
+                        regionalStats.Add(temp1);
+                    }
+
+                    res.Data = regionalStats;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition/{param}")]
+        public async Task<IActionResult> getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(string param)
+        {
+            ResultModel<List<EPKRSIncidentAccidentInvolverStatisticsbyPosition>> res = new ResultModel<List<EPKRSIncidentAccidentInvolverStatisticsbyPosition>>();
+            List<EPKRSIncidentAccidentInvolverStatisticsbyPosition> involverStats = new List<EPKRSIncidentAccidentInvolverStatisticsbyPosition>();
+            DataTable dtInvolverStats = new DataTable("EPKRSIncidentAccidentInvolverStatistics");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+
+                dtInvolverStats = getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPositionData(temp[0], temp[1]);
+
+                if (dtInvolverStats.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtInvolverStats.Rows)
+                    {
+                        EPKRSIncidentAccidentInvolverStatisticsbyPosition temp1 = new();
+
+                        temp1.InvolverPosition = dt["InvolverPosition"].ToString();
+                        temp1.TotalDocuments = Convert.ToInt32(dt["TotalDocuments"]);
+                        temp1.TotalInvolver = Convert.ToInt32(dt["TotalInvolver"]);
+
+                        involverStats.Add(temp1);
+                    }
+
+                    res.Data = involverStats;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept/{param}")]
+        public async Task<IActionResult> getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(string param)
+        {
+            ResultModel<List<EPKRSIncidentAccidentInvolverStatisticsbyDept>> res = new ResultModel<List<EPKRSIncidentAccidentInvolverStatisticsbyDept>>();
+            List<EPKRSIncidentAccidentInvolverStatisticsbyDept> involverStats = new List<EPKRSIncidentAccidentInvolverStatisticsbyDept>();
+            DataTable dtInvolverStats = new DataTable("EPKRSIncidentAccidentInvolverStatistics");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+
+                dtInvolverStats = getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDeptData(temp[0], temp[1]);
+
+                if (dtInvolverStats.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtInvolverStats.Rows)
+                    {
+                        EPKRSIncidentAccidentInvolverStatisticsbyDept temp1 = new();
+
+                        temp1.InvolverDept = dt["InvolverDept"].ToString();
+                        temp1.TotalDocuments = Convert.ToInt32(dt["TotalDocuments"]);
+                        temp1.TotalInvolver = Convert.ToInt32(dt["TotalInvolver"]);
+
+                        involverStats.Add(temp1);
+                    }
+
+                    res.Data = involverStats;
                     res.isSuccess = true;
                     res.ErrorCode = "00";
                     res.ErrorMessage = "";
@@ -12291,6 +13062,1035 @@ namespace BPIDA.Controllers
                 string loc = temp[1].Equals("") ? "HO" : temp[1];
 
                 res.Data = getPOMFModuleNumberOfPageData(temp[0], loc, temp[2], _rowPerPage);
+
+                res.isSuccess = true;
+                res.ErrorCode = "00";
+                res.ErrorMessage = "";
+
+                actionResult = Ok(res);
+            }
+            catch (Exception ex)
+            {
+                res.Data = 0;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        //
+    }
+
+    [Route("api/DA/FundReturn")]
+    [ApiController]
+    public class FundReturnController : ControllerBase
+    {
+        private readonly IConfiguration _configuration;
+        private readonly string _conString, _moduleConnection;
+        private readonly int _rowPerPage;
+
+        public FundReturnController(IConfiguration config)
+        {
+            _configuration = config;
+            _moduleConnection = _configuration.GetValue<string>("ModuleConnection:FundReturn");
+            _conString = _configuration.GetValue<string>($"ConnectionStrings:{_moduleConnection}");
+            _rowPerPage = _configuration.GetValue<int>("Paging:FundReturn:RowPerPage");
+        }
+
+        internal DataTable createIDData(string docType)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[createID]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@DocumentName", docType);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal bool createFundReturnDocumentData(QueryModel<FundReturnHeader> data, DataTable dataItemLines)
+        {
+            bool flag = false;
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[createFundReturnSchemaTables]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@LocationID", data.Data.LocationID);
+
+                    command.ExecuteNonQuery();
+
+                    command.CommandText = "[createFundReturnDocument]";
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@DocumentID", data.Data.DocumentID);
+                    command.Parameters.AddWithValue("@RequestDate", data.Data.RequestDate);
+                    command.Parameters.AddWithValue("@LocationID", data.Data.LocationID);
+                    command.Parameters.AddWithValue("@CommercialType", data.Data.CommercialType);
+                    command.Parameters.AddWithValue("@CustomerName", data.Data.CustomerName);
+                    command.Parameters.AddWithValue("@CustomerType", data.Data.CustomerType);
+                    command.Parameters.AddWithValue("@CustomerMemberID", data.Data.CustomerMemberID);
+                    command.Parameters.AddWithValue("@CustomerContactNo", data.Data.CustomerContactNo);
+                    command.Parameters.AddWithValue("@FundReturnCategoryID", data.Data.FundReturnCategoryID);
+                    command.Parameters.AddWithValue("@BankHolderName", data.Data.BankHolderName);
+                    command.Parameters.AddWithValue("@BankAccount", data.Data.BankAccount);
+                    command.Parameters.AddWithValue("@BankID", data.Data.BankID);
+                    command.Parameters.AddWithValue("@ReceiptDocument", data.Data.ReceiptDocument);
+                    command.Parameters.AddWithValue("@ExternalDocument", data.Data.ExternalDocument);
+                    command.Parameters.AddWithValue("@RefundAmount", data.Data.RefundAmount);
+                    command.Parameters.AddWithValue("@TransactionAmount", data.Data.TransactionAmount);
+                    command.Parameters.AddWithValue("@Reason", data.Data.Reason);
+                    command.Parameters.AddWithValue("@DocumentStatus", data.Data.DocumentStatus);
+                    command.Parameters.AddWithValue("@AuditUser", data.userEmail);
+                    command.Parameters.AddWithValue("@AuditAction", data.userAction);
+                    command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
+
+                    command.Parameters.AddWithValue("@ItemLines", dataItemLines);
+
+                    int ret = command.ExecuteNonQuery();
+
+                    if (ret > 0)
+                        flag = true;
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return flag;
+        }
+
+        internal bool createFundReturnHeaderData(QueryModel<FundReturnHeader> data)
+        {
+            bool flag = false;
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[createFundReturnSchemaTables]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@LocationID", data.Data.LocationID);
+
+                    command.ExecuteNonQuery();
+
+                    command.CommandText = "[createFundReturnHeaderData]";
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@DocumentID", data.Data.DocumentID);
+                    command.Parameters.AddWithValue("@RequestDate", data.Data.RequestDate);
+                    command.Parameters.AddWithValue("@LocationID", data.Data.LocationID);
+                    command.Parameters.AddWithValue("@CommercialType", data.Data.CommercialType);
+                    command.Parameters.AddWithValue("@CustomerName", data.Data.CustomerName);
+                    command.Parameters.AddWithValue("@CustomerType", data.Data.CustomerType);
+                    command.Parameters.AddWithValue("@CustomerMemberID", data.Data.CustomerMemberID);
+                    command.Parameters.AddWithValue("@CustomerContactNo", data.Data.CustomerContactNo);
+                    command.Parameters.AddWithValue("@FundReturnCategoryID", data.Data.FundReturnCategoryID);
+                    command.Parameters.AddWithValue("@BankHolderName", data.Data.BankHolderName);
+                    command.Parameters.AddWithValue("@BankAccount", data.Data.BankAccount);
+                    command.Parameters.AddWithValue("@BankID", data.Data.BankID);
+                    command.Parameters.AddWithValue("@ReceiptDocument", data.Data.ReceiptDocument);
+                    command.Parameters.AddWithValue("@ExternalDocument", data.Data.ExternalDocument);
+                    command.Parameters.AddWithValue("@RefundAmount", data.Data.RefundAmount);
+                    command.Parameters.AddWithValue("@TransactionAmount", data.Data.TransactionAmount);
+                    command.Parameters.AddWithValue("@Reason", data.Data.Reason);
+                    command.Parameters.AddWithValue("@DocumentStatus", data.Data.DocumentStatus);
+                    command.Parameters.AddWithValue("@AuditUser", data.userEmail);
+                    command.Parameters.AddWithValue("@AuditAction", data.userAction);
+                    command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
+
+                    int ret = command.ExecuteNonQuery();
+
+                    if (ret > 0)
+                        flag = true;
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return flag;
+        }
+
+        internal bool createFundReturnApprovalData(QueryModel<FundReturnApproval> data, string location)
+        {
+            bool flag = false;
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[createFundReturnApprovalData]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@LocationID", location);
+                    command.Parameters.AddWithValue("@DocumentID", data.Data.DocumentID);
+                    command.Parameters.AddWithValue("@ApprovalAction", data.Data.ApprovalAction);
+                    command.Parameters.AddWithValue("@Approver", data.Data.Approver);
+                    command.Parameters.AddWithValue("@ApproveDate", data.Data.ApproveDate);
+                    command.Parameters.AddWithValue("@AuditUser", data.userEmail);
+                    command.Parameters.AddWithValue("@AuditAction", data.userAction);
+                    command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
+
+                    int ret = command.ExecuteNonQuery();
+
+                    if (ret > 0)
+                        flag = true;
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return flag;
+        }
+
+        internal bool deleteFundReturnDocument(string id, string location, string user, string act, DateTime date)
+        {
+            bool flag = false;
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[deleteFundReturnDocument]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@DocumentID", id);
+                    command.Parameters.AddWithValue("@LocationID", location);
+                    command.Parameters.AddWithValue("@AuditUser", user);
+                    command.Parameters.AddWithValue("@AuditAction", act);
+                    command.Parameters.AddWithValue("@AuditActionDate", date);
+
+                    int ret = command.ExecuteNonQuery();
+
+                    if (ret > 0)
+                        flag = true;
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return flag;
+        }
+
+        internal DataTable getFundReturnHeaderbyFilterData(string location, string conditions, int pageNo, int rowPerPage)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getFundReturnHeaderbyFilter]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@LocationID", location);
+                    command.Parameters.AddWithValue("@Conditions", conditions);
+                    command.Parameters.AddWithValue("@PageNo", pageNo);
+                    command.Parameters.AddWithValue("@RowPerPage", rowPerPage);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getFundReturnItemLinesData(string location, DataTable param)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getFundReturnHeaderItemLines]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@LocationID", location);
+                    command.Parameters.AddWithValue("@FundReturnIds", param);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getFundReturnApprovalsData(string location, DataTable param)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getFundReturnApprovals]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@LocationID", location);
+                    command.Parameters.AddWithValue("@FundReturnIds", param);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getFundReturnBankData()
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getFundReturnBankData]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getFundReturnCategoryData()
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getFundReturnCategory]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal int getFundReturnModuleNumberOfPageData(string TbName, string loc, string conditions, int rowPerPage)
+        {
+            int conInt = 0;
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getFundReturnModulePageSize]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@TbName", TbName);
+                    command.Parameters.AddWithValue("@LocationID", loc);
+                    command.Parameters.AddWithValue("@Conditions", conditions);
+                    command.Parameters.AddWithValue("@RowPerPage", rowPerPage);
+
+                    var data = command.ExecuteScalar();
+                    conInt = Convert.ToInt32(data);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+            return conInt;
+        }
+
+        [HttpPost("createFundReturnDocument")]
+        public async Task<IActionResult> createFundReturnDocument(QueryModel<FundReturnDocument> data)
+        {
+            ResultModel<QueryModel<FundReturnDocument>> res = new ResultModel<QueryModel<FundReturnDocument>>();
+            DataTable dtMainIdentity = new DataTable("Identity");
+            string id = string.Empty;
+            IActionResult actionResult = null;
+
+            try
+            {
+                dtMainIdentity = createIDData("FundReturn");
+                var x = dtMainIdentity.AsEnumerable().First();
+
+                // 8 for date yyyyMMdd
+                string zero = string.Empty;
+                int idLength = x["Code"].ToString().Length + x["DocNumber"].ToString().Length + x["Parity"].ToString().Length + 8;
+                int maxLength = 18;
+
+                zero = new String('0', maxLength - idLength);
+
+                id = x["Code"].ToString() +
+                    DateTime.Now.Year.ToString() +
+                    DateTime.Now.ToString("MM") +
+                    DateTime.Now.ToString("dd") +
+                    zero +
+                    x["DocNumber"].ToString() +
+                    x["Parity"].ToString();
+
+                QueryModel<FundReturnHeader> dtMain = new();
+                dtMain.Data = new();
+
+                dtMain.Data = data.Data.dataHeader;
+                dtMain.Data.DocumentID = id;
+                dtMain.userEmail = data.userEmail;
+                dtMain.userAction = data.userAction;
+                dtMain.userActionDate = data.userActionDate;
+
+                List<FundReturnItemLine> tempItemLine = new();
+                data.Data.dataItemLines.ForEach(x =>
+                {
+                    tempItemLine.Add(new FundReturnItemLine
+                    {
+                        DocumentID = id,
+                        LineNum = x.LineNum,
+                        ItemCode = x.ItemCode,
+                        ItemDescription = x.ItemDescription,
+                        ItemQuantity = x.ItemQuantity,
+                        UOM = x.UOM,
+                        ItemAmount = x.ItemAmount,
+                        ItemDiscount = x.ItemDiscount
+                    });
+                });
+
+                var dtLines = CommonLibrary.ListToDataTable<FundReturnItemLine>(tempItemLine, data.userEmail, data.userAction, data.userActionDate, "FRItemLines");
+
+                if (createFundReturnDocumentData(dtMain, dtLines))
+                {
+                    res.Data = data;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = data;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Create Data Failed ! SP Fail to Execute";
+
+                    actionResult = Ok(res);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpPost("createFundReturnHeader")]
+        public async Task<IActionResult> createFundReturnHeader(QueryModel<FundReturnDocument> data)
+        {
+            ResultModel<QueryModel<FundReturnDocument>> res = new ResultModel<QueryModel<FundReturnDocument>>();
+            DataTable dtMainIdentity = new DataTable("Identity");
+            string id = string.Empty;
+            IActionResult actionResult = null;
+
+            try
+            {
+
+                dtMainIdentity = createIDData("FundReturn");
+                var x = dtMainIdentity.AsEnumerable().First();
+
+                // 8 for date yyyyMMdd
+                string zero = string.Empty;
+                int idLength = x["Code"].ToString().Length + x["DocNumber"].ToString().Length + x["Parity"].ToString().Length + 8;
+                int maxLength = 18;
+
+                zero = new String('0', maxLength - idLength);
+
+                id = x["Code"].ToString() +
+                    DateTime.Now.Year.ToString() +
+                    DateTime.Now.ToString("MM") +
+                    DateTime.Now.ToString("dd") +
+                    zero +
+                    x["DocNumber"].ToString() +
+                    x["Parity"].ToString();
+
+                QueryModel<FundReturnHeader> dtMain = new();
+                dtMain.Data = new();
+
+                dtMain.Data = data.Data.dataHeader;
+                dtMain.Data.DocumentID = id;
+                dtMain.userEmail = data.userEmail;
+                dtMain.userAction = data.userAction;
+                dtMain.userActionDate = data.userActionDate;
+
+                if (createFundReturnHeaderData(dtMain))
+                {
+                    res.Data = data;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = data;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Create Data Failed ! SP Fail to Execute";
+
+                    actionResult = Ok(res);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpPost("createFundReturnApproval")]
+        public async Task<IActionResult> createFundReturnApproval(QueryModel<FundReturnApprovalStream> data)
+        {
+            ResultModel<QueryModel<FundReturnApprovalStream>> res = new ResultModel<QueryModel<FundReturnApprovalStream>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                QueryModel<FundReturnApproval> temp = new();
+                temp.Data = new();
+
+                temp.Data = data.Data.Data;
+                temp.userEmail = data.userEmail;
+                temp.userAction = data.userAction;
+                temp.userActionDate = data.userActionDate;
+
+                if (createFundReturnApprovalData(temp, data.Data.LocationID))
+                {
+                    res.Data = data;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = data;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Create Data Failed ! SP Fail to Execute";
+
+                    actionResult = Ok(res);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpPost("deleteFundReturnDocument")]
+        public async Task<IActionResult> deleteFundReturnDocument(QueryModel<string> data)
+        {
+            ResultModel<QueryModel<string>> res = new ResultModel<QueryModel<string>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(data.Data).Split("!_!");
+
+                if (deleteFundReturnDocument(temp[0], temp[1], data.userEmail, data.userAction, data.userActionDate))
+                {
+                    res.Data = data;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = data;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Create Data Failed ! SP Fail to Execute";
+
+                    actionResult = Ok(res);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+            return actionResult;
+        }
+
+        [HttpGet("getFundReturnDocuments/{param}")]
+        public async Task<IActionResult> getFundReturnDocuments(string param)
+        {
+            ResultModel<List<FundReturnDocument>> res = new ResultModel<List<FundReturnDocument>>();
+            List<FundReturnDocument> fundReturnDocuments = new List<FundReturnDocument>();
+            DataTable dtFundReturnDocument = new DataTable("FundReturnDocument");
+            DataTable dtFundReturnItemLine = new DataTable("FundReturnItemLine");
+            DataTable dtFundReturnApproval = new DataTable("FundReturnApproval");
+            DataTable dtParam = new DataTable("Parameter");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+                string loc = temp[0].Equals("") ? "HO" : temp[0];
+
+                dtFundReturnDocument = getFundReturnHeaderbyFilterData(loc, temp[1], Convert.ToInt32(temp[2]), _rowPerPage);
+
+                dtParam = dtFundReturnDocument.Copy();
+
+                foreach (var removedCol in new[] {
+                    "RequestDate",
+                    "LocationID",
+                    "CommercialType",
+                    "CustomerName",
+                    "CustomerType",
+                    "CustomerMemberID",
+                    "CustomerContactNo",
+                    "FundReturnCategoryID",
+                    "BankHolderName",
+                    "BankAccount",
+                    "BankID",
+                    "ReceiptDocument",
+                    "ExternalDocument",
+                    "RefundAmount",
+                    "TransactionAmount",
+                    "Reason",
+                    "DocumentStatus",
+                    "AuditUser",
+                    "AuditAction",
+                    "AuditActionDate" })
+                {
+                    if (dtParam.Columns.Contains(removedCol))
+                        dtParam.Columns.Remove(removedCol);
+                }
+
+                if (dtFundReturnDocument.Rows.Count <= 0)
+                    throw new Exception("Fail Fetch POMFHeader Data");
+
+                dtFundReturnItemLine = getFundReturnItemLinesData(loc, dtParam);
+
+                if (dtFundReturnItemLine.Rows.Count <= 0)
+                    throw new Exception("Fail Fetch POMFItemLine Data");
+
+                dtFundReturnApproval = getFundReturnApprovalsData(loc, dtParam);
+
+                //if (dtPOMFApproval.Rows.Count <= 0)
+                //    throw new Exception("Fail Fetch POMFApproval Data");
+
+                if (dtFundReturnDocument.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtFundReturnDocument.Rows)
+                    {
+                        FundReturnDocument temp1 = new FundReturnDocument();
+
+                        temp1.dataHeader.DocumentID = dt["DocumentID"].ToString();
+                        temp1.dataHeader.RequestDate = Convert.ToDateTime(dt["RequestDate"]);
+                        temp1.dataHeader.LocationID = dt["LocationID"].ToString();
+                        temp1.dataHeader.CommercialType = dt["CommercialType"].ToString();
+                        temp1.dataHeader.CustomerName = dt["CustomerName"].ToString();
+                        temp1.dataHeader.CustomerType = dt["CustomerType"].ToString();
+                        temp1.dataHeader.CustomerMemberID = dt["CustomerMemberID"].ToString();
+                        temp1.dataHeader.CustomerContactNo = dt["CustomerContactNo"].ToString();
+                        temp1.dataHeader.FundReturnCategoryID = dt["FundReturnCategoryID"].ToString();
+                        temp1.dataHeader.BankHolderName = dt["BankHolderName"].ToString();
+                        temp1.dataHeader.BankAccount = dt["BankAccount"].ToString();
+                        temp1.dataHeader.BankID = dt["BankID"].ToString();
+                        temp1.dataHeader.ReceiptDocument = dt.IsNull("ReceiptDocument") ? string.Empty : dt["ReceiptDocument"].ToString();
+                        temp1.dataHeader.ExternalDocument = dt.IsNull("ExternalDocument") ? string.Empty : dt["ExternalDocument"].ToString();
+                        temp1.dataHeader.RefundAmount = dt.IsNull("RefundAmount") ? decimal.Zero : Convert.ToDecimal(dt["RefundAmount"]);
+                        temp1.dataHeader.TransactionAmount = dt.IsNull("TransactionAmount") ? decimal.Zero : Convert.ToDecimal(dt["TransactionAmount"]);
+                        temp1.dataHeader.Reason = dt["Reason"].ToString();
+                        temp1.dataHeader.DocumentStatus = dt["DocumentStatus"].ToString();
+
+                        temp1.dataItemLines = dtFundReturnItemLine.AsEnumerable().Where(y => y["DocumentID"].ToString().Equals(dt["DocumentID"].ToString())).Select(x => new FundReturnItemLine
+                        {
+                            DocumentID = x["DocumentID"].ToString(),
+                            LineNum = Convert.ToInt32(x["LineNum"]),
+                            ItemCode = x["ItemCode"].ToString(),
+                            ItemDescription = x["ItemDescription"].ToString(),
+                            ItemQuantity = Convert.ToInt32(x["ItemQuantity"]),
+                            UOM = x["UOM"].ToString(),
+                            ItemAmount = Convert.ToDecimal(x["ItemAmount"]),
+                            ItemDiscount = Convert.ToInt32(x["ItemDiscount"])
+                        }).ToList();
+
+                        if (dtFundReturnApproval.AsEnumerable().Where(y => y["DocumentID"].ToString().Equals(dt["DocumentID"].ToString())).ToList().Count > 0)
+                        {
+                            temp1.dataApproval = dtFundReturnApproval.AsEnumerable().Where(y => y["DocumentID"].ToString().Equals(dt["DocumentID"].ToString())).Select(x => new FundReturnApproval
+                            {
+                                DocumentID = x["DocumentID"].ToString(),
+                                ApprovalAction = x["ApprovalAction"].ToString(),
+                                Approver = x["Approver"].ToString(),
+                                ApproveDate = Convert.ToDateTime(x["ApproveDate"])
+                            }).ToList();
+                        }
+
+                        fundReturnDocuments.Add(temp1);
+                    }
+
+                    res.Data = fundReturnDocuments;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getFundReturnBankData")]
+        public async Task<IActionResult> getFundReturnBank()
+        {
+            ResultModel<List<Bank>> res = new ResultModel<List<Bank>>();
+            List<Bank> banks = new List<Bank>();
+            DataTable dtBank = new DataTable("Banks");
+            IActionResult actionResult = null;
+
+            try
+            {
+                dtBank = getFundReturnBankData();
+
+                if (dtBank.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtBank.Rows)
+                    {
+                        Bank temp1 = new();
+
+                        temp1.BankID = dt["BankID"].ToString();
+                        temp1.BankDescription = dt["BankDescription"].ToString();
+                        temp1.BankShortName = dt["BankShortName"].ToString();
+                        temp1.BankType = dt["BankType"].ToString();
+
+                        banks.Add(temp1);
+                    }
+
+                    res.Data = banks;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getFundReturnCategory")]
+        public async Task<IActionResult> getFundReturnCategory()
+        {
+            ResultModel<List<FundReturnCategory>> res = new ResultModel<List<FundReturnCategory>>();
+            List<FundReturnCategory> fundReturnCategories = new List<FundReturnCategory>();
+            DataTable dtFundReturnCategory = new DataTable("fundReturnCategory");
+            IActionResult actionResult = null;
+
+            try
+            {
+                dtFundReturnCategory = getFundReturnCategoryData();
+
+                if (dtFundReturnCategory.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtFundReturnCategory.Rows)
+                    {
+                        FundReturnCategory temp1 = new();
+
+                        temp1.FundReturnCategoryID = dt["FundReturnCategoryID"].ToString();
+                        temp1.FundReturnCategoryDescription = dt["FundReturnCategoryDescription"].ToString();
+
+                        fundReturnCategories.Add(temp1);
+                    }
+
+                    res.Data = fundReturnCategories;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getFundReturnModuleNumberOfPage/{param}")]
+        public async Task<IActionResult> getFundReturnModuleNumberOfPage(string param)
+        {
+            ResultModel<int> res = new ResultModel<int>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+                string loc = temp[1].Equals("") ? "HO" : temp[1];
+
+                res.Data = getFundReturnModuleNumberOfPageData(temp[0], loc, temp[2], _rowPerPage);
 
                 res.isSuccess = true;
                 res.ErrorCode = "00";

@@ -105,77 +105,91 @@ namespace BPIWebApplication.Client.Pages.POMFPages
         {
             try
             {
-                isLoading = true;
-
-                QueryModel<POMFDocument> uploadData = new();
-                uploadData.Data = new();
-                uploadData.Data.dataHeader = new();
-                uploadData.Data.dataItemLines = new();
-
-                uploadData.Data.dataHeader.POMFID = pomfData.POMFID;
-                uploadData.Data.dataHeader.POMFDate = pomfData.POMFDate;
-                uploadData.Data.dataHeader.LocationID = pomfData.LocationID;
-                uploadData.Data.dataHeader.CustomerName = pomfData.CustomerName.ToUpper();
-                uploadData.Data.dataHeader.ReceiptNo = pomfData.ReceiptNo;
-                uploadData.Data.dataHeader.NPNo = pomfData.NPNo;
-                uploadData.Data.dataHeader.NPTypeID = pomfData.NPTypeID;
-                uploadData.Data.dataHeader.ExternalRequestDocument = "";
-                uploadData.Data.dataHeader.ExternalReceiveDocument = "";
-                uploadData.Data.dataHeader.Requester = activeUser.userName;
-                
-                var doc = POMFService.npTypes.FirstOrDefault(x => x.NPTypeID.Equals(pomfData.NPTypeID));
-                
-                if (doc != null)
+                if (!validateForm())
                 {
-                    if (doc.isAutomaticApproval)
-                        uploadData.Data.dataHeader.DocumentStatus = "Confirmed";
-                    else
-                        uploadData.Data.dataHeader.DocumentStatus = "Open";
+                    await _jsModule.InvokeVoidAsync("showAlert", "Form Validation: Please ReCheck Your Input Field !");
                 }
                 else
                 {
-                    throw new Exception("NP TYPE NOT DEFINED, PLEASE REFRESH THE PAGE !");
-                }
-
-                uploadData.userEmail = activeUser.userName;
-                uploadData.userAction = "I";
-                uploadData.userActionDate = DateTime.Now;
-
-                int n = 0;
-
-                pomfLines.ForEach(x =>
-                {
-                    n++;
-                    string res = new string((from c in x.ItemValue where char.IsLetterOrDigit(c) select c).ToArray());
-
-                    uploadData.Data.dataItemLines.Add(new POMFItemLine
+                    if (!LoginService.activeUser.userPrivileges.Contains("CR"))
                     {
-                        POMFID = x.POMFID,
-                        LineNum = n,
-                        ItemCode = x.ItemCode,
-                        ItemDescription = x.ItemDescription.ToUpper(),
-                        RequestQuantity = x.RequestQuantity,
-                        NPQuantity = x.NPQuantity,
-                        ItemUOM = x.ItemUOM.ToUpper(),
-                        ItemValue = Convert.ToDecimal(res)
-                    });
-                });
+                        await _jsModule.InvokeVoidAsync("showAlert", "You Have no Access to Create Document ! Please Contact IT Ops");
+                    }
+                    else
+                    {
+                        isLoading = true;
 
-                var res = await POMFService.createPOMFDocument(uploadData);
+                        QueryModel<POMFDocument> uploadData = new();
+                        uploadData.Data = new();
+                        uploadData.Data.dataHeader = new();
+                        uploadData.Data.dataItemLines = new();
 
-                if (res.isSuccess)
-                {
-                    successUpload = true;
-                    pomfData.POMFID= res.Data.Data.dataHeader.POMFID;
-                    await _jsModule.InvokeVoidAsync("showAlert", "Data Creation Success !");
+                        uploadData.Data.dataHeader.POMFID = pomfData.POMFID;
+                        uploadData.Data.dataHeader.POMFDate = pomfData.POMFDate;
+                        uploadData.Data.dataHeader.LocationID = pomfData.LocationID;
+                        uploadData.Data.dataHeader.CustomerName = pomfData.CustomerName.ToUpper();
+                        uploadData.Data.dataHeader.ReceiptNo = pomfData.ReceiptNo;
+                        uploadData.Data.dataHeader.NPNo = pomfData.NPNo;
+                        uploadData.Data.dataHeader.NPTypeID = pomfData.NPTypeID;
+                        uploadData.Data.dataHeader.ExternalRequestDocument = "";
+                        uploadData.Data.dataHeader.ExternalReceiveDocument = "";
+                        uploadData.Data.dataHeader.Requester = activeUser.userName;
+                
+                        var doc = POMFService.npTypes.FirstOrDefault(x => x.NPTypeID.Equals(pomfData.NPTypeID));
+                
+                        if (doc != null)
+                        {
+                            if (doc.isAutomaticApproval)
+                                uploadData.Data.dataHeader.DocumentStatus = "Confirmed";
+                            else
+                                uploadData.Data.dataHeader.DocumentStatus = "Open";
+                        }
+                        else
+                        {
+                            throw new Exception("NP TYPE NOT DEFINED, PLEASE REFRESH THE PAGE !");
+                        }
+
+                        uploadData.userEmail = activeUser.userName;
+                        uploadData.userAction = "I";
+                        uploadData.userActionDate = DateTime.Now;
+
+                        int n = 0;
+
+                        pomfLines.ForEach(x =>
+                        {
+                            n++;
+                            string res = new string((from c in x.ItemValue where char.IsLetterOrDigit(c) select c).ToArray());
+
+                            uploadData.Data.dataItemLines.Add(new POMFItemLine
+                            {
+                                POMFID = x.POMFID,
+                                LineNum = n,
+                                ItemCode = x.ItemCode,
+                                ItemDescription = x.ItemDescription.ToUpper(),
+                                RequestQuantity = x.RequestQuantity,
+                                NPQuantity = x.NPQuantity,
+                                ItemUOM = x.ItemUOM.ToUpper(),
+                                ItemValue = Convert.ToDecimal(res)
+                            });
+                        });
+
+                        var res = await POMFService.createPOMFDocument(uploadData);
+
+                        if (res.isSuccess)
+                        {
+                            successUpload = true;
+                            pomfData.POMFID= res.Data.Data.dataHeader.POMFID;
+                            await _jsModule.InvokeVoidAsync("showAlert", "Data Creation Success !");
+                        }
+                        else
+                        {
+                            await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
+                        }
+
+                        isLoading = false;
+                        StateHasChanged();
+                    }
                 }
-                else
-                {
-                    await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
-                }
-
-                isLoading = false;
-                StateHasChanged();
             }
             catch (Exception ex)
             {
@@ -184,7 +198,18 @@ namespace BPIWebApplication.Client.Pages.POMFPages
             }
         }
 
-        
+        private bool validateForm()
+        {
+            if (pomfData.CustomerName.IsNullOrEmpty()) return false;
+
+            if (pomfData.ReceiptNo.IsNullOrEmpty()) return false;
+
+            if (pomfData.NPNo.IsNullOrEmpty()) return false;
+
+            if (pomfData.NPTypeID.IsNullOrEmpty()) return false;
+
+            return true;
+        }
 
         private bool checkPOMFLine()
         {

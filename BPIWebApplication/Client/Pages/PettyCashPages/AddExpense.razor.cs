@@ -303,6 +303,15 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
                             f.type = expenseId.Data;
                         }
 
+                        fileLines.ForEach(x =>
+                        {
+                            uploadData.expenseDetails.Data.attach.Add(new ExpenseAttachmentLine
+                            {
+                                ExpenseID = x.type,
+                                PathFile = x.fileName
+                            });
+                        });
+
                         uploadData.files = fileLines;
 
 

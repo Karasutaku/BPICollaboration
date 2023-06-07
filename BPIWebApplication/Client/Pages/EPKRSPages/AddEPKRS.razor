@@ -78,7 +78,7 @@ else
                             }
                             else
                             {
-                                <select id="riskId" class="form-select" @bind="RiskID" readonly>
+                                <select id="riskId" class="form-select" @bind="ReportingType" readonly>
                                     @if (checkReportingType())
                                     {
                                         <option hidden value="BLANK">Select Tipe Reporting</option>
@@ -97,7 +97,7 @@ else
                         </div>
                     </div>
 
-                    @if (RiskID.Equals("ITEMC"))
+                    @if (ReportingType.Equals("ITEMC"))
                     {
                         <EditForm Model="@itemCaseData">
                             <DataAnnotationsValidator />
@@ -107,13 +107,13 @@ else
                                 <div class="row my-2">
                                     <div class="col">
                                         <label for="risk_id">Tipe Risiko :</label>
-                                        <InputSelect id="risk_id" @bind-Value="itemCaseData.RiskID" class="form-select">
+                                        <InputSelect id="risk_id" @bind-Value="RiskID" class="form-select">
                                             @if (checkRiskType())
                                             {
                                                 <option hidden value="BLANK">Select Risk Type</option>
                                                 @foreach (var riskType in EPKRSService.riskTypes)
                                                 {
-                                                    @if (!riskType.ReportingID.Equals(RiskID))
+                                                    @if (!riskType.ReportingID.Equals(ReportingType))
                                                         continue;
 
                                                     <option value="@riskType.RiskID">@riskType.RiskDescription</option>
@@ -125,6 +125,29 @@ else
                                             }
                                         </InputSelect>
                                     </div>
+                                    <div class="col">
+                                        <label for="subrisk_id">Sub Tipe Risiko :</label>
+                                        <InputSelect id="subrisk_id" @bind-Value="itemCaseData.SubRiskID" class="form-select">
+                                            @if (checkSubRiskType())
+                                            {
+                                                <option hidden value="BLANK">Select Risk Sub Type</option>
+                                                @foreach (var subRiskType in EPKRSService.riskSubTypes)
+                                                {
+                                                    @if (!subRiskType.RiskID.Equals(RiskID))
+                                                        continue;
+
+                                                    <option value="@subRiskType.SubRiskID">@subRiskType.SubRiskDescription</option>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <option disabled hidden value="BLANK">Data Empty</option>
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
                                     <div class="col">
                                         <label for="doc_id">ID PKRS :</label>
                                         <InputText id="doc_id" @bind-Value="itemCaseData.DocumentID" class="form-control" readonly></InputText>
@@ -326,7 +349,7 @@ else
 
                         </EditForm>
                     }
-                    else if (RiskID.Equals("INCAC"))
+                    else if (ReportingType.Equals("INCAC"))
                     {
                         <EditForm Model="@incidentaccidentData">
                             <DataAnnotationsValidator />
@@ -336,13 +359,13 @@ else
                                 <div class="row my-2">
                                     <div class="col">
                                         <label for="risk_id">Tipe Risiko :</label>
-                                        <InputSelect id="risk_id" @bind-Value="incidentaccidentData.RiskID" class="form-select" disabled="@((isLoading || successUpload) ? "disabled" : null)">
+                                        <InputSelect id="risk_id" @bind-Value="RiskID" class="form-select" disabled="@((isLoading || successUpload) ? "disabled" : null)">
                                             @if (checkRiskType())
                                             {
                                                 <option hidden value="BLANK">Select Risk Type</option>
                                                 @foreach (var riskType in EPKRSService.riskTypes)
                                                 {
-                                                    @if (!riskType.ReportingID.Equals(RiskID))
+                                                    @if (!riskType.ReportingID.Equals(ReportingType))
                                                         continue;
 
                                                     <option value="@riskType.RiskID">@riskType.RiskDescription</option>
@@ -354,6 +377,29 @@ else
                                             }
                                         </InputSelect>
                                     </div>
+                                    <div class="col">
+                                        <label for="subrisk_id">Sub Tipe Risiko :</label>
+                                        <InputSelect id="subrisk_id" @bind-Value="incidentaccidentData.SubRiskID" class="form-select" disabled="@((isLoading || successUpload) ? "disabled" : null)">
+                                            @if (checkSubRiskType())
+                                            {
+                                                <option hidden value="BLANK">Select Risk Sub Type</option>
+                                                @foreach (var subRiskType in EPKRSService.riskSubTypes)
+                                                {
+                                                    @if (!subRiskType.RiskID.Equals(RiskID))
+                                                        continue;
+
+                                                    <option value="@subRiskType.SubRiskID">@subRiskType.SubRiskDescription</option>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <option disabled hidden value="BLANK">Data Empty</option>
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
                                     <div class="col">
                                         <label for="doc_id">ID PKRS :</label>
                                         <InputText id="doc_id" @bind-Value="incidentaccidentData.DocumentID" class="form-control" readonly></InputText>

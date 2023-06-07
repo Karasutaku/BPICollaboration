@@ -4,6 +4,7 @@ using BPIWebApplication.Shared.MainModel;
 using BPIWebApplication.Shared.MainModel.EPKRS;
 using BPIWebApplication.Shared.MainModel.Login;
 using BPIWebApplication.Shared.PagesModel.EPKRS;
+using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.IdentityModel.Tokens;
@@ -25,13 +26,19 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
         private List<CaseAttachment> previewCaseAttachment = new();
         private List<DocumentDiscussionForm> previewDocumentDiscussion = new();
         private DocumentApproval previewDocumentApproval = new();
+        private List<DocumentApproval> previewDocumentListApproval = new();
+        private List<IncidentAccidentInvolver> previewIncidentAccidentInvolver = new();
         private List<EPKRSDocumentStatistics>? previewGeneralStatistics = null;
         private List<EPKRSItemCaseCategoryStatistics>? previewItemCaseCategoryStatistics = null;
         private List<EPKRSTopLocationReportStatistics>? previewTopLocationReportStatistics = null;
         private List<EPKRSItemCaseItemCategoryStatistics>? previewItemCategoryStatistics = null;
+        private List<EPKRSIncidentAccidentRegionalStatistics>? previewRegionalStatistics = null;
+        private List<EPKRSIncidentAccidentInvolverStatisticsbyPosition>? previewInvolvedbyPosStatistics = null;
+        private List<EPKRSIncidentAccidentInvolverStatisticsbyDept>? previewInvolvedbyDeptStatistics = null;
 
         private ItemCase updateItemCase = new();
         private IncidentAccident updateIncidentAccident = new();
+        private List<IncidentAccidentInvolver> partyInvolved = new();
 
         private DocumentDiscussion uploadDocumentDiscussion = new();
         //private List<CaseAttachment> uploadDocumentDiscussionAttachment = new();
@@ -57,6 +64,54 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
         private bool itemCaseFilterActive = false;
         private bool incidentAccidentFilterActive = false;
+        private bool generalStatisticsFiltered = false;
+        private bool monitoringPanelFiltered = false;
+        private bool generalStatisticsMonthFilterActive = false;
+        private bool generalStatisticsRiskTypeFilterActive = false;
+        private bool generalStatisticsRegionalFilterActive = false;
+        private bool generalStatisticsPositionFilterActive = false;
+        private bool generalStatisticsDepartmentFilterActive = false;
+
+        private int selectedYearFilter = DateTime.Now.Year;
+        private int selectedYearFilterChart = DateTime.Now.Year;
+        private string dinamicGeneralStatisticsDateFilter = string.Empty;
+        private string dinamicGeneralStatisticsRiskTypeFilter = string.Empty;
+        private string dinamicGeneralStatisticsRegionalFilter = string.Empty;
+        private string dinamicGeneralStatisticsPositionFilter = string.Empty;
+        private string dinamicGeneralStatisticsDepartmentFilter = string.Empty;
+        private string dinamicMonitoringPanelDateFilter = string.Empty;
+        private string dinamicMonitoringPanelDateFilterExt = string.Empty;
+
+        private Dictionary<int, bool> monthSelector = new Dictionary<int, bool>
+        {
+            { 1, false },
+            { 2, false },
+            { 3, false },
+            { 4, false },
+            { 5, false },
+            { 6, false },
+            { 7, false },
+            { 8, false },
+            { 9, false },
+            { 10, false },
+            { 11, false },
+            { 12, false },
+        };
+        private Dictionary<int, bool> monthSelectorChart = new Dictionary<int, bool>
+        {
+            { 1, false },
+            { 2, false },
+            { 3, false },
+            { 4, false },
+            { 5, false },
+            { 6, false },
+            { 7, false },
+            { 8, false },
+            { 9, false },
+            { 10, false },
+            { 11, false },
+            { 12, false },
+        };
 
         private bool isLoading = false;
         private bool chartTriggered = false;
@@ -71,6 +126,11 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
         private IJSObjectReference _jsModule;
         private IReadOnlyList<IBrowserFile>? listFileUpload, listReplyFileUpload;
+
+        private ElementReference topLocationReportStatsRef;
+        private ElementReference itemCategoryStatsRef;
+        private ElementReference itemCaseValueStatsRef;
+        private ElementReference itemCaseCategoryStatsRef;
 
         protected override async Task OnInitializedAsync()
         {
@@ -142,10 +202,13 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
             await ManagementService.GetCompanyLocations(paramGetCompanyLocation);
             await ManagementService.GetAllDepartment(CommonLibrary.Base64Encode(paramGetAllDepartment));
+            await ManagementService.getAllCategories();
 
             await EPKRSService.getEPRKSReportingType();
             await EPKRSService.getEPRKSRiskType();
+            await EPKRSService.getEPRKSRiskSubType();
             await EPKRSService.getEPKRSItemRiskCategory();
+            await EPKRSService.getEPKRSIncidentAccidentInvolverType();
             maxFileSize = await EPKRSService.getEPKRSMaxFileSize();
 
             incidentAccidentFilterActive = false;
@@ -201,42 +264,76 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 string incidentAccidentParampz = $"[EPKRS].IncidentAccident!_!{activeUser.location}!_!";
                 var incidentAccidentpz = await EPKRSService.getEPKRSModuleNumberOfPage(CommonLibrary.Base64Encode(incidentAccidentParampz));
                 incidentAccidentNumberofPages = incidentAccidentpz.Data;
-
-                string generalStatisticsConditions = $"WHERE a.ReportDate BETWEEN \'{DateTime.Now.Year}-01-01\' AND \'{DateTime.Now.Year}-12-31\'";
-                var resGeneralStat = await EPKRSService.getEPKRSGeneralStatistics(CommonLibrary.Base64Encode(generalStatisticsConditions));
-
-                string itemCaseCategoryConditions = $"WHERE a.AuditActionDate BETWEEN \'{DateTime.Now.Year}-01-01\' AND \'{DateTime.Now.Year}-12-31\'";
-                var resItemCaseCategoryStat = await EPKRSService.getEPKRSItemCaseCategoryStatistics(CommonLibrary.Base64Encode(itemCaseCategoryConditions));
-
-                string topLocationReportConditions = $"WHERE a.ReportDate BETWEEN \'{DateTime.Now.Year}-01-01\' AND \'{DateTime.Now.Year}-12-31\'";
-                var resTopLocationReportStat = await EPKRSService.getEPKRSTopLocationReportStatistics(CommonLibrary.Base64Encode(topLocationReportConditions));
-
-                string itemCategoryStatsConditions = $"WHERE a.AuditActionDate BETWEEN \'{DateTime.Now.Year}-01-01\' AND \'{DateTime.Now.Year}-12-31\'";
-                var resItemCategoryStat = await EPKRSService.getEPKRSItemCategoriesStatistics(CommonLibrary.Base64Encode(itemCategoryStatsConditions));
-
-                if (resGeneralStat.isSuccess)
+                
+                await Task.Run(async () =>
                 {
-                    previewGeneralStatistics = new();
-                    previewGeneralStatistics = resGeneralStat.Data;
-                }
+                    string generalStatisticsConditions = $"WHERE a.ReportDate BETWEEN \'{selectedYearFilter}-01-01 00:00:00\' AND \'{selectedYearFilter}-12-31 23:59:59\'";
+                    var resGeneralStat = await EPKRSService.getEPKRSGeneralStatistics(CommonLibrary.Base64Encode(generalStatisticsConditions));
 
-                if (resItemCaseCategoryStat.isSuccess)
-                {
-                    previewItemCaseCategoryStatistics = new();
-                    previewItemCaseCategoryStatistics = resItemCaseCategoryStat.Data;
-                }
+                    string itemCaseCategoryConditions = $"WHERE a.AuditActionDate BETWEEN \'{selectedYearFilter}-01-01 00:00:00\' AND \'{selectedYearFilter}-12-31 23:59:59\'!_!AND (p.ReportDate BETWEEN \'{selectedYearFilter}-01-01 00:00:00\' AND \'{selectedYearFilter}-12-31 23:59:59\')";
+                    var resItemCaseCategoryStat = await EPKRSService.getEPKRSItemCaseCategoryStatistics(CommonLibrary.Base64Encode(itemCaseCategoryConditions));
 
-                if (resTopLocationReportStat.isSuccess)
-                {
-                    previewTopLocationReportStatistics = new();
-                    previewTopLocationReportStatistics = resTopLocationReportStat.Data;
-                }
+                    string topLocationReportConditions = $"WHERE a.ReportDate BETWEEN \'{selectedYearFilter}-01-01 00:00:00\' AND \'{selectedYearFilter}-12-31 23:59:59\'!_!AND (p.ReportDate BETWEEN \'{selectedYearFilter}-01-01 00:00:00\' AND \'{selectedYearFilter}-12-31 23:59:59\')";
+                    var resTopLocationReportStat = await EPKRSService.getEPKRSTopLocationReportStatistics(CommonLibrary.Base64Encode(topLocationReportConditions));
 
-                if (resItemCategoryStat.isSuccess)
+                    string itemCategoryStatsConditions = $"WHERE a.AuditActionDate BETWEEN \'{selectedYearFilter}-01-01 00:00:00\' AND \'{selectedYearFilter}-12-31 23:59:59\'!_!AND (p.ReportDate BETWEEN \'{selectedYearFilter}-01-01 00:00:00\' AND \'{selectedYearFilter}-12-31 23:59:59\')";
+                    var resItemCategoryStat = await EPKRSService.getEPKRSItemCategoriesStatistics(CommonLibrary.Base64Encode(itemCategoryStatsConditions));
+
+                    if (resGeneralStat.isSuccess)
+                    {
+                        previewGeneralStatistics = new();
+                        previewGeneralStatistics = resGeneralStat.Data;
+                    }
+
+                    if (resItemCaseCategoryStat.isSuccess)
+                    {
+                        previewItemCaseCategoryStatistics = new();
+                        previewItemCaseCategoryStatistics = resItemCaseCategoryStat.Data;
+                    }
+
+                    if (resTopLocationReportStat.isSuccess)
+                    {
+                        previewTopLocationReportStatistics = new();
+                        previewTopLocationReportStatistics = resTopLocationReportStat.Data;
+                    }
+
+                    if (resItemCategoryStat.isSuccess)
+                    {
+                        previewItemCategoryStatistics = new();
+                        previewItemCategoryStatistics = resItemCategoryStat.Data;
+                    }
+                });
+
+                await Task.Run(async () => 
                 {
-                    previewItemCategoryStatistics = new();
-                    previewItemCategoryStatistics = resItemCategoryStat.Data;
-                }
+                    string regionalStatsParam = $"WHERE a.ReportDate BETWEEN \'{selectedYearFilter}-01-01 00:00:00\' AND \'{selectedYearFilter}-12-31\'";
+                    var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(regionalStatsParam));
+
+                    string involvedbyPosParam = $"WHERE a.ReportDate BETWEEN \'{selectedYearFilter}-01-01 00:00:00\' AND \'{selectedYearFilter}-12-31\'!_!AND x.ReportDate BETWEEN '{selectedYearFilter}-01-01' AND '{selectedYearFilter}-12-31'";
+                    var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(involvedbyPosParam));
+
+                    string involvedbyDeptParam = $"WHERE a.ReportDate BETWEEN \'{selectedYearFilter}-01-01 00:00:00\' AND \'{selectedYearFilter}-12-31\'!_!AND x.ReportDate BETWEEN '{selectedYearFilter}-01-01' AND '{selectedYearFilter}-12-31'";
+                    var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(involvedbyDeptParam));
+
+                    if (resRegionalStats.isSuccess)
+                    {
+                        previewRegionalStatistics = new();
+                        previewRegionalStatistics = resRegionalStats.Data;
+                    }
+
+                    if (resInvolvedbyPos.isSuccess)
+                    {
+                        previewInvolvedbyPosStatistics = new();
+                        previewInvolvedbyPosStatistics = resInvolvedbyPos.Data;
+                    }
+
+                    if (resInvolvedbyDept.isSuccess)
+                    {
+                        previewInvolvedbyDeptStatistics = new();
+                        previewInvolvedbyDeptStatistics = resInvolvedbyDept.Data;
+                    }
+                });
+
             }
             else
             {
@@ -255,7 +352,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/EPKRSPages/EPKRSDashboard.razor.js");
         }
 
-        private async void initializeChart()
+        private async Task initializeChart()
         {
             if (!chartTriggered)
             {
@@ -344,7 +441,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                     });
 
                     await _jsModule.InvokeVoidAsync(
-                        "initializeLineChart",
+                        "initializeBarChart",
                         "itemCaseValueStats",
                         arrayLabels,
                         arrayDecimalValues,
@@ -362,7 +459,13 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 {
                     previewItemCategoryStatistics.ForEach(x =>
                     {
-                        arrayLabels.Add(x.CategoryID);
+                        var cat = ManagementService.categories.SingleOrDefault(y => y.CategoryID.Equals(x.CategoryID));
+
+                        if (cat != null)
+                            arrayLabels.Add(cat.CategoryDescription);
+                        else
+                            arrayLabels.Add(x.CategoryID);
+
                         arrayIntValues.Add(x.TotalDocuments);
                     });
 
@@ -378,6 +481,136 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             }
 
             chartTriggered = true;
+        }
+
+        private async Task updateChart()
+        {
+            List<string> arrayLabels = new();
+            List<string> arrayStringValues = new();
+            List<int> arrayIntValues = new();
+            List<decimal> arrayDecimalValues = new();
+
+            if (previewTopLocationReportStatistics != null)
+            {
+                previewTopLocationReportStatistics.ForEach(x =>
+                {
+                    if (x.LocationID.Equals("HO"))
+                    {
+                        arrayLabels.Add("HEAD OFFICE");
+                    }
+                    else
+                    {
+                        var loc = ManagementService.locations.SingleOrDefault(y => y.locationId.Equals(x.LocationID));
+
+                        if (loc != null)
+                            arrayLabels.Add(loc.locationName);
+                        else
+                            arrayLabels.Add(x.LocationID);
+                    }
+
+                    arrayIntValues.Add(x.TotalDocuments);
+                });
+
+                await _jsModule.InvokeVoidAsync(
+                    "updateBarChart",
+                    topLocationReportStatsRef,
+                    "topLocationReportStats",
+                    arrayLabels,
+                    arrayIntValues,
+                    "Top 10 Location with Most Reports",
+                    "# of Reports"
+                );
+            }
+
+            arrayLabels.Clear();
+            arrayStringValues.Clear();
+            arrayIntValues.Clear();
+            arrayDecimalValues.Clear();
+
+            if (previewItemCaseCategoryStatistics != null)
+            {
+                previewItemCaseCategoryStatistics.ForEach(x =>
+                {
+                    var riskCat = EPKRSService.itemRiskCategories.SingleOrDefault(y => y.ItemRiskCategoryID.Equals(x.ItemRiskCategoryID));
+
+                    if (riskCat != null)
+                        arrayLabels.Add(riskCat.CategoryDescription);
+                    else
+                        arrayLabels.Add(x.ItemRiskCategoryID);
+
+                    arrayIntValues.Add(x.TotalItemQty);
+                });
+
+                await _jsModule.InvokeVoidAsync(
+                    "updateDoughnutChart",
+                    itemCategoryStatsRef,
+                    "itemCaseCategoryStats",
+                    arrayLabels,
+                    arrayIntValues,
+                    "Item Case Count by Risk Type",
+                    "# of Reports"
+                );
+            }
+
+            arrayLabels.Clear();
+            arrayStringValues.Clear();
+            arrayIntValues.Clear();
+            arrayDecimalValues.Clear();
+
+            if (previewItemCaseCategoryStatistics != null)
+            {
+                previewItemCaseCategoryStatistics.ForEach(x =>
+                {
+                    var riskCat = EPKRSService.itemRiskCategories.SingleOrDefault(y => y.ItemRiskCategoryID.Equals(x.ItemRiskCategoryID));
+
+                    if (riskCat != null)
+                        arrayLabels.Add(riskCat.CategoryDescription);
+                    else
+                        arrayLabels.Add(x.ItemRiskCategoryID);
+
+                    arrayDecimalValues.Add(x.TotalItemValue);
+                });
+
+                await _jsModule.InvokeVoidAsync(
+                    "updateBarChart",
+                    itemCaseValueStatsRef,
+                    "itemCaseValueStats",
+                    arrayLabels,
+                    arrayDecimalValues,
+                    "Item Case Value by Risk Type",
+                    "Total Values"
+                );
+            }
+
+            arrayLabels.Clear();
+            arrayStringValues.Clear();
+            arrayIntValues.Clear();
+            arrayDecimalValues.Clear();
+
+            if (previewItemCategoryStatistics != null)
+            {
+                previewItemCategoryStatistics.ForEach(x =>
+                {
+                    var cat = ManagementService.categories.SingleOrDefault(y => y.CategoryID.Equals(x.CategoryID));
+
+                    if (cat != null)
+                        arrayLabels.Add(cat.CategoryDescription);
+                    else
+                        arrayLabels.Add(x.CategoryID);
+
+                    arrayIntValues.Add(x.TotalDocuments);
+                });
+
+                await _jsModule.InvokeVoidAsync(
+                    "updateBarChart",
+                    itemCaseCategoryStatsRef,
+                    "itemCategoryStats",
+                    arrayLabels,
+                    arrayIntValues,
+                    "Item Category Report Statistics",
+                    "# of Reports"
+                );
+            }
         }
 
         private Stream GetFileStream(byte[] data)
@@ -566,6 +799,8 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             {
                 previewIncidentAccident = data.incidentAccident;
                 previewCaseAttachment = data.attachment;
+                previewDocumentListApproval = data.Approval;
+                previewIncidentAccidentInvolver = data.Involver;
 
                 updateIncidentAccident = data.incidentAccident;
 
@@ -994,6 +1229,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 uploadData.Data = new();
                 uploadData.Data.approval = new();
                 uploadData.Data.extendedData = new();
+                uploadData.Data.involver = new();
 
                 uploadData.Data.approval = previewDocumentApproval;
 
@@ -1017,6 +1253,15 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 }
 
                 uploadData.Data.extendedData = temp;
+
+                if (partyInvolved.Count > 0)
+                {
+                    uploadData.Data.involver = partyInvolved;
+                    uploadData.Data.involver.ForEach(x =>
+                    {
+                        x.DocumentID = previewDocumentApproval.DocumentID;
+                    });
+                }
 
                 uploadData.userEmail = activeUser.userName;
                 uploadData.userAction = "I";
@@ -1275,54 +1520,865 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
         private async void resetIncidentAccidentFilter()
         {
-            isLoading = true;
-            incidentAccidentPageActive = 1;
-
-            string incidentAccidentParampz = $"[EPKRS].IncidentAccident!_!{activeUser.location}!_!";
-            var incidentAccidentpz = await EPKRSService.getEPKRSModuleNumberOfPage(CommonLibrary.Base64Encode(incidentAccidentParampz));
-            incidentAccidentNumberofPages = incidentAccidentpz.Data;
-
-            string paramGetIncidentAccidentInitialization = activeUser.location + "!_!!_!1";
-            await EPKRSService.getEPKRSIncidentAccidentData(CommonLibrary.Base64Encode(paramGetIncidentAccidentInitialization));
-
-            List<DocumentListParams> docParams = new();
-
-            if (EPKRSService.itemCases != null)
+            try
             {
-                if (EPKRSService.itemCases.Count > 0)
+                isLoading = true;
+                incidentAccidentPageActive = 1;
+
+                string incidentAccidentParampz = $"[EPKRS].IncidentAccident!_!{activeUser.location}!_!";
+                var incidentAccidentpz = await EPKRSService.getEPKRSModuleNumberOfPage(CommonLibrary.Base64Encode(incidentAccidentParampz));
+                incidentAccidentNumberofPages = incidentAccidentpz.Data;
+
+                string paramGetIncidentAccidentInitialization = activeUser.location + "!_!!_!1";
+                await EPKRSService.getEPKRSIncidentAccidentData(CommonLibrary.Base64Encode(paramGetIncidentAccidentInitialization));
+
+                List<DocumentListParams> docParams = new();
+
+                if (EPKRSService.itemCases != null)
                 {
-                    EPKRSService.itemCases.ForEach(x =>
+                    if (EPKRSService.itemCases.Count > 0)
                     {
-                        docParams.Add(new DocumentListParams
+                        EPKRSService.itemCases.ForEach(x =>
                         {
-                            LocationID = x.itemCase.SiteReporter,
-                            DocumentID = x.itemCase.DocumentID
+                            docParams.Add(new DocumentListParams
+                            {
+                                LocationID = x.itemCase.SiteReporter,
+                                DocumentID = x.itemCase.DocumentID
+                            });
                         });
-                    });
+                    }
+                }
+
+                if (EPKRSService.incidentAccidents != null)
+                {
+                    if (EPKRSService.incidentAccidents.Count > 0)
+                    {
+                        EPKRSService.incidentAccidents.ForEach(x =>
+                        {
+                            docParams.Add(new DocumentListParams
+                            {
+                                LocationID = x.incidentAccident.SiteReporter,
+                                DocumentID = x.incidentAccident.DocumentID
+                            });
+                        });
+                    }
+                }
+
+                await EPKRSService.getEPKRSInitializationDocumentDiscussions(docParams);
+                await EPKRSService.getEPKRSDocumentDiscussionReadHistory(docParams);
+
+                incidentAccidentFilterActive = false;
+                isLoading = false;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} from {ex.Source} {ex.InnerException} !");
+            }
+        }
+
+        private async Task generalStatisticsFilterbyYear(int year, bool isReset)
+        {
+            try
+            {
+                dinamicGeneralStatisticsDateFilter = string.Empty;
+                selectedYearFilter = year;
+
+                previewGeneralStatistics = null;
+                previewRegionalStatistics = null;
+                previewInvolvedbyPosStatistics = null;
+                previewInvolvedbyDeptStatistics = null;
+
+                string generalStatisticsConditions = $"WHERE a.ReportDate BETWEEN \'{year}-01-01 00:00:00\' AND \'{year}-12-31 23:59:59\'";
+                var resGeneralStat = await EPKRSService.getEPKRSGeneralStatistics(CommonLibrary.Base64Encode(generalStatisticsConditions));
+
+                string regionalStatsParam = $"WHERE a.ReportDate BETWEEN \'{year}-01-01 00:00:00\' AND \'{year}-12-31\'";
+                var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(regionalStatsParam));
+
+                string involvedbyPosParam = $"WHERE a.ReportDate BETWEEN \'{year}-01-01 00:00:00\' AND \'{year}-12-31\'!_!AND (x.ReportDate BETWEEN \'{year}-01-01\' AND \'{year}-12-31\')";
+                var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(involvedbyPosParam));
+
+                string involvedbyDeptParam = $"WHERE a.ReportDate BETWEEN \'{year}-01-01 00:00:00\' AND \'{year}-12-31\'!_!AND (x.ReportDate BETWEEN \'{year}-01-01\' AND \'{year}-12-31\')";
+                var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(involvedbyDeptParam));
+
+                if (resGeneralStat.isSuccess)
+                {
+                    previewGeneralStatistics = new();
+                    previewGeneralStatistics = resGeneralStat.Data;
+                }
+
+                if (resRegionalStats.isSuccess)
+                {
+                    previewRegionalStatistics = new();
+                    previewRegionalStatistics = resRegionalStats.Data;
+                }
+
+                if (resInvolvedbyPos.isSuccess)
+                {
+                    previewInvolvedbyPosStatistics = new();
+                    previewInvolvedbyPosStatistics = resInvolvedbyPos.Data;
+                }
+
+                if (resInvolvedbyDept.isSuccess)
+                {
+                    previewInvolvedbyDeptStatistics = new();
+                    previewInvolvedbyDeptStatistics = resInvolvedbyDept.Data;
+                }
+
+                if (isReset)
+                {
+                    foreach (var dt in monthSelector)
+                    {
+                        monthSelector[dt.Key] = false;
+                    }
+
+                    generalStatisticsMonthFilterActive = false;
+                    generalStatisticsRiskTypeFilterActive = false;
+                    generalStatisticsRegionalFilterActive = false;
+                    generalStatisticsPositionFilterActive = false;
+                    generalStatisticsFiltered = false;
+                }
+
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} from {ex.Source} {ex.InnerException} !");
+            }
+        }
+
+        private async Task generalStatisticsFilterbyMonth()
+        {
+            try
+            {
+                if (!monthSelector.Any(x => x.Value.Equals(true)))
+                {
+                    await _jsModule.InvokeVoidAsync("showAlert", "Select at Least 1 Month to Filter !");
+                }
+                else
+                {
+                    generalStatisticsMonthFilterActive = true;
+                    generalStatisticsFiltered = true;
+
+                    previewGeneralStatistics = null;
+                    previewRegionalStatistics = null;
+                    previewInvolvedbyPosStatistics = null;
+                    previewInvolvedbyDeptStatistics = null;
+
+                    dinamicGeneralStatisticsDateFilter = "WHERE ";
+
+                    foreach (var selectedMonth in monthSelector.Where(x => x.Value.Equals(true)))
+                    {
+                        dinamicGeneralStatisticsDateFilter += $"(a.ReportDate BETWEEN \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-01 00:00:00\' AND \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-{DateTime.DaysInMonth(selectedYearFilter, selectedMonth.Key)} 23:59:59\') OR ";
+                    }
+
+                    dinamicGeneralStatisticsDateFilter = dinamicGeneralStatisticsDateFilter.Substring(0, dinamicGeneralStatisticsDateFilter.Length - 4);
+
+                    var resGeneralStat = await EPKRSService.getEPKRSGeneralStatistics(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDateFilter));
+                    var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDateFilter));
+
+                    dinamicGeneralStatisticsDateFilter += "!_!AND (";
+
+                    foreach (var selectedMonth in monthSelector.Where(x => x.Value.Equals(true)))
+                    {
+                        dinamicGeneralStatisticsDateFilter += $"(x.ReportDate BETWEEN \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-01 00:00:00\' AND \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-{DateTime.DaysInMonth(selectedYearFilter, selectedMonth.Key)} 23:59:59\') OR ";
+                    }
+
+                    dinamicGeneralStatisticsDateFilter = dinamicGeneralStatisticsDateFilter.Substring(0, dinamicGeneralStatisticsDateFilter.Length - 4);
+                    dinamicGeneralStatisticsDateFilter += ")";
+
+                    var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDateFilter));
+                    var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDateFilter));
+
+                    if (resGeneralStat.isSuccess)
+                    {
+                        previewGeneralStatistics = new();
+                        previewGeneralStatistics = resGeneralStat.Data;
+                    }
+
+                    if (resRegionalStats.isSuccess)
+                    {
+                        previewRegionalStatistics = new();
+                        previewRegionalStatistics = resRegionalStats.Data;
+                    }
+
+                    if (resInvolvedbyPos.isSuccess)
+                    {
+                        previewInvolvedbyPosStatistics = new();
+                        previewInvolvedbyPosStatistics = resInvolvedbyPos.Data;
+                    }
+
+                    if (resInvolvedbyDept.isSuccess)
+                    {
+                        previewInvolvedbyDeptStatistics = new();
+                        previewInvolvedbyDeptStatistics = resInvolvedbyDept.Data;
+                    }
+
+                    StateHasChanged();
                 }
             }
-
-            if (EPKRSService.incidentAccidents != null)
+            catch (Exception ex)
             {
-                if (EPKRSService.incidentAccidents.Count > 0)
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} from {ex.Source} {ex.InnerException} !");
+            }
+        }
+
+        private async Task generalStatisticsFilterbyRiskType(string riskId)
+        {
+            try
+            {
+                var repType = EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(riskId));
+               
+                if (repType == null && repType.ReportingID.Equals("ITEMC"))
                 {
-                    EPKRSService.incidentAccidents.ForEach(x =>
+                    await _jsModule.InvokeVoidAsync("showAlert", "Select Incident Accident Type Only !");
+                }
+                else
+                {
+                    generalStatisticsRegionalFilterActive = false;
+                    generalStatisticsPositionFilterActive = false;
+                    generalStatisticsDepartmentFilterActive = false;
+                    generalStatisticsRiskTypeFilterActive = true;
+                    generalStatisticsFiltered = true;
+
+                    //previewGeneralStatistics = null;
+                    previewRegionalStatistics = null;
+                    previewInvolvedbyPosStatistics = null;
+                    previewInvolvedbyDeptStatistics = null;
+
+                    if (generalStatisticsMonthFilterActive)
                     {
-                        docParams.Add(new DocumentListParams
+                        dinamicGeneralStatisticsDateFilter = "WHERE ";
+
+                        foreach (var selectedMonth in monthSelector.Where(x => x.Value.Equals(true)))
                         {
-                            LocationID = x.incidentAccident.SiteReporter,
-                            DocumentID = x.incidentAccident.DocumentID
-                        });
-                    });
+                            dinamicGeneralStatisticsDateFilter += $"(a.ReportDate BETWEEN \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-01 00:00:00\' AND \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-{DateTime.DaysInMonth(selectedYearFilter, selectedMonth.Key)} 23:59:59\') OR ";
+                        }
+
+                        dinamicGeneralStatisticsDateFilter = dinamicGeneralStatisticsDateFilter.Substring(0, dinamicGeneralStatisticsDateFilter.Length - 4);
+                        dinamicGeneralStatisticsRiskTypeFilter += dinamicGeneralStatisticsDateFilter + $" AND c.RiskID = \'{riskId}\'";
+
+                        //var resGeneralStat = await EPKRSService.getEPKRSGeneralStatistics(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRiskTypeFilter));
+                        var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRiskTypeFilter));
+
+                        dinamicGeneralStatisticsDateFilter += "!_!AND (";
+
+                        foreach (var selectedMonth in monthSelector.Where(x => x.Value.Equals(true)))
+                        {
+                            dinamicGeneralStatisticsDateFilter += $"(x.ReportDate BETWEEN \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-01 00:00:00\' AND \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-{DateTime.DaysInMonth(selectedYearFilter, selectedMonth.Key)} 23:59:59\') OR ";
+                        }
+
+                        dinamicGeneralStatisticsDateFilter = dinamicGeneralStatisticsDateFilter.Substring(0, dinamicGeneralStatisticsDateFilter.Length - 4);
+                        dinamicGeneralStatisticsDateFilter += ")";
+
+                        dinamicGeneralStatisticsRiskTypeFilter += dinamicGeneralStatisticsDateFilter + $" AND v.RiskID = \'{riskId}\'";
+
+                        var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDateFilter));
+                        var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDateFilter));
+
+                        //if (resGeneralStat.isSuccess)
+                        //{
+                        //    previewGeneralStatistics = new();
+                        //    previewGeneralStatistics = resGeneralStat.Data;
+                        //}
+
+                        if (resRegionalStats.isSuccess)
+                        {
+                            previewRegionalStatistics = new();
+                            previewRegionalStatistics = resRegionalStats.Data;
+                        }
+
+                        if (resInvolvedbyPos.isSuccess)
+                        {
+                            previewInvolvedbyPosStatistics = new();
+                            previewInvolvedbyPosStatistics = resInvolvedbyPos.Data;
+                        }
+
+                        if (resInvolvedbyDept.isSuccess)
+                        {
+                            previewInvolvedbyDeptStatistics = new();
+                            previewInvolvedbyDeptStatistics = resInvolvedbyDept.Data;
+                        }
+                    }
+                    else
+                    {
+                        dinamicGeneralStatisticsRiskTypeFilter = $"WHERE c.RiskID = \'{riskId}\'";
+
+                        //var resGeneralStat = await EPKRSService.getEPKRSGeneralStatistics(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRiskTypeFilter));
+                        var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRiskTypeFilter));
+
+                        dinamicGeneralStatisticsRiskTypeFilter += $"!_!AND v.RiskID = \'{riskId}\'";
+
+                        var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRiskTypeFilter));
+                        var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRiskTypeFilter));
+
+                        //if (resGeneralStat.isSuccess)
+                        //{
+                        //    previewGeneralStatistics = new();
+                        //    previewGeneralStatistics = resGeneralStat.Data;
+                        //}
+
+                        if (resRegionalStats.isSuccess)
+                        {
+                            previewRegionalStatistics = new();
+                            previewRegionalStatistics = resRegionalStats.Data;
+                        }
+
+                        if (resInvolvedbyPos.isSuccess)
+                        {
+                            previewInvolvedbyPosStatistics = new();
+                            previewInvolvedbyPosStatistics = resInvolvedbyPos.Data;
+                        }
+
+                        if (resInvolvedbyDept.isSuccess)
+                        {
+                            previewInvolvedbyDeptStatistics = new();
+                            previewInvolvedbyDeptStatistics = resInvolvedbyDept.Data;
+                        }
+                    }
+
+                    dinamicGeneralStatisticsRiskTypeFilter = string.Empty;
+                    StateHasChanged();
                 }
             }
+            catch (Exception ex)
+            {
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} from {ex.Source} {ex.InnerException} !");
+            }
+        }
 
-            await EPKRSService.getEPKRSInitializationDocumentDiscussions(docParams);
-            await EPKRSService.getEPKRSDocumentDiscussionReadHistory(docParams);
+        private async Task generalStatisticsFilterbyRegion(string dormEmail)
+        {
+            try
+            {
+                generalStatisticsRiskTypeFilterActive = false;
+                generalStatisticsPositionFilterActive = false;
+                generalStatisticsDepartmentFilterActive = false;
+                generalStatisticsRegionalFilterActive = true;
+                generalStatisticsFiltered = true;
 
-            incidentAccidentFilterActive = false;
-            isLoading = false;
-            StateHasChanged();
+                previewGeneralStatistics = null;
+                //previewRegionalStatistics = null;
+                previewInvolvedbyPosStatistics = null;
+                previewInvolvedbyDeptStatistics = null;
+
+                if (generalStatisticsMonthFilterActive)
+                {
+                    dinamicGeneralStatisticsDateFilter = "WHERE (";
+
+                    foreach (var selectedMonth in monthSelector.Where(x => x.Value.Equals(true)))
+                    {
+                        dinamicGeneralStatisticsDateFilter += $"(a.ReportDate BETWEEN \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-01 00:00:00\' AND \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-{DateTime.DaysInMonth(selectedYearFilter, selectedMonth.Key)} 23:59:59\') OR ";
+                    }
+
+                    dinamicGeneralStatisticsDateFilter = dinamicGeneralStatisticsDateFilter.Substring(0, dinamicGeneralStatisticsDateFilter.Length - 4);
+                    dinamicGeneralStatisticsRegionalFilter += dinamicGeneralStatisticsDateFilter + $") AND a.DORMEmail = \'{dormEmail}\'";
+                    dinamicGeneralStatisticsRegionalFilter += "!_!AND ((";
+
+                    foreach (var selectedMonth in monthSelector.Where(x => x.Value.Equals(true)))
+                    {
+                        dinamicGeneralStatisticsRegionalFilter += $"(z.ReportDate BETWEEN \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-01 00:00:00\' AND \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-{DateTime.DaysInMonth(selectedYearFilter, selectedMonth.Key)} 23:59:59\') OR ";
+                    }
+
+                    dinamicGeneralStatisticsRegionalFilter = dinamicGeneralStatisticsRegionalFilter.Substring(0, dinamicGeneralStatisticsRegionalFilter.Length - 4);
+                    dinamicGeneralStatisticsRegionalFilter += $") AND z.DORMEmail = \'{dormEmail}\')";
+
+                    var resGeneralStat = await EPKRSService.getEPKRSGeneralIncidentAccidentStatistics(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRegionalFilter));
+                    //var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRiskTypeFilter));
+
+                    dinamicGeneralStatisticsRegionalFilter = string.Empty;
+                    dinamicGeneralStatisticsRegionalFilter += dinamicGeneralStatisticsDateFilter + $") AND a.DORMEmail = \'{dormEmail}\'!_!AND (";
+
+                    foreach (var selectedMonth in monthSelector.Where(x => x.Value.Equals(true)))
+                    {
+                        dinamicGeneralStatisticsRegionalFilter += $"(x.ReportDate BETWEEN \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-01 00:00:00\' AND \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-{DateTime.DaysInMonth(selectedYearFilter, selectedMonth.Key)} 23:59:59\') OR ";
+                    }
+
+                    dinamicGeneralStatisticsRegionalFilter = dinamicGeneralStatisticsRegionalFilter.Substring(0, dinamicGeneralStatisticsRegionalFilter.Length - 4);
+                    dinamicGeneralStatisticsRegionalFilter += $") AND x.DORMEmail = \'{dormEmail}\'";
+
+                    var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRegionalFilter));
+                    var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRegionalFilter));
+
+                    if (resGeneralStat.isSuccess)
+                    {
+                        previewGeneralStatistics = new();
+                        previewGeneralStatistics = resGeneralStat.Data;
+                    }
+
+                    //if (resRegionalStats.isSuccess)
+                    //{
+                    //    previewRegionalStatistics = new();
+                    //    previewRegionalStatistics = resRegionalStats.Data;
+                    //}
+
+                    if (resInvolvedbyPos.isSuccess)
+                    {
+                        previewInvolvedbyPosStatistics = new();
+                        previewInvolvedbyPosStatistics = resInvolvedbyPos.Data;
+                    }
+
+                    if (resInvolvedbyDept.isSuccess)
+                    {
+                        previewInvolvedbyDeptStatistics = new();
+                        previewInvolvedbyDeptStatistics = resInvolvedbyDept.Data;
+                    }
+                }
+                else
+                {
+                    dinamicGeneralStatisticsRegionalFilter = $"WHERE a.DORMEmail = \'{dormEmail}\'!_!AND z.DORMEmail = \'{dormEmail}\'";
+
+                    var resGeneralStat = await EPKRSService.getEPKRSGeneralIncidentAccidentStatistics(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRegionalFilter));
+                    //var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRiskTypeFilter));
+
+                    dinamicGeneralStatisticsRegionalFilter = $"WHERE a.DORMEmail = \'{dormEmail}\'!_!AND x.DORMEmail = \'{dormEmail}\'";
+
+                    var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRegionalFilter));
+                    var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRegionalFilter));
+
+                    if (resGeneralStat.isSuccess)
+                    {
+                        previewGeneralStatistics = new();
+                        previewGeneralStatistics = resGeneralStat.Data;
+                    }
+
+                    //if (resRegionalStats.isSuccess)
+                    //{
+                    //    previewRegionalStatistics = new();
+                    //    previewRegionalStatistics = resRegionalStats.Data;
+                    //}
+
+                    if (resInvolvedbyPos.isSuccess)
+                    {
+                        previewInvolvedbyPosStatistics = new();
+                        previewInvolvedbyPosStatistics = resInvolvedbyPos.Data;
+                    }
+
+                    if (resInvolvedbyDept.isSuccess)
+                    {
+                        previewInvolvedbyDeptStatistics = new();
+                        previewInvolvedbyDeptStatistics = resInvolvedbyDept.Data;
+                    }
+                }
+
+                dinamicGeneralStatisticsRegionalFilter = string.Empty;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} from {ex.Source} {ex.InnerException} !");
+            }
+        }
+
+        private async Task generalStatisticsFilterbyPosition(string involverPos)
+        {
+            try
+            {
+                generalStatisticsRiskTypeFilterActive = false;
+                generalStatisticsRegionalFilterActive = false;
+                generalStatisticsDepartmentFilterActive = false;
+                generalStatisticsPositionFilterActive = true;
+                generalStatisticsFiltered = true;
+
+                previewGeneralStatistics = null;
+                previewRegionalStatistics = null;
+                //previewInvolvedbyPosStatistics = null;
+                previewInvolvedbyDeptStatistics = null;
+
+                if (generalStatisticsMonthFilterActive)
+                {
+                    var joinA = "INNER JOIN (SELECT DISTINCT l.DocumentID, l.InvolverPosition FROM [EPKRS].IncidentAccidentInvolverDetails l) b on a.DocumentID = b.DocumentID ";
+                    var joinB = "INNER JOIN (SELECT DISTINCT l.DocumentID, l.InvolverPosition FROM [EPKRS].IncidentAccidentInvolverDetails l) d on a.DocumentID = d.DocumentID ";
+                    dinamicGeneralStatisticsDateFilter = "WHERE (";
+
+                    foreach (var selectedMonth in monthSelector.Where(x => x.Value.Equals(true)))
+                    {
+                        dinamicGeneralStatisticsDateFilter += $"(a.ReportDate BETWEEN \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-01 00:00:00\' AND \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-{DateTime.DaysInMonth(selectedYearFilter, selectedMonth.Key)} 23:59:59\') OR ";
+                    }
+
+                    dinamicGeneralStatisticsDateFilter = dinamicGeneralStatisticsDateFilter.Substring(0, dinamicGeneralStatisticsDateFilter.Length - 4);
+                    dinamicGeneralStatisticsPositionFilter += dinamicGeneralStatisticsDateFilter + $") AND b.InvolverPosition = \'{involverPos}\'";
+                    dinamicGeneralStatisticsPositionFilter += "!_!AND ((";
+
+                    foreach (var selectedMonth in monthSelector.Where(x => x.Value.Equals(true)))
+                    {
+                        dinamicGeneralStatisticsPositionFilter += $"(z.ReportDate BETWEEN \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-01 00:00:00\' AND \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-{DateTime.DaysInMonth(selectedYearFilter, selectedMonth.Key)} 23:59:59\') OR ";
+                    }
+
+                    dinamicGeneralStatisticsPositionFilter = dinamicGeneralStatisticsPositionFilter.Substring(0, dinamicGeneralStatisticsPositionFilter.Length - 4);
+                    dinamicGeneralStatisticsPositionFilter += $") AND m.InvolverPosition = \'{involverPos}\')";
+
+                    var resGeneralStat = await EPKRSService.getEPKRSGeneralIncidentAccidentStatistics(CommonLibrary.Base64Encode(joinA + dinamicGeneralStatisticsPositionFilter));
+
+                    dinamicGeneralStatisticsPositionFilter = string.Empty;
+                    dinamicGeneralStatisticsPositionFilter += dinamicGeneralStatisticsDateFilter + $") AND d.InvolverPosition = \'{involverPos}\'";
+
+                    var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(joinB + dinamicGeneralStatisticsPositionFilter));
+
+                    dinamicGeneralStatisticsPositionFilter = string.Empty;
+                    dinamicGeneralStatisticsPositionFilter += dinamicGeneralStatisticsDateFilter + $") AND b.InvolverPosition = \'{involverPos}\'!_!AND (";
+
+                    foreach (var selectedMonth in monthSelector.Where(x => x.Value.Equals(true)))
+                    {
+                        dinamicGeneralStatisticsPositionFilter += $"(x.ReportDate BETWEEN \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-01 00:00:00\' AND \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-{DateTime.DaysInMonth(selectedYearFilter, selectedMonth.Key)} 23:59:59\') OR ";
+                    }
+
+                    dinamicGeneralStatisticsPositionFilter = dinamicGeneralStatisticsPositionFilter.Substring(0, dinamicGeneralStatisticsPositionFilter.Length - 4);
+                    dinamicGeneralStatisticsPositionFilter += $") AND z.InvolverPosition = \'{involverPos}\'";
+
+                    //var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(dinamicGeneralStatisticsPositionFilter));
+                    var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(dinamicGeneralStatisticsPositionFilter));
+
+                    if (resGeneralStat.isSuccess)
+                    {
+                        previewGeneralStatistics = new();
+                        previewGeneralStatistics = resGeneralStat.Data;
+                    }
+
+                    if (resRegionalStats.isSuccess)
+                    {
+                        previewRegionalStatistics = new();
+                        previewRegionalStatistics = resRegionalStats.Data;
+                    }
+
+                    //if (resInvolvedbyPos.isSuccess)
+                    //{
+                    //    previewInvolvedbyPosStatistics = new();
+                    //    previewInvolvedbyPosStatistics = resInvolvedbyPos.Data;
+                    //}
+
+                    if (resInvolvedbyDept.isSuccess)
+                    {
+                        previewInvolvedbyDeptStatistics = new();
+                        previewInvolvedbyDeptStatistics = resInvolvedbyDept.Data;
+                    }
+                }
+                else
+                {
+                    dinamicGeneralStatisticsPositionFilter = $"INNER JOIN (SELECT DISTINCT l.DocumentID, l.InvolverPosition FROM [EPKRS].IncidentAccidentInvolverDetails l) b on a.DocumentID = b.DocumentID WHERE b.InvolverPosition = \'{involverPos}\'!_!AND m.InvolverPosition = \'{involverPos}\'";
+
+                    var resGeneralStat = await EPKRSService.getEPKRSGeneralIncidentAccidentStatistics(CommonLibrary.Base64Encode(dinamicGeneralStatisticsPositionFilter));
+
+                    dinamicGeneralStatisticsPositionFilter = $"INNER JOIN (SELECT DISTINCT l.DocumentID, l.InvolverPosition FROM [EPKRS].IncidentAccidentInvolverDetails l) d on a.DocumentID = d.DocumentID WHERE d.InvolverPosition = \'{involverPos}\'";
+
+                    var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(dinamicGeneralStatisticsPositionFilter));
+
+                    dinamicGeneralStatisticsPositionFilter = $"WHERE b.InvolverPosition = \'{involverPos}\'!_!AND z.InvolverPosition = \'{involverPos}\'";
+
+                    //var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(dinamicGeneralStatisticsPositionFilter));
+                    var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(dinamicGeneralStatisticsPositionFilter));
+
+                    if (resGeneralStat.isSuccess)
+                    {
+                        previewGeneralStatistics = new();
+                        previewGeneralStatistics = resGeneralStat.Data;
+                    }
+
+                    if (resRegionalStats.isSuccess)
+                    {
+                        previewRegionalStatistics = new();
+                        previewRegionalStatistics = resRegionalStats.Data;
+                    }
+
+                    //if (resInvolvedbyPos.isSuccess)
+                    //{
+                    //    previewInvolvedbyPosStatistics = new();
+                    //    previewInvolvedbyPosStatistics = resInvolvedbyPos.Data;
+                    //}
+
+                    if (resInvolvedbyDept.isSuccess)
+                    {
+                        previewInvolvedbyDeptStatistics = new();
+                        previewInvolvedbyDeptStatistics = resInvolvedbyDept.Data;
+                    }
+                }
+
+                dinamicGeneralStatisticsPositionFilter = string.Empty;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} from {ex.Source} {ex.InnerException} !");
+            }
+        }
+
+        private async Task generalStatisticsFilterbyDept(string involverPos)
+        {
+            try
+            {
+                generalStatisticsRiskTypeFilterActive = false;
+                generalStatisticsRegionalFilterActive = false;
+                generalStatisticsPositionFilterActive = false;
+                generalStatisticsDepartmentFilterActive = true;
+                generalStatisticsFiltered = true;
+
+                previewGeneralStatistics = null;
+                previewRegionalStatistics = null;
+                previewInvolvedbyPosStatistics = null;
+                //previewInvolvedbyDeptStatistics = null;
+
+                if (generalStatisticsMonthFilterActive)
+                {
+                    var joinA = "INNER JOIN (SELECT DISTINCT l.DocumentID, l.InvolverDept FROM [EPKRS].IncidentAccidentInvolverDetails l) b on a.DocumentID = b.DocumentID ";
+                    var joinB = "INNER JOIN (SELECT DISTINCT l.DocumentID, l.InvolverDept FROM [EPKRS].IncidentAccidentInvolverDetails l) d on a.DocumentID = d.DocumentID ";
+                    dinamicGeneralStatisticsDateFilter = "WHERE (";
+
+                    foreach (var selectedMonth in monthSelector.Where(x => x.Value.Equals(true)))
+                    {
+                        dinamicGeneralStatisticsDateFilter += $"(a.ReportDate BETWEEN \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-01 00:00:00\' AND \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-{DateTime.DaysInMonth(selectedYearFilter, selectedMonth.Key)} 23:59:59\') OR ";
+                    }
+
+                    dinamicGeneralStatisticsDateFilter = dinamicGeneralStatisticsDateFilter.Substring(0, dinamicGeneralStatisticsDateFilter.Length - 4);
+                    dinamicGeneralStatisticsDepartmentFilter += dinamicGeneralStatisticsDateFilter + $") AND b.InvolverDept = \'{involverPos}\'";
+                    dinamicGeneralStatisticsDepartmentFilter += "!_!AND ((";
+
+                    foreach (var selectedMonth in monthSelector.Where(x => x.Value.Equals(true)))
+                    {
+                        dinamicGeneralStatisticsDepartmentFilter += $"(z.ReportDate BETWEEN \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-01 00:00:00\' AND \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-{DateTime.DaysInMonth(selectedYearFilter, selectedMonth.Key)} 23:59:59\') OR ";
+                    }
+
+                    dinamicGeneralStatisticsDepartmentFilter = dinamicGeneralStatisticsDepartmentFilter.Substring(0, dinamicGeneralStatisticsDepartmentFilter.Length - 4);
+                    dinamicGeneralStatisticsDepartmentFilter += $") AND m.InvolverDept = \'{involverPos}\')";
+
+                    var resGeneralStat = await EPKRSService.getEPKRSGeneralIncidentAccidentStatistics(CommonLibrary.Base64Encode(joinA + dinamicGeneralStatisticsDepartmentFilter));
+
+                    dinamicGeneralStatisticsDepartmentFilter = string.Empty;
+                    dinamicGeneralStatisticsDepartmentFilter += dinamicGeneralStatisticsDateFilter + $") AND d.InvolverDept = \'{involverPos}\'";
+
+                    var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(joinB + dinamicGeneralStatisticsDepartmentFilter));
+
+                    dinamicGeneralStatisticsDepartmentFilter = string.Empty;
+                    dinamicGeneralStatisticsDepartmentFilter += dinamicGeneralStatisticsDateFilter + $") AND b.InvolverDept = \'{involverPos}\'!_!AND (";
+
+                    foreach (var selectedMonth in monthSelector.Where(x => x.Value.Equals(true)))
+                    {
+                        dinamicGeneralStatisticsDepartmentFilter += $"(x.ReportDate BETWEEN \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-01 00:00:00\' AND \'{selectedYearFilter}-{selectedMonth.Key.ToString("00")}-{DateTime.DaysInMonth(selectedYearFilter, selectedMonth.Key)} 23:59:59\') OR ";
+                    }
+
+                    dinamicGeneralStatisticsDepartmentFilter = dinamicGeneralStatisticsDepartmentFilter.Substring(0, dinamicGeneralStatisticsDepartmentFilter.Length - 4);
+                    dinamicGeneralStatisticsDepartmentFilter += $") AND z.InvolverDept = \'{involverPos}\'";
+
+                    var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDepartmentFilter));
+                    //var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDepartmentFilter));
+
+                    if (resGeneralStat.isSuccess)
+                    {
+                        previewGeneralStatistics = new();
+                        previewGeneralStatistics = resGeneralStat.Data;
+                    }
+
+                    if (resRegionalStats.isSuccess)
+                    {
+                        previewRegionalStatistics = new();
+                        previewRegionalStatistics = resRegionalStats.Data;
+                    }
+
+                    if (resInvolvedbyPos.isSuccess)
+                    {
+                        previewInvolvedbyPosStatistics = new();
+                        previewInvolvedbyPosStatistics = resInvolvedbyPos.Data;
+                    }
+
+                    //if (resInvolvedbyDept.isSuccess)
+                    //{
+                    //    previewInvolvedbyDeptStatistics = new();
+                    //    previewInvolvedbyDeptStatistics = resInvolvedbyDept.Data;
+                    //}
+                }
+                else
+                {
+                    dinamicGeneralStatisticsDepartmentFilter = $"INNER JOIN (SELECT DISTINCT l.DocumentID, l.InvolverDept FROM [EPKRS].IncidentAccidentInvolverDetails l) b on a.DocumentID = b.DocumentID WHERE b.InvolverDept = \'{involverPos}\'!_!AND m.InvolverDept = \'{involverPos}\'";
+
+                    var resGeneralStat = await EPKRSService.getEPKRSGeneralIncidentAccidentStatistics(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDepartmentFilter));
+
+                    dinamicGeneralStatisticsDepartmentFilter = $"INNER JOIN (SELECT DISTINCT l.DocumentID, l.InvolverDept FROM [EPKRS].IncidentAccidentInvolverDetails l) d on a.DocumentID = d.DocumentID WHERE d.InvolverDept = \'{involverPos}\'";
+
+                    var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDepartmentFilter));
+
+                    dinamicGeneralStatisticsDepartmentFilter = $"WHERE b.InvolverDept = \'{involverPos}\'!_!AND z.InvolverDept = \'{involverPos}\'";
+
+                    var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDepartmentFilter));
+                    //var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(dinamicGeneralStatisticsPositionFilter));
+
+                    if (resGeneralStat.isSuccess)
+                    {
+                        previewGeneralStatistics = new();
+                        previewGeneralStatistics = resGeneralStat.Data;
+                    }
+
+                    if (resRegionalStats.isSuccess)
+                    {
+                        previewRegionalStatistics = new();
+                        previewRegionalStatistics = resRegionalStats.Data;
+                    }
+
+                    if (resInvolvedbyPos.isSuccess)
+                    {
+                        previewInvolvedbyPosStatistics = new();
+                        previewInvolvedbyPosStatistics = resInvolvedbyPos.Data;
+                    }
+
+                    //if (resInvolvedbyDept.isSuccess)
+                    //{
+                    //    previewInvolvedbyDeptStatistics = new();
+                    //    previewInvolvedbyDeptStatistics = resInvolvedbyDept.Data;
+                    //}
+                }
+
+                dinamicGeneralStatisticsDepartmentFilter = string.Empty;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} from {ex.Source} {ex.InnerException} !");
+            }
+        }
+
+        private async Task monitoringPanelFilterbyYear(int year, bool isReset)
+        {
+            try
+            {
+                //chartTriggered = false;
+                dinamicMonitoringPanelDateFilter = string.Empty;
+                selectedYearFilterChart = year;
+
+                previewTopLocationReportStatistics = null;
+                previewItemCaseCategoryStatistics = null;
+                previewItemCategoryStatistics = null;
+
+                string itemCaseCategoryConditions = $"WHERE a.AuditActionDate BETWEEN \'{year}-01-01 00:00:00\' AND \'{year}-12-31 23:59:59\'!_!AND (p.ReportDate BETWEEN \'{year}-01-01 00:00:00\' AND \'{year}-12-31 23:59:59\')";
+                var resItemCaseCategoryStat = await EPKRSService.getEPKRSItemCaseCategoryStatistics(CommonLibrary.Base64Encode(itemCaseCategoryConditions));
+
+                string topLocationReportConditions = $"WHERE a.ReportDate BETWEEN \'{year}-01-01 00:00:00\' AND \'{year}-12-31 23:59:59\'!_!AND (p.ReportDate BETWEEN \'{year}-01-01 00:00:00\' AND \'{year}-12-31 23:59:59\')";
+                var resTopLocationReportStat = await EPKRSService.getEPKRSTopLocationReportStatistics(CommonLibrary.Base64Encode(topLocationReportConditions));
+
+                string itemCategoryStatsConditions = $"WHERE a.AuditActionDate BETWEEN \'{year}-01-01 00:00:00\' AND \'{year}-12-31 23:59:59\'!_!AND (p.ReportDate BETWEEN \'{year}-01-01 00:00:00\' AND \'{year}-12-31 23:59:59\')";
+                var resItemCategoryStat = await EPKRSService.getEPKRSItemCategoriesStatistics(CommonLibrary.Base64Encode(itemCategoryStatsConditions));
+
+                if (resItemCaseCategoryStat.isSuccess && resItemCaseCategoryStat.Data != null)
+                {
+                    previewItemCaseCategoryStatistics = new();
+                    previewItemCaseCategoryStatistics = resItemCaseCategoryStat.Data;
+                }
+
+                if (resTopLocationReportStat.isSuccess && resTopLocationReportStat.Data != null)
+                {
+                    previewTopLocationReportStatistics = new();
+                    previewTopLocationReportStatistics = resTopLocationReportStat.Data;
+                }
+
+                if (resItemCategoryStat.isSuccess && resItemCategoryStat.Data != null)
+                {
+                    previewItemCategoryStatistics = new();
+                    previewItemCategoryStatistics = resItemCategoryStat.Data;
+                }
+
+                if (isReset)
+                {
+                    foreach (var dt in monthSelectorChart)
+                    {
+                        monthSelectorChart[dt.Key] = false;
+                    }
+
+                    monitoringPanelFiltered = false;
+                }
+
+                #pragma warning disable CS4014 
+                Task.Run(async () => {
+                    await updateChart();
+                    StateHasChanged();
+                });
+                #pragma warning restore CS4014
+            }
+            catch (Exception ex)
+            {
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} from {ex.Source} {ex.InnerException} !");
+            }
+        }
+
+        private async Task monitoringPanelFilterbyMonth()
+        {
+            try
+            {
+                if (!monthSelectorChart.Any(x => x.Value.Equals(true)))
+                {
+                    await _jsModule.InvokeVoidAsync("showAlert", "Select at Least 1 Month to Filter !");
+                }
+                else
+                {
+                    //chartTriggered = false;
+                    monitoringPanelFiltered = true;
+                    previewTopLocationReportStatistics = null;
+                    previewItemCaseCategoryStatistics = null;
+                    previewItemCategoryStatistics = null;
+
+                    dinamicMonitoringPanelDateFilter = "WHERE (";
+                    dinamicMonitoringPanelDateFilterExt = "!_!AND (";
+
+                    foreach (var selectedMonth in monthSelectorChart.Where(x => x.Value.Equals(true)))
+                    {
+                        dinamicMonitoringPanelDateFilter += $"(a.AuditActionDate BETWEEN \'{selectedYearFilterChart}-{selectedMonth.Key.ToString("00")}-01 00:00:00\' AND \'{selectedYearFilterChart}-{selectedMonth.Key.ToString("00")}-{DateTime.DaysInMonth(selectedYearFilter, selectedMonth.Key)} 23:59:59\') OR ";
+                        dinamicMonitoringPanelDateFilterExt += $"(p.ReportDate BETWEEN \'{selectedYearFilterChart}-{selectedMonth.Key.ToString("00")}-01 00:00:00\' AND \'{selectedYearFilterChart}-{selectedMonth.Key.ToString("00")}-{DateTime.DaysInMonth(selectedYearFilter, selectedMonth.Key)} 23:59:59\') OR ";
+                    }
+
+                    dinamicMonitoringPanelDateFilterExt = dinamicMonitoringPanelDateFilterExt.Substring(0, dinamicMonitoringPanelDateFilterExt.Length - 4);
+                    dinamicMonitoringPanelDateFilterExt += ")";
+                    dinamicMonitoringPanelDateFilter = dinamicMonitoringPanelDateFilter.Substring(0, dinamicMonitoringPanelDateFilter.Length - 4);
+                    dinamicMonitoringPanelDateFilter += ")";
+                    var resItemCaseCategoryStat = await EPKRSService.getEPKRSItemCaseCategoryStatistics(CommonLibrary.Base64Encode(dinamicMonitoringPanelDateFilter + dinamicMonitoringPanelDateFilterExt));
+
+                    dinamicMonitoringPanelDateFilter = "WHERE (";
+
+                    foreach (var selectedMonth in monthSelectorChart.Where(x => x.Value.Equals(true)))
+                    {
+                        dinamicMonitoringPanelDateFilter += $"(a.ReportDate BETWEEN \'{selectedYearFilterChart}-{selectedMonth.Key.ToString("00")}-01 00:00:00\' AND \'{selectedYearFilterChart}-{selectedMonth.Key.ToString("00")}-{DateTime.DaysInMonth(selectedYearFilter, selectedMonth.Key)} 23:59:59\') OR ";
+                    }
+
+                    dinamicMonitoringPanelDateFilter = dinamicMonitoringPanelDateFilter.Substring(0, dinamicMonitoringPanelDateFilter.Length - 4);
+                    dinamicMonitoringPanelDateFilter += ")";
+                    var resTopLocationReportStat = await EPKRSService.getEPKRSTopLocationReportStatistics(CommonLibrary.Base64Encode(dinamicMonitoringPanelDateFilter + dinamicMonitoringPanelDateFilterExt));
+
+                    dinamicMonitoringPanelDateFilter = "WHERE (";
+
+                    foreach (var selectedMonth in monthSelectorChart.Where(x => x.Value.Equals(true)))
+                    {
+                        dinamicMonitoringPanelDateFilter += $"(a.AuditActionDate BETWEEN \'{selectedYearFilterChart}-{selectedMonth.Key.ToString("00")}-01 00:00:00\' AND \'{selectedYearFilterChart}-{selectedMonth.Key.ToString("00")}-{DateTime.DaysInMonth(selectedYearFilter, selectedMonth.Key)} 23:59:59\') OR ";
+                    }
+
+                    dinamicMonitoringPanelDateFilter = dinamicMonitoringPanelDateFilter.Substring(0, dinamicMonitoringPanelDateFilter.Length - 4);
+                    dinamicMonitoringPanelDateFilter += ")";
+                    var resItemCategoryStat = await EPKRSService.getEPKRSItemCategoriesStatistics(CommonLibrary.Base64Encode(dinamicMonitoringPanelDateFilter + dinamicMonitoringPanelDateFilterExt));
+
+                    if (resItemCaseCategoryStat.isSuccess && resItemCaseCategoryStat.Data != null)
+                    {
+                        previewItemCaseCategoryStatistics = new();
+                        previewItemCaseCategoryStatistics = resItemCaseCategoryStat.Data;
+                    }
+
+                    if (resTopLocationReportStat.isSuccess && resTopLocationReportStat.Data != null)
+                    {
+                        previewTopLocationReportStatistics = new();
+                        previewTopLocationReportStatistics = resTopLocationReportStat.Data;
+                    }
+
+                    if (resItemCategoryStat.isSuccess && resItemCategoryStat.Data != null)
+                    {
+                        previewItemCategoryStatistics = new();
+                        previewItemCategoryStatistics = resItemCategoryStat.Data;
+                    }
+
+                    #pragma warning disable CS4014
+                    Task.Run(async () => {
+                        await updateChart();
+                        StateHasChanged();
+                    });
+                    #pragma warning restore CS4014
+                }
+            }
+            catch (Exception ex)
+            {
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} from {ex.Source} {ex.InnerException} !");
+            }
         }
 
         private bool checkReportingType()
@@ -1463,6 +2519,63 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             try
             {
                 if (fileReplyDiscussionUpload.Any())
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        private bool checkPartyInvolved()
+        {
+            try
+            {
+                if (partyInvolved.Any())
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        private bool checkPreviewPartyInvolved()
+        {
+            try
+            {
+                if (previewIncidentAccidentInvolver.Any())
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        private bool checkPreviewApproval()
+        {
+            try
+            {
+                if (previewDocumentListApproval.Any())
                 {
                     return true;
                 }

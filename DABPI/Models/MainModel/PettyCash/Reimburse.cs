@@ -12,6 +12,7 @@
         public string Applicant { get; set; } = string.Empty;
 
         public List<ReimburseLine> lines { get; set; } = new();
+        public List<ReimburseAttachmentLine> attach { get; set; } = new();
         public ReimburseDocumentStatus statusDetails { get; set; } = new();
 
     }

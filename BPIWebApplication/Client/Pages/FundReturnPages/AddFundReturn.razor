@@ -1,0 +1,535 @@
+﻿@page "/fundreturn/addfundreturn"
+@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
+@inject Blazored.SessionStorage.ISyncSessionStorageService syncSessionStorage
+@inject IFundReturnService FundReturnService
+@inject ILoginService LoginService
+@inject IManagementService ManagementService
+@inject IJSRuntime JS
+
+<PageTitle>Fund Return - Add Fund Return Document</PageTitle>
+
+@if (LoginService.activeUser == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    if (LoginService.activeUser.userPrivileges != null)
+    {
+        @if (!LoginService.activeUser.userPrivileges.Contains("VW"))
+        {
+            <div class="container-fluid">
+                <div class="d-flex align-items-center">
+                    <h3>User Require Elevation</h3>
+                </div>
+            </div>
+        }
+        else
+        {
+            <h3>Fund Return (Pengembalian Dana)</h3>
+            <small><i>Add Fund Return Document</i></small>
+            
+            @if (alertTrigger)
+            {
+                <div id="warningAlert" class="alert alert-warning show" role="alert">
+                    <h5 class="alert-heading fw-bold">@alertMessage</h5>
+                    @alertBody
+                    <button type="button" class="btn btn-close" aria-label="Close">
+                    </button>
+                </div>
+            }
+
+            @if (successAlert)
+            {
+                <div id="successAlert" class="alert alert-success show" role="alert">
+                    <h5 class="alert-heading fw-bold">@alertMessage</h5>
+                    @alertBody
+                    <button type="button" class="btn btn-close" aria-label="Close">
+                    </button>
+                </div>
+            }
+
+            <div class="container-fluid">
+                <div class="d-flex flex-column align-items-center">
+
+                    <div class="row mt-3">
+                        <div class="col">
+                            <label for="retfund_type">Return Fund Type :</label>
+                            <select id="retfund_type" class="form-select" @onchange="fundReturnCategoryonChange" disabled="@((isLoading || successUpload) ? "disabled" : null)">
+                                @if (checkFundReturnCategory())
+                                {
+                                    <option hidden value="BLANK">Choose Refund Category</option>
+                                    @foreach (var cat in FundReturnService.fundReturnCategories)
+                                    {
+                                        <option value="@cat.FundReturnCategoryID">@cat.FundReturnCategoryDescription</option>
+                                    }
+                                }
+                                else
+                                {
+                                    <option disabled hidden value="BLANK">Data Empty</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <EditForm Model="@fundReturnHeader">
+                        <DataAnnotationsValidator />
+
+                        @if (fundReturnCategorySelected.Equals("XRKN"))
+                        {
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="doc_id">Document ID :</label>
+                                    <InputText id="doc_id" @bind-Value="fundReturnHeader.DocumentID" class="form-control" readonly></InputText>
+                                </div>
+                                <div class="col">
+                                    <label for="req_date">Request Date :</label>
+                                    <InputDate id="req_date" @bind-Value="fundReturnHeader.RequestDate" class="form-control" readonly></InputDate>
+                                </div>
+                            </div>
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="loc">Location :</label>
+                                    <InputText id="loc" @bind-Value="fundReturnHeader.LocationID" class="form-control" readonly></InputText>
+                                </div>
+                                @*<div class="col">
+                                    <label for="com_type">Commercial Type :</label>
+                                    <InputSelect id="com_type" @bind-Value="fundReturnHeader.CommercialType" class="form-select">
+                                        <option hidden value="BLANK">Select Commercial Type</option>
+                                        <option value="ONLINE">Online</option>
+                                        <option value="OFFLINE">Offline</option>
+                                    </InputSelect>
+                                </div>*@
+                            </div>
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="cust_name">Customer Name :</label>
+                                    <InputText id="cust_name" @bind-Value="fundReturnHeader.CustomerName" class="form-control"></InputText>
+                                </div>
+                                <div class="col">
+                                    <label for="cust_contc">Contact No :</label>
+                                    <InputText id="cust_contc" @bind-Value="fundReturnHeader.CustomerContactNo" class="form-control"></InputText>
+                                </div>
+                            </div>
+@*
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="cust_type">Customer Type :</label>
+                                    <InputSelect id="cust_type" @bind-Value="fundReturnHeader.CustomerType" class="form-select">
+                                        <option hidden value="BLANK">Select Customer Type</option>
+                                        <option value="MEMBER">Member</option>
+                                        <option value="NONMEMBER">Non-Member</option>
+                                    </InputSelect>
+                                </div>
+                                <div class="col">
+                                    @if (fundReturnHeader.CustomerType.Equals("MEMBER"))
+                                    {
+                                        <label for="memb_id">Customer Member ID :</label>
+                                        <InputText id="memb_id" @bind-Value="fundReturnHeader.CustomerMemberID" class="form-control"></InputText>
+                                    }
+                                </div>
+                            </div>*@
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="rcp_doc">Refund Amount :</label>
+                                    <InputText id="rcp_doc" @bind-Value="fundReturnHeader.RefundAmount" class="form-control" readonly></InputText>
+                                </div>
+                                <div class="col">
+                                    <label for="rcp_doc">Transaction Amount :</label>
+                                    <InputText id="rcp_doc" @bind-Value="fundReturnHeader.TransactionAmount" class="form-control" @oninput="((ChangeEventArgs e) => fundReturnHeader.RefundAmount = e.Value.ToString())"></InputText>
+                                </div>
+                            </div>
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="bank_holder">Bank Holder Name :</label>
+                                    <InputText id="bank_holder" @bind-Value="fundReturnHeader.BankHolderName" class="form-control"></InputText>
+                                </div>
+                            </div>
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="bank_account">Bank Account :</label>
+                                    <InputText id="bank_account" @bind-Value="fundReturnHeader.BankAccount" class="form-control"></InputText>
+                                </div>
+                                <div class="col">
+                                    <label for="banks">Bank :</label>
+                                    <InputSelect id="banks" @bind-Value="fundReturnHeader.BankID" class="form-select">
+                                        @if (checkBank())
+                                        {
+                                            @foreach (var bank in FundReturnService.banks)
+                                            {
+                                                <option value="@bank.BankID">@bank.BankShortName</option>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <option disabled value="BLANK">Bank Data Empty</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                            </div>
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="reason">Reason / Cronology :</label>
+                                    <InputTextArea id="reason" @bind-Value="fundReturnHeader.Reason" class="form-control"></InputTextArea>
+                                </div>
+                            </div>
+                        }
+                        else if (fundReturnCategorySelected.Equals("RQST"))
+                        {
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="doc_id">Document ID :</label>
+                                    <InputText id="doc_id" @bind-Value="fundReturnHeader.DocumentID" class="form-control" readonly></InputText>
+                                </div>
+                                <div class="col">
+                                    <label for="req_date">Request Date :</label>
+                                    <InputDate id="req_date" @bind-Value="fundReturnHeader.RequestDate" class="form-control" readonly></InputDate>
+                                </div>
+                            </div>
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="loc">Location :</label>
+                                    <InputText id="loc" @bind-Value="fundReturnHeader.LocationID" class="form-control" readonly></InputText>
+                                </div>
+                                <div class="col">
+                                    <label for="com_type">Commercial Type :</label>
+                                    <InputSelect id="com_type" @bind-Value="fundReturnHeader.CommercialType" class="form-select">
+                                        <option hidden value="BLANK">Select Commercial Type</option>
+                                        <option value="ONLINE">Online</option>
+                                        <option value="OFFLINE">Offline</option>
+                                    </InputSelect>
+                                </div>
+                            </div>
+
+                            @if (fundReturnHeader.CommercialType.Equals("BLANK"))
+                            {
+                                <div class="alert alert-info alert-dismissible fade show my-3" role="alert">
+                                    <strong>Select Commercial Type Above !</strong>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="rcp_doc">
+                                            @(fundReturnHeader.CommercialType.Equals("ONLINE") ? "PSORT :" : "Refund Receipt :")
+                                        </label>
+                                        <InputText id="rcp_doc" @bind-Value="fundReturnHeader.ReceiptDocument" class="form-control"></InputText>
+                                    </div>
+                                </div>
+
+                                @if (fundReturnHeader.CommercialType.Equals("ONLINE"))
+                                {
+                                    <div class="row my-2">
+                                        <div class="col">
+                                            <label for="rcp_doc">External Document :</label>
+                                            <InputText id="rcp_doc" @bind-Value="fundReturnHeader.ExternalDocument" class="form-control"></InputText>
+                                        </div>
+                                    </div>
+                                }
+                            }
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="rcp_doc">Refund Amount :</label>
+                                    <InputText id="rcp_doc" @bind-Value="fundReturnHeader.RefundAmount" class="form-control"></InputText>
+                                </div>
+                                <div class="col">
+                                    <label for="rcp_doc">Transaction Amount :</label>
+                                    <InputText id="rcp_doc" @bind-Value="fundReturnHeader.TransactionAmount" class="form-control"></InputText>
+                                </div>
+                            </div>
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="cust_name">Customer Name :</label>
+                                    <InputText id="cust_name" @bind-Value="fundReturnHeader.CustomerName" class="form-control"></InputText>
+                                </div>
+                                <div class="col">
+                                    <label for="cust_contc">Contact No :</label>
+                                    <InputText id="cust_contc" @bind-Value="fundReturnHeader.CustomerContactNo" class="form-control"></InputText>
+                                </div>
+                            </div>
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="cust_type">Customer Type :</label>
+                                    <InputSelect id="cust_type" @bind-Value="fundReturnHeader.CustomerType" class="form-select">
+                                        <option hidden value="BLANK">Select Customer Type</option>
+                                        <option value="MEMBER">Member</option>
+                                        <option value="NONMEMBER">Non-Member</option>
+                                    </InputSelect>
+                                </div>
+                                <div class="col">
+                                    @if (fundReturnHeader.CustomerType.Equals("MEMBER"))
+                                    {
+                                        <label for="memb_id">Customer Member ID :</label>
+                                        <InputText id="memb_id" @bind-Value="fundReturnHeader.CustomerMemberID" class="form-control"></InputText>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="bank_holder">Bank Holder Name :</label>
+                                    <InputText id="bank_holder" @bind-Value="fundReturnHeader.BankHolderName" class="form-control"></InputText>
+                                </div>
+                            </div>
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="bank_account">Bank Account :</label>
+                                    <InputText id="bank_account" @bind-Value="fundReturnHeader.BankAccount" class="form-control"></InputText>
+                                </div>
+                                <div class="col">
+                                    <label for="banks">Bank :</label>
+                                    <InputSelect id="banks" @bind-Value="fundReturnHeader.BankID" class="form-select">
+                                        @if (checkBank())
+                                        {
+                                            @foreach (var bank in FundReturnService.banks)
+                                            {
+                                                <option value="@bank.BankID">@bank.BankShortName</option>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <option disabled value="BLANK">Bank Data Empty</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                            </div>
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="reason">Reason / Cronology :</label>
+                                    <InputTextArea id="reason" @bind-Value="fundReturnHeader.Reason" class="form-control"></InputTextArea>
+                                </div>
+                            </div>
+                        }
+                        else if (fundReturnCategorySelected.Equals("XNTF"))
+                        {
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="doc_id">Document ID :</label>
+                                    <InputText id="doc_id" @bind-Value="fundReturnHeader.DocumentID" class="form-control" readonly></InputText>
+                                </div>
+                                <div class="col">
+                                    <label for="req_date">Request Date :</label>
+                                    <InputDate id="req_date" @bind-Value="fundReturnHeader.RequestDate" class="form-control" readonly></InputDate>
+                                </div>
+                            </div>
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="loc">Location :</label>
+                                    <InputText id="loc" @bind-Value="fundReturnHeader.LocationID" class="form-control" readonly></InputText>
+                                </div>
+                                <div class="col">
+                                    <label for="com_type">Commercial Type :</label>
+                                    <InputSelect id="com_type" @bind-Value="fundReturnHeader.CommercialType" class="form-select">
+                                        <option hidden value="BLANK">Select Commercial Type</option>
+                                        <option value="ONLINE">Online</option>
+                                        <option value="OFFLINE">Offline</option>
+                                    </InputSelect>
+                                </div>
+                            </div>
+
+                            @if (fundReturnHeader.CommercialType.Equals("BLANK"))
+                            {
+                                <div class="alert alert-info alert-dismissible fade show my-3" role="alert">
+                                    <strong>Select Commercial Type Above !</strong>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="rcp_doc">
+                                            @(fundReturnHeader.CommercialType.Equals("ONLINE") ? "SO :" : "Receipt :")
+                                        </label>
+                                        <InputText id="rcp_doc" @bind-Value="fundReturnHeader.ReceiptDocument" class="form-control"></InputText>
+                                    </div>
+                                </div>
+
+                                @if (fundReturnHeader.CommercialType.Equals("ONLINE"))
+                                {
+                                    <div class="row my-2">
+                                        <div class="col">
+                                            <label for="rcp_doc">External Document :</label>
+                                            <InputText id="rcp_doc" @bind-Value="fundReturnHeader.ExternalDocument" class="form-control"></InputText>
+                                        </div>
+                                    </div>
+                                }
+                            }
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="rcp_doc">Refund Amount :</label>
+                                    <InputText id="rcp_doc" @bind-Value="fundReturnHeader.RefundAmount" class="form-control"></InputText>
+                                </div>
+                                <div class="col">
+                                    <label for="rcp_doc">Transaction Amount :</label>
+                                    <InputText id="rcp_doc" @bind-Value="fundReturnHeader.TransactionAmount" class="form-control"></InputText>
+                                </div>
+                            </div>
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="cust_name">Customer Name :</label>
+                                    <InputText id="cust_name" @bind-Value="fundReturnHeader.CustomerName" class="form-control"></InputText>
+                                </div>
+                                <div class="col">
+                                    <label for="cust_contc">Contact No :</label>
+                                    <InputText id="cust_contc" @bind-Value="fundReturnHeader.CustomerContactNo" class="form-control"></InputText>
+                                </div>
+                            </div>
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="cust_type">Customer Type :</label>
+                                    <InputSelect id="cust_type" @bind-Value="fundReturnHeader.CustomerType" class="form-select">
+                                        <option hidden value="BLANK">Select Customer Type</option>
+                                        <option value="MEMBER">Member</option>
+                                        <option value="NONMEMBER">Non-Member</option>
+                                    </InputSelect>
+                                </div>
+                                <div class="col">
+                                    @if (fundReturnHeader.CustomerType.Equals("MEMBER"))
+                                    {
+                                        <label for="memb_id">Customer Member ID :</label>
+                                        <InputText id="memb_id" @bind-Value="fundReturnHeader.CustomerMemberID" class="form-control"></InputText>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="bank_holder">Bank Holder Name :</label>
+                                    <InputText id="bank_holder" @bind-Value="fundReturnHeader.BankHolderName" class="form-control"></InputText>
+                                </div>
+                            </div>
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="bank_account">Bank Account :</label>
+                                    <InputText id="bank_account" @bind-Value="fundReturnHeader.BankAccount" class="form-control"></InputText>
+                                </div>
+                                <div class="col">
+                                    <label for="banks">Bank :</label>
+                                    <InputSelect id="banks" @bind-Value="fundReturnHeader.BankID" class="form-select">
+                                        @if (checkBank())
+                                        {
+                                            @foreach (var bank in FundReturnService.banks)
+                                            {
+                                                <option value="@bank.BankID">@bank.BankShortName</option>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <option disabled value="BLANK">Bank Data Empty</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                            </div>
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="reason">Reason / Cronology :</label>
+                                    <InputTextArea id="reason" @bind-Value="fundReturnHeader.Reason" class="form-control"></InputTextArea>
+                                </div>
+                            </div>
+
+                            <div class="row my-4">
+                                <div class="col">
+                                    <button type="button" class="btn btn-sm btn-warning" @onclick="(() => fundReturnLine.Add(new()))"><b>Add</b></button>
+                                </div>
+                            </div>
+
+                            @if (checkFundReturnLine())
+                            {
+                                <table class="table table-sm table-bordered" style="width: 100%">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Action</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 17%; font-size: 15px;">Item Code</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 30%; font-size: 15px;">Item Description</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Item Qty</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">UOM</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 18%; font-size: 15px;">Item Amount</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Discount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var line in fundReturnLine)
+                                        {
+                                            <tr>
+                                                <td><button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="(() => fundReturnLine.Remove(line))"><i class="oi oi-delete"></i></button></td>
+
+                                                <td><input type="text" class="form-control" @bind-value="line.ItemCode" readonly="@(successUpload ? "readonly" : null)" /></td>
+                                                <td><input type="text" class="form-control" @bind-value="line.ItemDescription" readonly="@(successUpload ? "readonly" : null)" /></td>
+                                                <td><input type="number" class="form-control" @bind-value="line.ItemQuantity" readonly="@(successUpload ? "readonly" : null)" /></td>
+                                                <td><input type="text" class="form-control" @bind-value="line.UOM" readonly="@(successUpload ? "readonly" : null)" /></td>
+                                                <td><input type="text" class="form-control" @bind-value="line.ItemAmount" readonly="@(successUpload ? "readonly" : null)" /></td>
+                                                <td><input type="number" class="form-control" @bind-value="line.ItemDiscount" readonly="@(successUpload ? "readonly" : null)" /></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
+                                    <strong>Add Item Line !</strong>
+                                </div>
+                            }
+                        }
+
+                        <ValidationSummary />
+
+                        @if (!fundReturnCategorySelected.Equals("BLANK"))
+                        {
+                            <div class="row my-3">
+                                <div class="col">
+                                    <button type="reset" title="Reset" class="btn btn-sm btn-dark" @onclick="resetFundReturnForm" disabled="@((isLoading || successUpload) ? "disabled" : null)">
+                                        Reset
+                                    </button>
+                                    <button type="button" title="Submit" class="btn btn-sm btn-primary-cus fw-bold" disabled="@((isLoading || successUpload) ? "disabled" : null)" @onclick="createFundReturn">
+                                        Create Request
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </EditForm>
+
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col align-middle text-center">
+                    <h3>Fetch Data Privileges in Process</h3>
+                    <small>Refresh Page Using Button Below If There is No Response</small>
+                    <br />
+                    <button type="button" class="btn btn-primary my-4" @onclick="(() => StateHasChanged())"><b>Refresh Page</b></button>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@if (isLoading)
+{
+    <div class="modal show" id="splashLoading" tabindex="-5" role="dialog" aria-labelledby="splashLoadingDialog" aria-hidden="true" style="display:block; background: rgba(0,0,0, 0.7);">
+        <BPIWebApplication.Client.Shared.CustomLayout.SplashScreen></BPIWebApplication.Client.Shared.CustomLayout.SplashScreen>
+    </div>
+}

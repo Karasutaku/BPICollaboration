@@ -5,6 +5,7 @@ using Blazored.SessionStorage;
 using BPIWebApplication.Client;
 using BPIWebApplication.Client.Services.CashierLogbookServices;
 using BPIWebApplication.Client.Services.EPKRSServices;
+using BPIWebApplication.Client.Services.FundReturnServices;
 using BPIWebApplication.Client.Services.ManagementServices;
 using BPIWebApplication.Client.Services.PettyCashServices;
 using BPIWebApplication.Client.Services.POMFServices;
@@ -27,6 +28,7 @@ builder.Services.AddScoped<ICashierLogbookService, CashierLogbookService>();
 builder.Services.AddScoped<IStandarizationService, StandarizationService>();
 builder.Services.AddScoped<IEPKRSService, EPKRSService>();
 builder.Services.AddScoped<IPOMFService, POMFService>();
+builder.Services.AddScoped<IFundReturnService, FundReturnService>();
 
 builder.Services.AddBlazoredSessionStorage();
 

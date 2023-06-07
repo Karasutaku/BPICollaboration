@@ -31,4 +31,26 @@
         public string CategoryID { get; set; } = string.Empty;
         public int TotalDocuments { get; set; } = 0;
     }
+
+    public class EPKRSIncidentAccidentRegionalStatistics
+    {
+        public string DORMEmail { get; set; } = string.Empty;
+        public int TotalDocuments { get; set; } = 0;
+        public decimal TotalValues { get; set; } = decimal.Zero;
+        public decimal ReturnValues { get; set; } = decimal.Zero;
+    }
+
+    public class EPKRSIncidentAccidentInvolverStatisticsbyPosition
+    {
+        public string InvolverPosition { get; set; } = string.Empty;
+        public int TotalDocuments { get; set; } = 0;
+        public int TotalInvolver { get; set; } = 0;
+    }
+
+    public class EPKRSIncidentAccidentInvolverStatisticsbyDept
+    {
+        public string InvolverDept { get; set; } = string.Empty;
+        public int TotalDocuments { get; set; } = 0;
+        public int TotalInvolver { get; set; } = 0;
+    }
 }

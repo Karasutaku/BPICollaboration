@@ -28,6 +28,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
         private List<CaseAttachmentForm> caseAttachments = new();
         private List<BPIWebApplication.Shared.MainModel.Stream.FileStream> fileUploads = new();
 
+        private string ReportingType { get; set; } = string.Empty;
         private string RiskID { get; set; } = string.Empty;
         private string isLate { get; set; } = string.Empty;
         private string isCCTVCovered { get; set; } = string.Empty;
@@ -133,11 +134,12 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
             await EPKRSService.getEPRKSReportingType();
             await EPKRSService.getEPRKSRiskType();
+            await EPKRSService.getEPRKSRiskSubType();
             await ManagementService.GetAllDepartment(CommonLibrary.Base64Encode(loc));
             maxFileSize = await EPKRSService.getEPKRSMaxFileSize();
 
             formPage = 1;
-            RiskID = "BLANK";
+            ReportingType = "BLANK";
             isLate = "BLANK";
             isCCTVCovered = "BLANK";
             isReportedtoSender = "BLANK";
@@ -159,11 +161,15 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                     
                     if (data != null)
                     {
-                        RiskID = temp[0];
+                        ReportingType = temp[0];
+                        var type = EPKRSService.riskSubTypes.SingleOrDefault(x => x.SubRiskID.Equals(data.itemCase.SubRiskID));
+                        
+                        if (type != null)
+                            RiskID = type.RiskID;
 
                         itemCaseData = new ItemCaseForm
                         {
-                            RiskID = data.itemCase.RiskID,
+                            SubRiskID = data.itemCase.SubRiskID,
                             DocumentID = data.itemCase.DocumentID,
                             SiteReporter = data.itemCase.SiteReporter,
                             SiteSender = data.itemCase.SiteSender,
@@ -186,11 +192,15 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
                     if (data != null)
                     {
-                        RiskID = temp[0];
+                        ReportingType = temp[0];
+                        var type = EPKRSService.riskSubTypes.SingleOrDefault(x => x.SubRiskID.Equals(data.incidentAccident.SubRiskID));
+
+                        if (type != null)
+                            RiskID = type.RiskID;
 
                         incidentaccidentData = new IncidentAccidentForm
                         {
-                            RiskID = data.incidentAccident.RiskID,
+                            SubRiskID = data.incidentAccident.SubRiskID,
                             DocumentID = data.incidentAccident.DocumentID,
                             ReportDate = data.incidentAccident.ReportDate,
                             OccurenceDate = data.incidentAccident.OccurenceDate,
@@ -299,7 +309,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 uploadData.mainData = new();
                 uploadData.mainData.Data = new();
                 uploadData.mainData.Data.incidentAccident = new();
-                uploadData.mainData.Data.incidentAccident.RiskID = incidentaccidentData.RiskID;
+                uploadData.mainData.Data.incidentAccident.SubRiskID = incidentaccidentData.SubRiskID;
                 uploadData.mainData.Data.incidentAccident.DocumentID = "";
                 uploadData.mainData.Data.incidentAccident.ReportDate = incidentaccidentData.ReportDate;
                 uploadData.mainData.Data.incidentAccident.OccurenceDate = incidentaccidentData.OccurenceDate;
@@ -384,7 +394,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
                 QueryModel<IncidentAccident> uploadData = new();
                 uploadData.Data = new();
-                uploadData.Data.RiskID = incidentaccidentData.RiskID;
+                uploadData.Data.SubRiskID = incidentaccidentData.SubRiskID;
                 uploadData.Data.DocumentID = incidentaccidentData.DocumentID;
                 uploadData.Data.ReportDate = incidentaccidentData.ReportDate;
                 uploadData.Data.OccurenceDate = incidentaccidentData.OccurenceDate;
@@ -451,7 +461,11 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
         private void reportingTypeonChange(ChangeEventArgs e)
         {
-            RiskID = e.Value.ToString();
+            ReportingType = e.Value.ToString();
+
+            RiskID = "BLANK";
+            itemCaseData.SubRiskID = "BLANK";
+            incidentaccidentData.SubRiskID = "BLANK";
 
             formPage = 1;
             caseAttachments.Clear();
@@ -548,6 +562,25 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             try
             {
                 if (EPKRSService.riskTypes.Any())
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        private bool checkSubRiskType()
+        {
+            try
+            {
+                if (EPKRSService.riskSubTypes.Any())
                 {
                     return true;
                 }

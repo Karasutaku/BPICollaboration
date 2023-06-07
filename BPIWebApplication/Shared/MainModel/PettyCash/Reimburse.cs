@@ -15,6 +15,13 @@ namespace BPIWebApplication.Shared.MainModel.PettyCash
         public string Applicant { get; set; } = string.Empty;
 
         public List<ReimburseLine> lines { get; set; } = new();
+        public List<ReimburseAttachmentLine> attach { get; set; } = new();
         public ReimburseDocumentStatus statusDetails { get; set; } = new();
+    }
+    public class ReimburseAttachmentLine
+    {
+        public string ReimburseID { get; set; } = string.Empty;
+        public string ExpenseID { get; set; } = string.Empty;
+        public string PathFile { get; set; } = string.Empty;
     }
 }

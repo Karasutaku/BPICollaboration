@@ -8,6 +8,7 @@ using BPIWebApplication.Shared.MainModel.Login;
 using BPIWebApplication.Shared.DbModel;
 using System;
 using Microsoft.IdentityModel.Tokens;
+using BPIWebApplication.Client.Services.PettyCashServices;
 
 namespace BPIWebApplication.Client.Pages.PettyCashPages
 {
@@ -203,6 +204,16 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
                             f.type = f.type + "!_!" + reimburseId.Data;
                             f.content = Array.Empty<byte>();
                         }
+
+                        PettyCashService.fileStreams.ForEach(x =>
+                        {
+                            uploadData.reimburseDetails.Data.attach.Add(new ReimburseAttachmentLine
+                            {
+                                ReimburseID = reimburseId.Data,
+                                ExpenseID = x.type.Split("!_!")[0],
+                                PathFile = x.fileName
+                            });
+                        });
 
                         uploadData.files = PettyCashService.fileStreams;
 

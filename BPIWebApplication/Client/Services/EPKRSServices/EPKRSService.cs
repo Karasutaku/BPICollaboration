@@ -16,7 +16,9 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
 
         public List<ReportingType> reportingTypes { get; set; } = new();
         public List<RiskType> riskTypes { get; set; } = new();
+        public List<RiskSubType> riskSubTypes { get; set; } = new();
         public List<ItemRiskCategory> itemRiskCategories { get; set; } = new();
+        public List<IncidentAccidentInvolverType> involverType { get; set; } = new();
         public List<EPKRSUploadItemCase> itemCases { get; set; } = new();
         public List<EPKRSUploadIncidentAccident> incidentAccidents { get; set; } = new();
         public List<DocumentDiscussion> documentDiscussions { get; set; } = new();
@@ -557,6 +559,43 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
             return resData;
         }
 
+        public async Task<ResultModel<List<RiskSubType>>> getEPRKSRiskSubType()
+        {
+            ResultModel<List<RiskSubType>> resData = new ResultModel<List<RiskSubType>>();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<RiskSubType>>>("api/endUser/EPKRS/getEPKRSRiskSubType");
+
+                if (result.isSuccess)
+                {
+                    riskSubTypes.Clear();
+                    riskSubTypes = result.Data;
+
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
         public async Task<ResultModel<List<ItemRiskCategory>>> getEPKRSItemRiskCategory()
         {
             ResultModel<List<ItemRiskCategory>> resData = new ResultModel<List<ItemRiskCategory>>();
@@ -569,6 +608,43 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
                 {
                     itemRiskCategories.Clear();
                     itemRiskCategories = result.Data;
+
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
+        public async Task<ResultModel<List<IncidentAccidentInvolverType>>> getEPKRSIncidentAccidentInvolverType()
+        {
+            ResultModel<List<IncidentAccidentInvolverType>> resData = new ResultModel<List<IncidentAccidentInvolverType>>();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<IncidentAccidentInvolverType>>>("api/endUser/EPKRS/getEPKRSIncidentAccidentInvolverType");
+
+                if (result.isSuccess)
+                {
+                    involverType.Clear();
+                    involverType = result.Data;
 
                     resData.Data = result.Data;
                     resData.isSuccess = result.isSuccess;
@@ -863,6 +939,40 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
             return resData;
         }
 
+        public async Task<ResultModel<List<EPKRSDocumentStatistics>>> getEPKRSGeneralIncidentAccidentStatistics(string param)
+        {
+            ResultModel<List<EPKRSDocumentStatistics>> resData = new ResultModel<List<EPKRSDocumentStatistics>>();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSDocumentStatistics>>>($"api/endUser/EPKRS/getEPKRSGeneralIncidentAccidentStatistics/{param}");
+
+                if (result.isSuccess)
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
         public async Task<ResultModel<List<EPKRSItemCaseCategoryStatistics>>> getEPKRSItemCaseCategoryStatistics(string param)
         {
             ResultModel<List<EPKRSItemCaseCategoryStatistics>> resData = new ResultModel<List<EPKRSItemCaseCategoryStatistics>>();
@@ -938,6 +1048,108 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
             try
             {
                 var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSItemCaseItemCategoryStatistics>>>($"api/endUser/EPKRS/getEPKRSItemCategoriesStatistics/{param}");
+
+                if (result.isSuccess)
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
+        public async Task<ResultModel<List<EPKRSIncidentAccidentRegionalStatistics>>> getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(string param)
+        {
+            ResultModel<List<EPKRSIncidentAccidentRegionalStatistics>> resData = new ResultModel<List<EPKRSIncidentAccidentRegionalStatistics>>();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSIncidentAccidentRegionalStatistics>>>($"api/endUser/EPKRS/getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail/{param}");
+
+                if (result.isSuccess)
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
+        public async Task<ResultModel<List<EPKRSIncidentAccidentInvolverStatisticsbyPosition>>> getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(string param)
+        {
+            ResultModel<List<EPKRSIncidentAccidentInvolverStatisticsbyPosition>> resData = new ResultModel<List<EPKRSIncidentAccidentInvolverStatisticsbyPosition>>();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSIncidentAccidentInvolverStatisticsbyPosition>>>($"api/endUser/EPKRS/getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition/{param}");
+
+                if (result.isSuccess)
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
+        public async Task<ResultModel<List<EPKRSIncidentAccidentInvolverStatisticsbyDept>>> getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(string param)
+        {
+            ResultModel<List<EPKRSIncidentAccidentInvolverStatisticsbyDept>> resData = new ResultModel<List<EPKRSIncidentAccidentInvolverStatisticsbyDept>>();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSIncidentAccidentInvolverStatisticsbyDept>>>($"api/endUser/EPKRS/getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept/{param}");
 
                 if (result.isSuccess)
                 {

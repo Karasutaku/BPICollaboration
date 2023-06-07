@@ -8,6 +8,26 @@
         opacity: 0.9;
     }
 
+#epkrsstats, #epkrsmpanel, epkrsApprovalLists, epkrsInvolverLists {
+    background-color: #213555;
+}
+
+#epkrstitleapr, #epkrstitleinv, #epkrsstatstitle, #epkrsmpaneltitle {
+    width: 100%;
+    color: white;
+    background-color: #4F709C;
+}
+
+#filterSelector {
+    user-select: none;
+    cursor: pointer;
+}
+
+.bg-special {
+    background: rgb(254,255,125);
+    background: linear-gradient(90deg, rgba(254,255,125,0.44870448179271705) 0%, rgba(255,222,87,0.5439425770308124) 38%, rgba(245,255,118,0.48792016806722693) 100%);
+}
+
 .cus-bg {
     color: white;
     background: rgb(2,0,36);
