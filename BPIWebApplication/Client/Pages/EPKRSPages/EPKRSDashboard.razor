@@ -429,6 +429,25 @@ else
 
                             <div class="tab-content" id="myTabContent">
                                 <div class="tab-pane fade show active" id="itemcase" role="tabpanel" aria-labelledby="itemcase-tab">
+
+                                    <form @onsubmit="itemCaseFilter">
+                                        <div class="input-group my-3">
+                                            <div class="input-group-prepend">
+                                                <select class="form-select" @bind="itemCaseFilterType">
+                                                    <option hidden disabled value="">Filter By</option>
+                                                    <option value="ID">EPKRS ID</option>
+                                                    <option value="LOC">Location</option>
+                                                    <option value="STATUS">Status</option>
+                                                </select>
+                                            </div>
+                                            <input type="text" class="form-control" aria-label="Text input with dropdown button" @bind-value="itemCaseFilterValue">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary fw-bold" type="button" disabled="@(itemCaseFilterActive ? null : "disabled")" @onclick="resetItemCaseFilter">Reset</button>
+                                            </div>
+                                        </div>
+                                        <input type="submit" hidden>
+                                    </form>
+                                    
                                     @if (checkItemCaseData())
                                     {
                                         <div class="m-2 p-1">
@@ -467,8 +486,8 @@ else
                                                                     <b> Loading Document No : </b> @itemCase.itemCase.LoadingDocumentID, @itemCase.itemCase.LoadingDocumentDate.ToString("dd / MM / yyyy")
                                                                     <br />
                                                                     <b> Report Date : </b> @itemCase.itemCase.ReportDate.ToString("dd / MM / yyyy")
-                                                                    <br />
-                                                                    <b> Variance Date : </b> @itemCase.itemCase.VarianceDate
+                                                                    @*<br />
+                                                                    <b> Variance : </b> @itemCase.itemCase.VarianceDate Day(s)*@
                                                                     <br />
                                                                     <b> Document Status : </b> @itemCase.itemCase.DocumentStatus
                                                                 </p>
@@ -477,10 +496,14 @@ else
                                                                     @{
                                                                         int? unreadCountA = null;
 
-                                                                        if (EPKRSService.documentDiscussions.Count > 0 && EPKRSService.documentDiscussionReadHistories.Count > 0)
-                                                                            unreadCountA = EPKRSService.documentDiscussions.ExceptBy(EPKRSService.documentDiscussionReadHistories.Select(f => f.rowGuid), g => g.rowGuid).Where(h => h.DocumentID.Equals(itemCase.itemCase.DocumentID)).ToList().Count;
+                                                                        @try
+                                                                        {
+                                                                            if (EPKRSService.documentDiscussions.Count > 0 && EPKRSService.documentDiscussionReadHistories.Count > 0)
+                                                                                unreadCountA = EPKRSService.documentDiscussions.ExceptBy(EPKRSService.documentDiscussionReadHistories.Select(f => f.rowGuid), g => g.rowGuid).Where(h => h.DocumentID.Equals(itemCase.itemCase.DocumentID)).ToList().Count;
+                                                                        }
+                                                                        catch { unreadCountA = 0; }
                                                                     }
-                                                                    @if (unreadCountA != null)
+                                                                    @if (unreadCountA > 0)
                                                                     {   
                                                                         <span class="badge bg-danger text-white">@unreadCountA.Value.ToString("N0")</span>
                                                                     }
@@ -490,6 +513,34 @@ else
                                                     </div>
                                                 </div>
                                             }
+
+                                            <nav aria-label="Item Case Pagination">
+                                                <ul class="pagination pagination-sm justify-content-center my-2">
+                                                    @if ((itemCasePageActive - 1) > 0)
+                                                    {
+                                                        <li class="page-item px-1 paging-style" @onclick="(() => itemCasePageSelect((itemCasePageActive - 1)))"><span class="page-link">Previous</span></li>
+                                                        <li class="page-item paging-style" @onclick="(() => itemCasePageSelect((itemCasePageActive - 1)))"><span class="page-link">@(itemCasePageActive - 1)</span></li>
+                                                    }
+                                                    else
+                                                    {
+                                                        <li class="page-item px-1 disabled dis-paging-style"><span class="page-link">Previous</span></li>
+                                                        <li class="page-item disabled dis-paging-style"><span class="page-link">. . .</span></li>
+                                                    }
+
+                                                    <li class="page-item active dis-paging-style"><span class="page-link">@itemCasePageActive</span></li>
+
+                                                    @if (itemCasePageActive < itemCaseNumberofPages)
+                                                    {
+                                                        <li class="page-item paging-style" @onclick="(() => itemCasePageSelect((itemCasePageActive + 1)))"><span class="page-link">@(itemCasePageActive + 1)</span></li>
+                                                        <li class="page-item px-1 paging-style" @onclick="(() => itemCasePageSelect((itemCasePageActive + 1)))"><span class="page-link">Next</span></li>
+                                                    }
+                                                    else
+                                                    {
+                                                        <li class="page-item disabled dis-paging-style"><span class="page-link">. . .</span></li>
+                                                        <li class="page-item px-1 disabled dis-paging-style"><span class="page-link">Next</span></li>
+                                                    }
+                                                </ul>
+                                            </nav>
                                         </div>
                                     }
                                     else
@@ -566,8 +617,12 @@ else
                                                                     @{
                                                                         int? unreadCountB = null;
 
-                                                                        if (EPKRSService.documentDiscussions.Count > 0 && EPKRSService.documentDiscussionReadHistories.Count > 0)
-                                                                            unreadCountB = EPKRSService.documentDiscussions.ExceptBy(EPKRSService.documentDiscussionReadHistories.Select(f => f.rowGuid), g => g.rowGuid).Where(h => h.DocumentID.Equals(incidentAccident.incidentAccident.DocumentID)).ToList().Count;
+                                                                        @try
+                                                                        {
+                                                                            if (EPKRSService.documentDiscussions.Count > 0 && EPKRSService.documentDiscussionReadHistories.Count > 0)
+                                                                                unreadCountB = EPKRSService.documentDiscussions.ExceptBy(EPKRSService.documentDiscussionReadHistories.Select(f => f.rowGuid), g => g.rowGuid).Where(h => h.DocumentID.Equals(incidentAccident.incidentAccident.DocumentID)).ToList().Count;
+                                                                        } 
+                                                                        catch { unreadCountB = 0; }
                                                                     }
                                                                     @if (unreadCountB > 0)
                                                                     {
@@ -655,74 +710,211 @@ else
                 </button>
             </div>
             <div class="modal-body">
-                <div class="row">
-                    <div class="col fw-bold">Document ID</div>
-                    <div class="col">: @previewItemCase.DocumentID</div>
+                <div class="border border-2 p-2">
+                    <div class="row">
+                        <div class="col align-middle text-center">
+                            <h5 class="fw-bold my-auto"> @previewItemCase.DocumentID </h5>
+                            <p class="my-auto"><small> Report Date : @previewItemCase.ReportDate.ToString("dddd, dd MMMM yyyy") </small></p>
+                            <p class="my-auto"><b> Document Status </b> - <em> @previewItemCase.DocumentStatus </em></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col col-4 fw-bold">Document ID</div>
+                    <div class="col col-8">: @previewItemCase.DocumentID</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Report Date</div>
-                    <div class="col">: @previewItemCase.ReportDate.ToString("dd MMMM yyyy")</div>
+                    <div class="col col-4 fw-bold">Report Date</div>
+                    <div class="col col-8">: @previewItemCase.ReportDate.ToString("dd MMMM yyyy")</div>
                 </div>
                 @{
                     var ariskSubType = EPKRSService.riskSubTypes.SingleOrDefault(x => x.SubRiskID.Equals(previewItemCase.SubRiskID));
                     var ariskType = (ariskSubType != null ? EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(ariskSubType.RiskID)) : null);
                 }
+                <div class="row">
+                    <div class="col col-4 fw-bold">Risk Type</div>
+                    <div class="col col-8">: @(ariskType != null ? ariskType.RiskDescription : "")</div>
+                </div>
                 <div class="row mb-4">
-                    <div class="col fw-bold">Risk Type</div>
-                    <div class="col">: @(ariskType != null ? ariskType.RiskDescription : "")</div>
-                </div>
-                <div class="row mb-4">
-                    <div class="col fw-bold">Risk Sub Type</div>
-                    <div class="col">: @(ariskSubType != null ? ariskSubType.SubRiskDescription : "")</div>
+                    <div class="col col-4 fw-bold">Risk Sub Type</div>
+                    <div class="col col-8">: @(ariskSubType != null ? ariskSubType.SubRiskDescription : "")</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Site Reporter</div>
-                    <div class="col">: @(ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewItemCase.SiteReporter)) == null ? previewItemCase.SiteReporter.Equals("HO") ? "HEAD OFFICE" : previewItemCase.SiteReporter : ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewItemCase.SiteReporter)).locationName)</div>
+                    <div class="col col-4 fw-bold">Site Reporter</div>
+                    <div class="col col-8">: @(ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewItemCase.SiteReporter)) == null ? previewItemCase.SiteReporter.Equals("HO") ? "HEAD OFFICE" : previewItemCase.SiteReporter : ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewItemCase.SiteReporter)).locationName)</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Site Sender</div>
-                    <div class="col">: @(ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewItemCase.SiteSender)) == null ? previewItemCase.SiteReporter.Equals("HO") ? "HEAD OFFICE" : previewItemCase.SiteReporter : ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewItemCase.SiteSender)).locationName)</div>
+                    <div class="col col-4 fw-bold">Site Sender</div>
+                    <div class="col col-8">: @(ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewItemCase.SiteSender)) == null ? previewItemCase.SiteReporter.Equals("HO") ? "HEAD OFFICE" : previewItemCase.SiteReporter : ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewItemCase.SiteSender)).locationName)</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Loading Document ID</div>
-                    <div class="col">: @previewItemCase.LoadingDocumentID</div>
+                    <div class="col col-4 fw-bold">Loading Document ID</div>
+                    <div class="col col-8">: @previewItemCase.LoadingDocumentID</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Loading Document Date</div>
-                    <div class="col">: @previewItemCase.LoadingDocumentDate.ToString("dd MMMM yyyy")</div>
+                    <div class="col col-4 fw-bold">Loading Document Date</div>
+                    <div class="col col-8">: @previewItemCase.LoadingDocumentDate.ToString("dd MMMM yyyy")</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Item Pickup Date</div>
-                    <div class="col">: @previewItemCase.ItemPickupDate.ToString("dd MMMM yyyy")</div>
+                    <div class="col col-4 fw-bold">Item Pickup Date</div>
+                    <div class="col col-8">: @previewItemCase.ItemPickupDate.ToString("dd MMMM yyyy")</div>
+                </div>
+                @*<div class="row">
+                    <div class="col col-4 fw-bold">Late Status</div>
+                    <div class="col col-8">: @(previewItemCase.isLate.Equals(true) ? "Late" : "On Time")</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Late Status</div>
-                    <div class="col">: @(previewItemCase.isLate.Equals(true) ? "Late" : "On Time")</div>
+                    <div class="col col-4 fw-bold">Variance</div>
+                    <div class="col col-8">: @previewItemCase.VarianceDate Day(s)</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Variance</div>
-                    <div class="col">: @previewItemCase.VarianceDate Day(s)</div>
+                    <div class="col col-4 fw-bold">CCTV Status</div>
+                    <div class="col col-8">: @(previewItemCase.isCCTVCoverable.Equals(true) ? "Covered" : "Not Covered") </div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">CCTV Status</div>
-                    <div class="col">: @(previewItemCase.isCCTVCoverable.Equals(true) ? "Covered" : "Not Covered") </div>
-                </div>
-                <div class="row">
-                    <div class="col fw-bold">Report Sender Status</div>
-                    <div class="col">: @(previewItemCase.isReportedtoSender.Equals(true) ? "Reported" : "Not Reported")</div>
-                </div>
+                    <div class="col col-4 fw-bold">Report Sender Status</div>
+                    <div class="col col-8">: @(previewItemCase.isReportedtoSender.Equals(true) ? "Reported" : "Not Reported")</div>
+                </div>*@
 
                 @if (previewItemCase.DocumentStatus.Equals("OnProgress") || previewItemCase.DocumentStatus.Equals("Closed"))
                 {
                     <div class="row">
-                        <div class="col fw-bold">RISK Mitigation Plan</div>
-                        <div class="col">: @previewItemCase.ExtendedMitigationPlan</div>
+                        <div class="col col-4 fw-bold">RISK Mitigation Plan</div>
+                        <div class="col col-8">: @previewItemCase.ExtendedMitigationPlan</div>
+                    </div>
+                }
+
+                <div class="row mt-4">
+                    <div class="col">
+                        @if (checkPreviewItemLine())
+                        {
+                            @*<div class="table-responsive">*@
+                            <table class="table table-sm table-hover" style="width: 100%">
+                                <caption>
+                                    @*Total @previewItemLine.Count() Item(s) in Report*@
+                                </caption>
+                                <thead>
+                                    <tr>
+                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 16%; font-size: 15px;">TR ID</th>
+                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">TR Date</th>
+                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Item Code</th>
+                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 20%; font-size: 15px;">Item Desc.</th>
+                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Risk Type</th>
+                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Qty</th>
+                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">UOM</th>
+                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 14%; font-size: 15px;">Value</th>
+                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Stock</th>
+                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 5%;">Prvw.</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in previewItemLine)
+                                    {
+                                        var riskCat = EPKRSService.itemRiskCategories.SingleOrDefault(x => x.ItemRiskCategoryID.Equals(item.ItemRiskCategoryID));
+                                            
+                                        <tr class="dropdown">
+                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.TRID</td>
+                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.TRDate.ToString("dd/MM/yyyy")</td>
+                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemCode</td>
+                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemDescription</td>
+                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                                @if (riskCat != null)
+                                                    @riskCat.CategoryDescription
+                                                else
+                                                    @item.ItemRiskCategoryID
+                                            </td>
+                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemQuantity</td>
+                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.UOM</td>
+                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">Rp. @item.ItemValue.ToString("N0") ,-</td>
+                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemStock</td>
+                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                                <div class="btn-group dropdown">
+                                                    <button class="btn btn-sm dropdown-toggle" type="button" data-toggle="dropdown" data-boundary="viewport" aria-haspopup="true" aria-expanded="false">
+                                                        <i class="oi oi-eye"></i>
+                                                    </button>
+                                                    <div class="dropdown-menu dropdown-menu-right" id="dropdownSelector" onclick="event.stopPropagation();">
+                                                        <div class="px-4 py-2">
+
+                                                            <div class="row my-1">
+                                                                <div class="col">
+                                                                    <b>Time Variance</b> : @item.VarianceDate.ToString("N0") Day(s)
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row my-1">
+                                                                <div class="col">
+                                                                    <b>Status Terlambat</b> : @(item.isLate ? "YA" : "TIDAK")
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row my-1">
+                                                                <div class="col">
+                                                                    <b>Status Tercakup CCTV</b> : @(item.isCCTVCoverable ? "YA" : "TIDAK")
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row my-1">
+                                                                <div class="col">
+                                                                    <b>Status Pemberitahuan ke Pengirim</b> : @(item.isReportedtoSender ? "YA" : "TIDAK")
+                                                                </div>
+                                                            </div>
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            @*</div>*@
+                        }
+                        else
+                        {
+                            
+                        }
+                    </div>
+                </div>
+
+                @if (checkPreviewApproval())
+                {
+                    <div id="accordionApproval" class="my-2" style="width: 100%;">
+
+                        <div class="card" style="width: 100%;">
+                            <div class="card-header" id="epkrsAccordionHeaderApr">
+                                <div class="border border-1">
+                                    <button id="epkrstitleapr" class="btn w-100" data-toggle="collapse" data-target="#epkrsApprovalLists" aria-expanded="true" aria-controls="epkrsApprovalLists">
+                                        <b>EPKRS Approval List(s)</b>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="epkrsApprovalLists" class="collapse bg-special" aria-labelledby="epkrstitleapr" data-parent="#accordionApproval">
+                                <div class="card-body">
+                                    @foreach (var apv in previewDocumentListApproval)
+                                    {
+                                        <div class="row my-1">
+                                            <div class="col">
+                                                <label class="fw-bold" for="@(apv.ApprovalAction)_user">@apv.ApprovalAction User :</label>
+                                                <input type="text" id="@(@apv.ApprovalAction)_user" value="@apv.Approver" class="form-control-sm w-100 border-1" readonly />
+                                            </div>
+                                            <div class="col">
+                                                <label class="fw-bold" for="@(@apv.ApprovalAction)_date">@apv.ApprovalAction Date :</label>
+                                                <input type="text" id="@(@apv.ApprovalAction)_date" value="@apv.ApproveDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")" class="form-control-sm w-100 border-1" readonly />
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 }
 
                 <div class="row my-3">
                     <div class="col">
-                        <p class="fw-bold"><i class="oi oi-paperclip"></i> Attachment </p>
+                        <p class="fw-bold text-center"><i class="oi oi-paperclip"></i> Attachment(s) </p>
 
                         @if (checkPreviewCaseAttachment())
                         {
@@ -753,54 +945,6 @@ else
                         }
                     </div>
                 </div>
-
-                <div class="row">
-                    <div class="col">
-                        @if (checkPreviewItemLine())
-                        {
-                            <div class="table-responsive">
-                                <table class="table table-sm table-hover" style="width: 100%">
-                                    <caption>
-                                        @*Total @previewItemLine.Count() Item(s) in Report*@
-                                    </caption>
-                                    <thead>
-                                        <tr>
-                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 17%; font-size: 15px;">TR ID</th>
-                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 11%; font-size: 15px;">TR Date</th>
-                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 11%; font-size: 15px;">Item Code</th>
-                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 21%; font-size: 15px;">Item Desc.</th>
-                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 11%; font-size: 15px;">Risk Type</th>
-                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Qty</th>
-                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">UOM</th>
-                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 14%; font-size: 15px;">Value</th>
-                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Stock</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var item in previewItemLine)
-                                        {
-                                            <tr>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.TRID</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.TRDate.ToString("dd/MM/yyyy")</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemCode</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemDescription</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemRiskCategoryID</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemQuantity</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.UOM</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Rp. @item.ItemValue.ToString("N0") ,-</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemStock</td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        }
-                        else
-                        {
-                            
-                        }
-                    </div>
-                </div>
             </div>
             <div class="modal-footer cus-bg">
                 @if (LoginService.activeUser.userPrivileges.Contains("AP"))
@@ -814,7 +958,7 @@ else
                 }
                 @if (LoginService.activeUser.userPrivileges.Contains("RL"))
                 {
-                    <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Close"))"><i class="oi oi-lock-locked" disabled="@(previewItemCase.DocumentStatus.Equals("OnProgress") ? null : "disabled")"></i> Close Report</button>
+                    <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Close"))" disabled="@(previewItemCase.DocumentStatus.Equals("OnProgress") ? null : "disabled")"><i class="oi oi-lock-locked"></i> Close Report</button>
                 }
                 @if (LoginService.activeUser.userPrivileges.Contains("ED"))
                 {
@@ -822,15 +966,19 @@ else
                 }
                 @if (LoginService.activeUser.userPrivileges.Contains("DL"))
                 {
-                    <button type="button" class="btn btn-danger mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Delete"))"><i class="oi oi-basket"></i> Delete</button>
+                    <button type="button" class="btn btn-danger mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Delete"))" disabled="@(previewItemCase.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-basket"></i> Delete</button>
                 }
                 <button type="button" class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal"><i class="oi oi-chat"></i> Discussion Panel 
                     @{
-                        var unreadCountC = EPKRSService.documentDiscussions.ExceptBy(EPKRSService.documentDiscussionReadHistories.Select(f => f.rowGuid), g => g.rowGuid).Where(h => h.DocumentID.Equals(previewItemCase.DocumentID)).ToList().Count;
+                        int ? unreadCountC = null;
+                        @try {
+                            if (EPKRSService.documentDiscussions.Count > 0 && EPKRSService.documentDiscussionReadHistories.Count > 0)
+                                unreadCountC = EPKRSService.documentDiscussions.ExceptBy(EPKRSService.documentDiscussionReadHistories.Select(f => f.rowGuid), g => g.rowGuid).Where(h => h.DocumentID.Equals(previewItemCase.DocumentID)).ToList().Count;
+                        } catch { unreadCountC = 0; }
                     }
                     @if (unreadCountC > 0)
                     {
-                        <span class="badge bg-danger text-white">@unreadCountC.ToString("N0")</span>
+                        <span class="badge bg-danger text-white">@unreadCountC.Value.ToString("N0")</span>
                     }
                 </button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#itemCasePreviewModal"><i class="oi oi-x"></i> Close</button>
@@ -861,112 +1009,112 @@ else
                 </div>
 
                 <div class="row mt-4">
-                    <div class="col fw-bold">Site Reporter</div>
-                    <div class="col">: @previewIncidentAccident.SiteReporter</div>
+                    <div class="col col-4 fw-bold">Site Reporter</div>
+                    <div class="col col-8">: @previewIncidentAccident.SiteReporter</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Department Reporter</div>
-                    <div class="col">: @((ManagementService.departments.SingleOrDefault(x => x.DepartmentID.Equals(previewIncidentAccident.DepartmentReporter)) == null) ? previewIncidentAccident.DepartmentReporter : ManagementService.departments.SingleOrDefault(x => x.DepartmentID.Equals(previewIncidentAccident.DepartmentReporter)).DepartmentName)  </div>
+                    <div class="col col-4 fw-bold">Department Reporter</div>
+                    <div class="col col-8">: @((ManagementService.departments.SingleOrDefault(x => x.DepartmentID.Equals(previewIncidentAccident.DepartmentReporter)) == null) ? previewIncidentAccident.DepartmentReporter : ManagementService.departments.SingleOrDefault(x => x.DepartmentID.Equals(previewIncidentAccident.DepartmentReporter)).DepartmentName)  </div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Risk RP</div>
-                    <div class="col">: @previewIncidentAccident.RiskRPName - <em> @previewIncidentAccident.RiskRPEmail </em></div>
+                    <div class="col col-4 fw-bold">Risk RP</div>
+                    <div class="col col-8">: @previewIncidentAccident.RiskRPName - <em> @previewIncidentAccident.RiskRPEmail </em></div>
                 </div>
                 <div class="row mb-4">
-                    <div class="col fw-bold">DORM</div>
-                    <div class="col">: @previewIncidentAccident.DORMName - <em> @previewIncidentAccident.DORMEmail </em></div>
+                    <div class="col col-4 fw-bold">DORM</div>
+                    <div class="col col-8">: @previewIncidentAccident.DORMName - <em> @previewIncidentAccident.DORMEmail </em></div>
                 </div>
 
                 @*split*@
 
                 <div class="row mt-4">
-                    <div class="col fw-bold">Case Description</div>
-                    <div class="col">: @previewIncidentAccident.CaseDescription</div>
+                    <div class="col col-4 fw-bold">Case Description</div>
+                    <div class="col col-8">: @previewIncidentAccident.CaseDescription</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Occurence Date</div>
-                    <div class="col">: @previewIncidentAccident.OccurenceDate.ToString("dddd, dd MMMM yyyy")</div>
+                    <div class="col col-4 fw-bold">Occurence Date</div>
+                    <div class="col col-8">: @previewIncidentAccident.OccurenceDate.ToString("dddd, dd MMMM yyyy")</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Department Affected</div>
-                    <div class="col">: @((ManagementService.departments.SingleOrDefault(x => x.DepartmentID.Equals(previewIncidentAccident.DepartmentAffected)) == null) ? previewIncidentAccident.DepartmentAffected : ManagementService.departments.SingleOrDefault(x => x.DepartmentID.Equals(previewIncidentAccident.DepartmentAffected)).DepartmentName) </div>
+                    <div class="col col-4 fw-bold">Department Affected</div>
+                    <div class="col col-8">: @((ManagementService.departments.SingleOrDefault(x => x.DepartmentID.Equals(previewIncidentAccident.DepartmentAffected)) == null) ? previewIncidentAccident.DepartmentAffected : ManagementService.departments.SingleOrDefault(x => x.DepartmentID.Equals(previewIncidentAccident.DepartmentAffected)).DepartmentName) </div>
                 </div>
                 @{
                     var briskSubType = EPKRSService.riskSubTypes.SingleOrDefault(x => x.SubRiskID.Equals(previewIncidentAccident.SubRiskID));
                     var briskType = (briskSubType != null ? EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(briskSubType.RiskID)) : null);
                 }
                 <div class="row">
-                    <div class="col fw-bold">Risk Type</div>
-                    <div class="col">: @(briskType != null ? briskType.RiskDescription : "")</div>
+                    <div class="col col-4 fw-bold">Risk Type</div>
+                    <div class="col col-8">: @(briskType != null ? briskType.RiskDescription : "")</div>
                 </div>
                 <div class="row mb-4">
-                    <div class="col fw-bold">Risk Sub Type</div>
-                    <div class="col">: @(briskSubType != null ? briskSubType.SubRiskDescription : "")</div>
+                    <div class="col col-4 fw-bold">Risk Sub Type</div>
+                    <div class="col col-8">: @(briskSubType != null ? briskSubType.SubRiskDescription : "")</div>
                 </div>
 
                 @*split*@
 
                 <div class="row mt-4">
-                    <div class="col fw-bold">Cronology</div>
-                    <div class="col text-wrap">: @previewIncidentAccident.Cronology</div>
+                    <div class="col col-4 fw-bold">Cronology</div>
+                    <div class="col col-8 text-wrap">: @previewIncidentAccident.Cronology</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Root Cause</div>
-                    <div class="col text-wrap">: @previewIncidentAccident.RootCause</div>
+                    <div class="col col-4 fw-bold">Root Cause</div>
+                    <div class="col col-8 text-wrap">: @previewIncidentAccident.RootCause</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Loss Description</div>
-                    <div class="col text-wrap">: @previewIncidentAccident.LossDescription</div>
+                    <div class="col col-4 fw-bold">Loss Description</div>
+                    <div class="col col-8 text-wrap">: @previewIncidentAccident.LossDescription</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Loss Estimation</div>
-                    <div class="col">: Rp. @previewIncidentAccident.LossEstimation.ToString("N0") ,-</div>
+                    <div class="col col-4 fw-bold">Loss Estimation</div>
+                    <div class="col col-8">: Rp. @previewIncidentAccident.LossEstimation.ToString("N0") ,-</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Return Amount</div>
-                    <div class="col">: Rp. @previewIncidentAccident.ReturnAmount.ToString("N0") ,-</div>
+                    <div class="col col-4 fw-bold">Return Amount</div>
+                    <div class="col col-8">: Rp. @previewIncidentAccident.ReturnAmount.ToString("N0") ,-</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Risk Description</div>
-                    <div class="col text-wrap">: @previewIncidentAccident.RiskDescription</div>
+                    <div class="col col-4 fw-bold">Risk Description</div>
+                    <div class="col col-8 text-wrap">: @previewIncidentAccident.RiskDescription</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Cause Description</div>
-                    <div class="col text-wrap">: @previewIncidentAccident.CauseDescription</div>
+                    <div class="col col-4 fw-bold">Cause Description</div>
+                    <div class="col col-8 text-wrap">: @previewIncidentAccident.CauseDescription</div>
                 </div>
                 <div class="row mb-4">
-                    <div class="col fw-bold">Action Plan</div>
-                    <div class="col text-wrap">: @previewIncidentAccident.ActionPlan</div>
+                    <div class="col col-4 fw-bold">Action Plan</div>
+                    <div class="col col-8 text-wrap">: @previewIncidentAccident.ActionPlan</div>
                 </div>
 
                 @*split*@
 
                 <div class="row mt-4">
-                    <div class="col fw-bold">PIC</div>
-                    <div class="col">: @previewIncidentAccident.PIC</div>
+                    <div class="col col-4 fw-bold">PIC</div>
+                    <div class="col col-8">: @previewIncidentAccident.PIC</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Target Date</div>
-                    <div class="col">: @previewIncidentAccident.TargetDate.ToString("dddd, dd MMMM yyyy")</div>
+                    <div class="col col-4 fw-bold">Target Date</div>
+                    <div class="col col-8">: @previewIncidentAccident.TargetDate.ToString("dddd, dd MMMM yyyy")</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Mitigation Plan</div>
-                    <div class="col text-wrap">: @previewIncidentAccident.MitigationPlan</div>
+                    <div class="col col-4 fw-bold">Mitigation Plan</div>
+                    <div class="col col-8 text-wrap">: @previewIncidentAccident.MitigationPlan</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Mitigation Date</div>
-                    <div class="col">: @previewIncidentAccident.MitigationDate.ToString("dddd, dd MMMM yyyy")</div>
+                    <div class="col col-4 fw-bold">Mitigation Date</div>
+                    <div class="col col-8">: @previewIncidentAccident.MitigationDate.ToString("dddd, dd MMMM yyyy")</div>
                 </div>
 
                 @if (previewIncidentAccident.DocumentStatus.Equals("OnProgress") || previewIncidentAccident.DocumentStatus.Equals("Closed"))
                 {
                     <div class="row mt-4">
-                        <div class="col fw-bold">RISK Root Cause</div>
-                        <div class="col">: @previewIncidentAccident.ExtendedRootCause</div>
+                        <div class="col col-4 fw-bold">RISK Root Cause</div>
+                        <div class="col col-8">: @previewIncidentAccident.ExtendedRootCause</div>
                     </div>
                     <div class="row">
-                        <div class="col fw-bold">RISK Mitigation Plan</div>
-                        <div class="col">: @previewIncidentAccident.ExtendedMitigationPlan</div>
+                        <div class="col col-4 fw-bold">RISK Mitigation Plan</div>
+                        <div class="col col-8">: @previewIncidentAccident.ExtendedMitigationPlan</div>
                     </div>
                 }
 
@@ -1111,15 +1259,19 @@ else
                 }
                 @if (LoginService.activeUser.userPrivileges.Contains("DL"))
                 {
-                    <button type="button" class="btn btn-danger mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Delete"))"><i class="oi oi-basket"></i> Delete</button>
+                    <button type="button" class="btn btn-danger mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Delete"))" disabled="@(previewIncidentAccident.DocumentStatus.Equals("OnProgress") ? null : "disabled")"><i class="oi oi-basket"></i> Delete</button>
                 }
                 <button type="button" class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal" @onclick="(async () => await setDocumentDiscussionPreviewData(previewIncidentAccident.DocumentID, previewIncidentAccident.SiteReporter))"><i class="oi oi-chat"></i> Discussion Panel 
                     @{
-                        var unreadCountD = EPKRSService.documentDiscussions.ExceptBy(EPKRSService.documentDiscussionReadHistories.Select(f => f.rowGuid), g => g.rowGuid).Where(h => h.DocumentID.Equals(previewIncidentAccident.DocumentID)).ToList().Count;
+                        int? unreadCountD = null;
+                        @try {
+                            if (EPKRSService.documentDiscussions.Count > 0 && EPKRSService.documentDiscussionReadHistories.Count > 0)
+                                unreadCountD = EPKRSService.documentDiscussions.ExceptBy(EPKRSService.documentDiscussionReadHistories.Select(f => f.rowGuid), g => g.rowGuid).Where(h => h.DocumentID.Equals(previewIncidentAccident.DocumentID)).ToList().Count;
+                        } catch { unreadCountD = 0; }
                     }
                     @if (unreadCountD > 0) 
                     {
-                        <span class="badge bg-danger text-white">@unreadCountD.ToString("N0")</span>
+                        <span class="badge bg-danger text-white">@unreadCountD.Value.ToString("N0")</span>
                     }
                 </button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#incidentAccidentPreviewModal"><i class="oi oi-x"></i> Close</button>

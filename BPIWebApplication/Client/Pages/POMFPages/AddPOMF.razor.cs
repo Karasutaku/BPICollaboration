@@ -1,6 +1,7 @@
 ﻿using BPILibrary;
 using BPIWebApplication.Client.Services.EPKRSServices;
 using BPIWebApplication.Shared.DbModel;
+using BPIWebApplication.Shared.MainModel.EPKRS;
 using BPIWebApplication.Shared.MainModel.Login;
 using BPIWebApplication.Shared.MainModel.POMF;
 using BPIWebApplication.Shared.PagesModel.POMF;
@@ -21,7 +22,14 @@ namespace BPIWebApplication.Client.Pages.POMFPages
         private POMFHeaderForm pomfData = new();
         private List<POMFItemLineForm> pomfLines = new();
 
+        private List<NPwithReceiptNoResp> npReceiptData = new();
+        private List<NPwithReceiptNoResp> selectedNPReceiptData = new();
+
+        private string previousLoadedNP = string.Empty;
+        private string previousLoadedReceipt = string.Empty;
+
         private bool isLoading = false;
+        private bool isMiniLoading = false;
         private bool successUpload = false;
 
         private bool alertTrigger = false;
@@ -99,6 +107,106 @@ namespace BPIWebApplication.Client.Pages.POMFPages
             await POMFService.getPOMFNPType();
 
             _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/POMFPages/AddPOMF.razor.js");
+        }
+
+        private async Task selectItembyNPandReceiptID()
+        {
+            try
+            {
+                if (previousLoadedNP == pomfData.NPNo && previousLoadedReceipt == pomfData.ReceiptNo)
+                    return;
+
+                if (!(pomfData.NPNo.Length > 0) || !(pomfData.ReceiptNo.Length > 0))
+                {
+                    await _jsModule.InvokeVoidAsync("showAlert", $"Input Loading Manifest ID !");
+                }
+                else
+                {
+                    isMiniLoading = true;
+
+                    NPwithReceiptNotoTMS param = new();
+                    param.npNo = pomfData.NPNo;
+                    param.receiptNo = pomfData.ReceiptNo;
+
+                    #pragma warning disable CS4014
+                    Task.Run(async () =>
+                    {
+                        var res = await POMFService.getDetailsItemByReceiptNoAndNPNo(param, activeUser.token);
+
+                        if (res.isSuccess)
+                        {
+                            npReceiptData = new();
+                            npReceiptData = res.Data;
+
+                            previousLoadedNP = pomfData.NPNo;
+                            previousLoadedReceipt = pomfData.ReceiptNo;
+                        }
+                        else
+                        {
+                            await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
+                        }
+
+                        isMiniLoading = false;
+                        StateHasChanged();
+                    });
+                    #pragma warning restore CS4014
+                }
+            }
+            catch (Exception ex)
+            {
+                isLoading = false;
+                isMiniLoading = false;
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} from {ex.Source} {ex.InnerException} !");
+            }
+        }
+
+        private void appendSelectedItem(NPwithReceiptNoResp data)
+        {
+            if (selectedNPReceiptData.FirstOrDefault(x => x.itemCode.Equals(data.itemCode)) == null)
+            {
+                selectedNPReceiptData.Add(new NPwithReceiptNoResp
+                {
+                    itemCode = data.itemCode,
+                    itemDesc = data.itemDesc,
+                    qtyNP = data.qtyNP,
+                    uom = data.uom
+                });
+            }
+            else
+            {
+                var dt = selectedNPReceiptData.SingleOrDefault(x => x.itemCode.Equals(data.itemCode));
+                if (dt != null)
+                {
+                    selectedNPReceiptData.Remove(dt);
+                }
+            }
+        }
+
+        private void selectItembyNPandReceipt()
+        {
+            if (selectedNPReceiptData.Count > 0)
+            {
+                pomfLines.Clear();
+
+                int n = 0;
+                selectedNPReceiptData.ForEach(x =>
+                {
+                    n++;
+                    pomfLines.Add(new POMFItemLineForm
+                    {
+                        POMFID = "",
+                        LineNum = n,
+                        ItemCode = x.itemCode,
+                        ItemDescription = x.itemDesc,
+                        RequestQuantity = 0,
+                        NPQuantity = Convert.ToInt32(x.qtyNP),
+                        ItemUOM = x.uom,
+                        ItemValue = "0"
+                    });
+                });
+            }
+
+            StateHasChanged();
         }
 
         private async void createPOMFDocument()
@@ -208,6 +316,8 @@ namespace BPIWebApplication.Client.Pages.POMFPages
 
             if (pomfData.NPTypeID.IsNullOrEmpty()) return false;
 
+            if (pomfLines.Any(x => x.RequestQuantity > x.NPQuantity)) return false;
+
             return true;
         }
 
@@ -235,6 +345,25 @@ namespace BPIWebApplication.Client.Pages.POMFPages
             try
             {
                 if (POMFService.npTypes.Any())
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        private bool checkNPandReceiptData()
+        {
+            try
+            {
+                if (npReceiptData.Any())
                 {
                     return true;
                 }

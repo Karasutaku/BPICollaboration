@@ -1,4 +1,6 @@
 ﻿using BPILibrary;
+using BPIWebApplication.Client.Services.FundReturnServices;
+using BPIWebApplication.Shared.MainModel.FundReturn;
 using BPIWebApplication.Shared.MainModel.Login;
 using BPIWebApplication.Shared.PagesModel.FundReturn;
 using Microsoft.AspNetCore.Components;
@@ -13,7 +15,15 @@ namespace BPIWebApplication.Client.Pages.FundReturnPages
         private UserPrivileges privilegeDataParam = new();
         private List<string> userPriv = new();
 
+        private FundReturnDocument previewRefundDocument = new();
 
+        private int fundReturnNumberofPage = 0;
+        private int fundReturnPageActive = 0;
+
+        private string fundReturnDocumentFilterType { get; set; } = string.Empty;
+        private string fundReturnDocumentFilterValue { get; set; } = string.Empty;
+
+        private bool fundReturnFilterActive { get; set; } = false;
 
         private bool isLoading = false;
         private bool successUpload = false;
@@ -87,8 +97,103 @@ namespace BPIWebApplication.Client.Pages.FundReturnPages
 
             string loc = activeUser.location.Equals("") ? "HO" : activeUser.location;
 
+            await FundReturnService.getFundReturnBank();
+            await FundReturnService.getFundReturnCategory();
+
+            fundReturnPageActive = 1;
+
+
+            string paramGetFundReturn = activeUser.location + "!_!!_!1";
+            await FundReturnService.getFundReturnDocuments(CommonLibrary.Base64Encode(paramGetFundReturn));
 
             _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/FundReturnPages/FundReturnDashboard.razor.js");
         }
+
+        private void setRefundDocument(FundReturnDocument data)
+        {
+            previewRefundDocument = data;
+
+            StateHasChanged();
+        }
+
+        private async Task fundReturnPageSelect(int currPage)
+        {
+            fundReturnPageActive = currPage;
+            isLoading = true;
+            string getFundReturnDocumentParam = string.Empty;
+
+            if (fundReturnFilterActive)
+            {
+
+            }
+            else
+            {
+                getFundReturnDocumentParam = activeUser.location + "!_!!_!" + fundReturnPageActive.ToString();
+            }
+
+            await FundReturnService.getFundReturnDocuments(CommonLibrary.Base64Encode(getFundReturnDocumentParam));
+
+            isLoading = false;
+            StateHasChanged();
+        }
+
+        private bool checkFundReturnDocument()
+        {
+            try
+            {
+                if (FundReturnService.fundReturns.Any())
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        private bool checkPreviewRefundLines()
+        {
+            try
+            {
+                if (previewRefundDocument.dataItemLines.Any())
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        private bool checkPreviewRefundApprovalLine()
+        {
+            try
+            {
+                if (previewRefundDocument.dataApproval.Any())
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        //
     }
 }

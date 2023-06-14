@@ -24,9 +24,13 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
         private ItemCaseForm itemCaseData = new();
         private List<ItemLineForm> itemLineData = new();
+        private ItemLineForm itemLineExtender = new();
         private IncidentAccidentForm incidentaccidentData = new();
         private List<CaseAttachmentForm> caseAttachments = new();
         private List<BPIWebApplication.Shared.MainModel.Stream.FileStream> fileUploads = new();
+
+        private List<LoadingManifestResp>? lmData = null;
+        private List<LoadingManifestResp> selectedLMData = new();
 
         private string ReportingType { get; set; } = string.Empty;
         private string RiskID { get; set; } = string.Empty;
@@ -59,7 +63,10 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             }
         };
 
+        private string previousLoadedLM = string.Empty;
+
         private bool isLoading = false;
+        private bool isMiniLoading = false;
         private bool successUpload = false;
 
         private bool alertTrigger = false;
@@ -135,6 +142,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             await EPKRSService.getEPRKSReportingType();
             await EPKRSService.getEPRKSRiskType();
             await EPKRSService.getEPRKSRiskSubType();
+            await EPKRSService.getEPKRSItemRiskCategory();
             await ManagementService.GetAllDepartment(CommonLibrary.Base64Encode(loc));
             maxFileSize = await EPKRSService.getEPKRSMaxFileSize();
 
@@ -177,13 +185,32 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                             ItemPickupDate = data.itemCase.ItemPickupDate,
                             LoadingDocumentID = data.itemCase.LoadingDocumentID,
                             LoadingDocumentDate = data.itemCase.LoadingDocumentDate,
-                            VarianceDate = data.itemCase.VarianceDate,
-                            isLate = data.itemCase.isLate,
-                            isCCTVCoverable = data.itemCase.isCCTVCoverable,
-                            isReportedtoSender = data.itemCase.isReportedtoSender,
                             ExtendedMitigationPlan = data.itemCase.ExtendedMitigationPlan,
                             DocumentStatus = data.itemCase.DocumentStatus
                         };
+
+                        data.itemLine.ForEach(x =>
+                        {
+                            itemLineData.Add(new ItemLineForm
+                            {
+                                DocumentID = x.DocumentID,
+                                LineNum = x.LineNum,
+                                TRID = x.TRID,
+                                TRDate = x.TRDate,
+                                ItemCode = x.ItemCode,
+                                ItemDescription = x.ItemDescription,
+                                ItemRiskCategoryID = x.ItemRiskCategoryID,
+                                CategoryID = x.CategoryID,
+                                ItemQuantity = x.ItemQuantity,
+                                UOM = x.UOM,
+                                ItemValue = x.ItemValue,
+                                ItemStock = x.ItemStock,
+                                VarianceDate = x.VarianceDate,
+                                isLate = x.isLate ? "TRUE" : "False",
+                                isCCTVCoverable = x.isCCTVCoverable ? "TRUE" : "FALSE",
+                                isReportedtoSender = x.isReportedtoSender ? "TRUE" : "FALSE"
+                            });
+                        });
                     }
                 }
                 else if (temp[0].Equals("INCAC"))
@@ -293,9 +320,114 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             this.StateHasChanged();
         }
 
-        private void selectItembyLoadingDocumentID()
+        private void appendSelectedLMItem(LoadingManifestResp data)
         {
+            if (selectedLMData.FirstOrDefault(x => x.siteNo.Equals(data.siteNo) && x.trNo.Equals(data.trNo) && x.itemCode.Equals(data.itemCode)) == null)
+            {
+                selectedLMData.Add(new LoadingManifestResp
+                {
+                    lmNo = data.lmNo,
+                    siteNo = data.siteNo,
+                    trNo = data.trNo,
+                    sentRequestDate = data.sentRequestDate,
+                    itemCode = data.itemCode,
+                    itemDesc = data.itemDesc,
+                    itemValue = data.itemValue,
+                    uom = data.uom
+                });
+            }
+            else
+            {
+                var dt = selectedLMData.SingleOrDefault(x => x.siteNo.Equals(data.siteNo) && x.trNo.Equals(data.trNo) && x.itemCode.Equals(data.itemCode));
+                if (dt != null)
+                {
+                    selectedLMData.Remove(dt);
+                }
+            }
+        }
 
+        private void selectItembyLoadingDocument()
+        {
+            if (selectedLMData.Count > 0)
+            {
+                itemLineData.Clear();
+
+                int n = 0;
+                selectedLMData.ForEach(x =>
+                {
+                    n++;
+                    itemLineData.Add(new ItemLineForm
+                    {
+                        DocumentID = "",
+                        LineNum = n,
+                        TRID = x.trNo,
+                        TRDate = Convert.ToDateTime(x.sentRequestDate),
+                        ItemCode = x.itemCode,
+                        ItemDescription = x.itemDesc,
+                        ItemRiskCategoryID = "BLANK",
+                        CategoryID = x.itemCode.Substring(0, 2),
+                        ItemQuantity = 0,
+                        UOM = x.uom,
+                        ItemValue = x.itemValue,
+                        ItemStock = 0,
+                        VarianceDate = 0,
+                        isLate = "FALSE",
+                        isCCTVCoverable = "FALSE",
+                        isReportedtoSender = "FALSE"
+                    });
+                });
+            }
+
+            StateHasChanged();
+        }
+
+        private async Task selectItembyLoadingDocumentID()
+        {
+            try
+            {
+                if (previousLoadedLM == itemCaseData.LoadingDocumentID)
+                    return;
+
+                if (!(itemCaseData.LoadingDocumentID.Length > 0))
+                {
+                    await _jsModule.InvokeVoidAsync("showAlert", $"Input Loading Manifest ID !");
+                }
+                else
+                {
+                    isMiniLoading = true;
+
+                    LMNotoTMS param = new();
+                    param.lmNo = itemCaseData.LoadingDocumentID;
+
+                    #pragma warning disable CS4014
+                    Task.Run(async () =>
+                    {
+                        var res = await EPKRSService.getEPKRSItemDetailsbyLMNo(param, activeUser.token);
+
+                        if (res.isSuccess)
+                        {
+                            lmData = new();
+                            lmData = res.Data;
+
+                            previousLoadedLM = itemCaseData.LoadingDocumentID;
+                        }
+                        else
+                        {
+                            await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
+                        }
+
+                        isMiniLoading = false;
+                        StateHasChanged();
+                    });
+                    #pragma warning restore CS4014
+                }
+            }
+            catch (Exception ex)
+            {
+                isLoading = false;
+                isMiniLoading = false;
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} from {ex.Source} {ex.InnerException} !");
+            }
         }
 
         private async void submitIncidentAccident()
@@ -449,9 +581,183 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             }
         }
 
-        private void submitItemCase()
+        private async void submitItemCase()
         {
+            try
+            {
+                isLoading = true;
+                StateHasChanged();
 
+                ItemCaseStream uploadData = new();
+                uploadData.mainData = new();
+                uploadData.mainData.Data = new();
+                uploadData.mainData.Data.itemCase = new();
+                uploadData.mainData.Data.itemCase.SubRiskID = itemCaseData.SubRiskID;
+                uploadData.mainData.Data.itemCase.DocumentID = "";
+                uploadData.mainData.Data.itemCase.SiteReporter = itemCaseData.SiteReporter;
+                uploadData.mainData.Data.itemCase.SiteSender = itemCaseData.SiteSender;
+                uploadData.mainData.Data.itemCase.ReportDate = itemCaseData.ReportDate;
+                uploadData.mainData.Data.itemCase.ItemPickupDate = itemCaseData.ItemPickupDate;
+                uploadData.mainData.Data.itemCase.LoadingDocumentID = itemCaseData.LoadingDocumentID;
+                uploadData.mainData.Data.itemCase.LoadingDocumentDate = itemCaseData.LoadingDocumentDate;
+                uploadData.mainData.Data.itemCase.ExtendedMitigationPlan = "";
+                uploadData.mainData.Data.itemCase.DocumentStatus = "Open";
+
+                int n = 0;
+
+                uploadData.mainData.Data.itemLine = new();
+                itemLineData.ForEach(x =>
+                {
+                    n++;
+                    var parseLate = bool.TryParse(x.isLate, out var result1) ? result1 : result1;
+                    var parseCctv = bool.TryParse(x.isCCTVCoverable, out var result2) ? result2 : result2;
+                    var parseReported = bool.TryParse(x.isReportedtoSender, out var result3) ? result3 : result3;
+
+                    uploadData.mainData.Data.itemLine.Add(new ItemLine
+                    {
+                        DocumentID = "",
+                        LineNum = n,
+                        TRID = x.TRID,
+                        TRDate = x.TRDate,
+                        ItemCode = x.ItemCode,
+                        ItemDescription = x.ItemDescription,
+                        ItemRiskCategoryID = x.ItemRiskCategoryID,
+                        CategoryID = x.CategoryID,
+                        ItemQuantity = x.ItemQuantity,
+                        UOM = x.UOM,
+                        ItemValue = x.ItemValue,
+                        ItemStock = x.ItemStock,
+                        VarianceDate = (itemCaseData.ItemPickupDate - x.TRDate).Days,
+                        isLate = parseLate,
+                        isCCTVCoverable = parseCctv,
+                        isReportedtoSender = parseReported
+                    });
+                });
+
+                uploadData.mainData.Data.attachment = new();
+                int c = 0;
+
+                fileUploads.ForEach(x =>
+                {
+                    uploadData.mainData.Data.attachment.Add(new CaseAttachment
+                    {
+                        DocumentID = "",
+                        LineNum = c + 1,
+                        UploadDate = DateTime.Now,
+                        FileExtension = x.fileType,
+                        FilePath = x.fileName
+                    });
+
+                    c++;
+                });
+
+                uploadData.mainData.userEmail = activeUser.userName;
+                uploadData.mainData.userAction = "I";
+                uploadData.mainData.userActionDate = DateTime.Now;
+
+                uploadData.files = new();
+                uploadData.files = fileUploads;
+
+                var res = await EPKRSService.createEPKRSItemCaseDocument(uploadData);
+
+                if (res.isSuccess)
+                {
+                    successUpload = true;
+                    itemCaseData.DocumentID = res.Data.mainData.Data.itemCase.DocumentID;
+                    await _jsModule.InvokeVoidAsync("showAlert", "Data Creation Success !");
+                }
+                else
+                {
+                    successUpload = false;
+                    await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
+                }
+
+                isLoading = false;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} !");
+            }
+        }
+
+        private async void editItemCase()
+        {
+            try
+            {
+                isLoading = true;
+                StateHasChanged();
+
+                QueryModel<EPKRSUploadItemCase> uploadData = new();
+                uploadData = new();
+                uploadData.Data = new();
+                uploadData.Data.itemCase = new();
+                uploadData.Data.itemCase.SubRiskID = itemCaseData.SubRiskID;
+                uploadData.Data.itemCase.DocumentID = itemCaseData.DocumentID;
+                uploadData.Data.itemCase.SiteReporter = itemCaseData.SiteReporter;
+                uploadData.Data.itemCase.SiteSender = itemCaseData.SiteSender;
+                uploadData.Data.itemCase.ReportDate = itemCaseData.ReportDate;
+                uploadData.Data.itemCase.ItemPickupDate = itemCaseData.ItemPickupDate;
+                uploadData.Data.itemCase.LoadingDocumentID = itemCaseData.LoadingDocumentID;
+                uploadData.Data.itemCase.LoadingDocumentDate = itemCaseData.LoadingDocumentDate;
+                uploadData.Data.itemCase.ExtendedMitigationPlan = itemCaseData.ExtendedMitigationPlan;
+                uploadData.Data.itemCase.DocumentStatus = itemCaseData.DocumentStatus;
+
+                int n = 0;
+
+                uploadData.Data.itemLine = new();
+                itemLineData.ForEach(x =>
+                {
+                    n++;
+                    var parseLate = bool.TryParse(x.isLate, out var result1) ? result1 : result1;
+                    var parseCctv = bool.TryParse(x.isCCTVCoverable, out var result2) ? result2 : result2;
+                    var parseReported = bool.TryParse(x.isReportedtoSender, out var result3) ? result3 : result3;
+
+                    uploadData.Data.itemLine.Add(new ItemLine
+                    {
+                        DocumentID = itemCaseData.DocumentID,
+                        LineNum = n,
+                        TRID = x.TRID,
+                        TRDate = x.TRDate,
+                        ItemCode = x.ItemCode,
+                        ItemDescription = x.ItemDescription,
+                        ItemRiskCategoryID = x.ItemRiskCategoryID,
+                        CategoryID = x.CategoryID,
+                        ItemQuantity = x.ItemQuantity,
+                        UOM = x.UOM,
+                        ItemValue = x.ItemValue,
+                        ItemStock = x.ItemStock,
+                        VarianceDate = x.VarianceDate,
+                        isLate = parseLate,
+                        isCCTVCoverable = parseCctv,
+                        isReportedtoSender = parseReported
+                    });
+                });
+
+                uploadData.userEmail = activeUser.userName;
+                uploadData.userAction = "I";
+                uploadData.userActionDate = DateTime.Now;
+
+                var res = await EPKRSService.editEPKRSItemCaseData(uploadData);
+
+                if (res.isSuccess)
+                {
+                    successUpload = true;
+                    await _jsModule.InvokeVoidAsync("showAlert", "Edit Data Success !");
+                }
+                else
+                {
+                    successUpload = false;
+                    await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
+                }
+
+                isLoading = false;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} !");
+            }
         }
 
         private async void onFailedSubmit()
@@ -583,6 +889,51 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 if (EPKRSService.riskSubTypes.Any())
                 {
                     return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        private bool checkItemRiskCategory()
+        {
+            try
+            {
+                if (EPKRSService.itemRiskCategories.Any())
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        private bool checkLMData()
+        {
+            try
+            {
+                if (lmData != null)
+                {
+                    if (lmData.Any())
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
                 else
                 {

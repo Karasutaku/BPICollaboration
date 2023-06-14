@@ -113,7 +113,6 @@ namespace BPIWebApplication.Client.Pages.FundReturnPages
             fundReturnHeader.CustomerMemberID = string.Empty;
             fundReturnHeader.BankHolderName = string.Empty;
             fundReturnHeader.BankAccount = string.Empty;
-            fundReturnHeader.BankAccount = string.Empty;
             fundReturnHeader.BankID = "BLANK";
             fundReturnHeader.ReceiptDocument = string.Empty;
             fundReturnHeader.ExternalDocument = string.Empty;
@@ -121,6 +120,41 @@ namespace BPIWebApplication.Client.Pages.FundReturnPages
             fundReturnHeader.TransactionAmount = 0.ToString();
             fundReturnHeader.Reason = string.Empty;
         }
+
+        //private bool validateForm()
+        //{
+        //    if (fundReturnHeader.CommercialType.Equals("BLANK")) return false;
+
+        //    if (fundReturnHeader.CustomerName.IsNullOrEmpty()) return false;
+
+        //    if (fundReturnHeader.CustomerType.Equals("BLANK"))
+        //    {
+        //        return false;
+        //    }
+        //    else
+        //    {
+        //        if (fundReturnHeader.CustomerType.Equals("MEMBER"))
+        //            if (fundReturnHeader.CustomerMemberID.IsNullOrEmpty()) return false;
+        //    }
+
+        //    if (fundReturnHeader.BankHolderName.IsNullOrEmpty()) return false;
+
+        //    if (fundReturnHeader.BankAccount.IsNullOrEmpty()) return false;
+
+        //    if (fundReturnHeader.BankID.Equals("BLANK")) return false;
+
+        //    if (fundReturnHeader.ReceiptDocument.IsNullOrEmpty()) return false;
+
+        //    if (fundReturnHeader.ExternalDocument.IsNullOrEmpty()) return false;
+
+        //    if (fundReturnHeader.RefundAmount.Equals("0")) return false;
+
+        //    if (fundReturnHeader.TransactionAmount.Equals("0")) return false;
+
+        //    if (fundReturnHeader.Reason.IsNullOrEmpty()) return false;
+
+        //    return true;
+        //}
 
         private void fundReturnCategoryonChange(ChangeEventArgs e)
         {
@@ -135,73 +169,86 @@ namespace BPIWebApplication.Client.Pages.FundReturnPages
         {
             try
             {
-                isLoading = true;
+                //if (!validateForm())
+                //{
+                //    await _jsModule.InvokeVoidAsync("showAlert", "Form Validation: Please ReCheck Your Input Field !");
+                //    return;
+                //}
 
-                QueryModel<FundReturnDocument> uploadData = new();
-                uploadData.Data = new();
-                uploadData.Data.dataHeader = new();
-                uploadData.Data.dataItemLines = new();
-
-                uploadData.Data.dataHeader.DocumentID = "";
-                uploadData.Data.dataHeader.RequestDate = fundReturnHeader.RequestDate;
-                uploadData.Data.dataHeader.LocationID = fundReturnHeader.LocationID;
-                uploadData.Data.dataHeader.CommercialType = fundReturnHeader.CommercialType;
-                uploadData.Data.dataHeader.CustomerName = fundReturnHeader.CustomerName;
-                uploadData.Data.dataHeader.CustomerType = fundReturnHeader.CustomerType;
-                uploadData.Data.dataHeader.CustomerMemberID = fundReturnHeader.CustomerMemberID;
-                uploadData.Data.dataHeader.CustomerContactNo = fundReturnHeader.CustomerContactNo;
-                uploadData.Data.dataHeader.FundReturnCategoryID = fundReturnHeader.FundReturnCategoryID;
-                uploadData.Data.dataHeader.BankHolderName = fundReturnHeader.BankHolderName;
-                uploadData.Data.dataHeader.BankAccount = fundReturnHeader.BankAccount;
-                uploadData.Data.dataHeader.BankID = fundReturnHeader.BankID;
-                uploadData.Data.dataHeader.ReceiptDocument = fundReturnHeader.ReceiptDocument;
-                uploadData.Data.dataHeader.ExternalDocument = fundReturnHeader.ExternalDocument;
-                uploadData.Data.dataHeader.RefundAmount = Convert.ToDecimal(fundReturnHeader.RefundAmount);
-                uploadData.Data.dataHeader.TransactionAmount = Convert.ToDecimal(fundReturnHeader.TransactionAmount);
-                uploadData.Data.dataHeader.Reason = fundReturnHeader.Reason;
-                uploadData.Data.dataHeader.DocumentStatus = "Open";
-
-                uploadData.userEmail = activeUser.userName;
-                uploadData.userAction = "I";
-                uploadData.userActionDate = DateTime.Now;
-
-                if (fundReturnCategorySelected.Equals("XNTF"))
+                if (!LoginService.activeUser.userPrivileges.Contains("CR"))
                 {
-                    int n = 0;
-
-                    fundReturnLine.ForEach(x =>
-                    {
-                        n++;
-                        uploadData.Data.dataItemLines.Add(new FundReturnItemLine
-                        {
-                            DocumentID = "",
-                            LineNum = n,
-                            ItemCode = x.ItemCode,
-                            ItemDescription = x.ItemDescription,
-                            ItemQuantity = x.ItemQuantity,
-                            UOM = x.UOM,
-                            ItemAmount = Convert.ToDecimal(x.ItemAmount),
-                            ItemDiscount = x.ItemDiscount,
-                        });
-                    });
-                }
-
-                var res = await FundReturnService.createFundReturnDocument(uploadData);
-
-                if (res.isSuccess)
-                {
-                    successUpload = true;
-                    fundReturnHeader.DocumentID = res.Data.Data.dataHeader.DocumentID;
-                    await _jsModule.InvokeVoidAsync("showAlert", "Data Creation Success !");
+                    await _jsModule.InvokeVoidAsync("showAlert", "You Have no Access to Create Document ! Please Contact IT Ops !");
                 }
                 else
                 {
-                    successUpload = false;
-                    await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
-                }
+                    isLoading = true;
 
-                isLoading = false;
-                StateHasChanged();
+                    QueryModel<FundReturnDocument> uploadData = new();
+                    uploadData.Data = new();
+                    uploadData.Data.dataHeader = new();
+                    uploadData.Data.dataItemLines = new();
+
+                    uploadData.Data.dataHeader.DocumentID = "";
+                    uploadData.Data.dataHeader.RequestDate = fundReturnHeader.RequestDate;
+                    uploadData.Data.dataHeader.LocationID = fundReturnHeader.LocationID;
+                    uploadData.Data.dataHeader.CommercialType = fundReturnHeader.CommercialType;
+                    uploadData.Data.dataHeader.CustomerName = fundReturnHeader.CustomerName;
+                    uploadData.Data.dataHeader.CustomerType = fundReturnHeader.CustomerType;
+                    uploadData.Data.dataHeader.CustomerMemberID = fundReturnHeader.CustomerMemberID;
+                    uploadData.Data.dataHeader.CustomerContactNo = CommonLibrary.Base64Encode(fundReturnHeader.CustomerContactNo);
+                    uploadData.Data.dataHeader.FundReturnCategoryID = fundReturnHeader.FundReturnCategoryID;
+                    uploadData.Data.dataHeader.BankHolderName = fundReturnHeader.BankHolderName;
+                    uploadData.Data.dataHeader.BankAccount = fundReturnHeader.BankAccount;
+                    uploadData.Data.dataHeader.BankID = fundReturnHeader.BankID;
+                    uploadData.Data.dataHeader.ReceiptDocument = fundReturnHeader.ReceiptDocument;
+                    uploadData.Data.dataHeader.ExternalDocument = fundReturnHeader.ExternalDocument;
+                    uploadData.Data.dataHeader.RefundAmount = Convert.ToDecimal(fundReturnHeader.RefundAmount);
+                    uploadData.Data.dataHeader.TransactionAmount = Convert.ToDecimal(fundReturnHeader.TransactionAmount);
+                    uploadData.Data.dataHeader.Reason = fundReturnHeader.Reason;
+                    uploadData.Data.dataHeader.DocumentStatus = "Open";
+
+                    uploadData.userEmail = activeUser.userName;
+                    uploadData.userAction = "I";
+                    uploadData.userActionDate = DateTime.Now;
+
+                    if (fundReturnCategorySelected.Equals("XNTF"))
+                    {
+                        int n = 0;
+
+                        fundReturnLine.ForEach(x =>
+                        {
+                            n++;
+                            uploadData.Data.dataItemLines.Add(new FundReturnItemLine
+                            {
+                                DocumentID = "",
+                                LineNum = n,
+                                ItemCode = x.ItemCode,
+                                ItemDescription = x.ItemDescription,
+                                ItemQuantity = x.ItemQuantity,
+                                UOM = x.UOM,
+                                ItemAmount = Convert.ToDecimal(x.ItemAmount),
+                                ItemDiscount = x.ItemDiscount,
+                            });
+                        });
+                    }
+
+                    var res = await FundReturnService.createFundReturnDocument(uploadData);
+
+                    if (res.isSuccess)
+                    {
+                        successUpload = true;
+                        fundReturnHeader.DocumentID = res.Data.Data.dataHeader.DocumentID;
+                        await _jsModule.InvokeVoidAsync("showAlert", "Data Creation Success !");
+                    }
+                    else
+                    {
+                        successUpload = false;
+                        await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
+                    }
+
+                    isLoading = false;
+                    StateHasChanged();
+                }
             }
             catch (Exception ex)
             {

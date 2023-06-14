@@ -13,4 +13,16 @@ namespace BPIWebApplication.Shared.MainModel
         public string ErrorCode { get; set; } = string.Empty;
         public string ErrorMessage { get; set; } = string.Empty;
     }
+
+    public class TMSResultModel
+    {
+        public string data { get; set; } = string.Empty;
+        public ErrorResult errorResult { get; set; } = new();
+    }
+
+    public class ErrorResult
+    {
+        public string errorCode { get; set; } = string.Empty;
+        public string errorMessage { get; set; } = string.Empty;
+    }
 }

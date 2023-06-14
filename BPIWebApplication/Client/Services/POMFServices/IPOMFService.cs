@@ -1,5 +1,6 @@
 ﻿using BPIWebApplication.Shared.DbModel;
 using BPIWebApplication.Shared.MainModel;
+using BPIWebApplication.Shared.MainModel.EPKRS;
 using BPIWebApplication.Shared.MainModel.POMF;
 
 namespace BPIWebApplication.Client.Services.POMFServices
@@ -17,6 +18,10 @@ namespace BPIWebApplication.Client.Services.POMFServices
 
         Task<ResultModel<List<POMFDocument>>> getPOMFDocuments(string param);
         Task<ResultModel<List<POMFNPType>>> getPOMFNPType();
+
+        // TMS
+
+        Task<ResultModel<List<NPwithReceiptNoResp>>> getDetailsItemByReceiptNoAndNPNo(NPwithReceiptNotoTMS param, string token);
 
         Task<ResultModel<int>> getPOMFModuleNumberOfPage(string param);
     }

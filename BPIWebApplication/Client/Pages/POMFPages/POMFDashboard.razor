@@ -411,10 +411,10 @@ else
                                             <tr>
                                                 <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemCode</td>
                                                 <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemDescription</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.RequestQuantity</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.NPQuantity</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.RequestQuantity.ToString("N0")</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.NPQuantity.ToString("N0")</td>
                                                 <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemUOM</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemValue.ToString("N0")</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Rp. @item.ItemValue.ToString("N0") ,-</td>
                                             </tr>
                                         }
                                     </tbody>

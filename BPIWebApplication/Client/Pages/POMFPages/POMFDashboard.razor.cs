@@ -26,7 +26,6 @@ namespace BPIWebApplication.Client.Pages.POMFPages
 
         private int pomfNumberofPage = 0;
         private int pomfPageActive = 0;
-
         private int pomfConfirmedNumberofPage = 0;
         private int pomfConfirmedPageActive = 0;
 

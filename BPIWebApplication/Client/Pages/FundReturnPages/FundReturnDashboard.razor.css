@@ -1,4 +1,9 @@
-﻿.btn-primary-cus {
+﻿#tbodyDashboard {
+    user-select: none;
+    cursor: pointer;
+}
+
+.btn-primary-cus {
     color: white;
     font-weight: bold;
     background-image: linear-gradient( 96.5deg, rgba(39,103,187,1) 10.4%, rgba(16,72,144,1) 87.7% );

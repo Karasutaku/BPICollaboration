@@ -53,7 +53,101 @@ else
             <div class="container-fluid">
 
                 <div class="border border-2 p-2 my-4">
-                    
+                    <div class="row mb-2">
+                        <div class="col px-3">
+                            <h5><b>Fund Return Documents</b></h5>
+                        </div>
+                    </div>
+
+                    @*<form @onsubmit="pomfFilter">
+                        <div class="input-group my-3">
+                            <div class="input-group-prepend">
+                                <select class="form-select" @bind="pomfDocumentFilterType">
+                                    <option hidden disabled value="">Filter By</option>
+                                    <option value="ID">POMF ID</option>
+                                    <option value="NPN">NP No</option>
+                                    <option value="RCN">Receipt No</option>
+                                    <option value="CUST">Customer Name</option>
+                                    <option value="STATUS">Status</option>
+                                </select>
+                            </div>
+                            <input type="text" class="form-control" aria-label="Text input with dropdown button" @bind-value="pomfDocumentFilterValue">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary fw-bold" type="button" disabled="@(pomfFilterActive ? null : "disabled")" @onclick="resetPOMFFilter">Reset</button>
+                            </div>
+                        </div>
+                        <input type="submit" hidden>
+                    </form>*@
+
+                    @*Table*@
+                    @if (checkFundReturnDocument())
+                    {
+                        <div class="mb-3">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover" style="width: 100%">
+                                    <thead>
+                                        <tr title="Click to view">
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 17%; font-size: 15px;">Refund ID</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 14%; font-size: 15px;">Document Date</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 14%; font-size: 15px;">Refund Type</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 14%; font-size: 15px;">Commercial Type</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 16%; font-size: 15px;">Customer Name</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 15%; font-size: 15px;">Refund Amount</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Document Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyDashboard">
+                                        @foreach (var fundReturn in FundReturnService.fundReturns)
+                                        {
+                                            <tr data-toggle="modal" data-target="#previewFundReturnModal" @onclick="(() => setRefundDocument(fundReturn))">
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@fundReturn.dataHeader.DocumentID</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@fundReturn.dataHeader.RequestDate.ToString("dd MMMM yyyy HH:mm:ss")</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@fundReturn.dataHeader.FundReturnCategoryID</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@fundReturn.dataHeader.CommercialType</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@fundReturn.dataHeader.CustomerName</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Rp. @fundReturn.dataHeader.RefundAmount.ToString("N0") ,-</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@fundReturn.dataHeader.DocumentStatus</td>
+                                            </tr>
+                                        }
+
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+
+                        <nav aria-label="Refund Pagination">
+                            <ul class="pagination pagination-sm justify-content-center my-2">
+                                @if ((fundReturnPageActive - 1) > 0)
+                                {
+                                    <li class="page-item px-1 paging-style" @onclick="(() => fundReturnPageSelect((fundReturnPageActive - 1)))"><span class="page-link">Previous</span></li>
+                                    <li class="page-item paging-style" @onclick="(() => fundReturnPageSelect((fundReturnPageActive - 1)))"><span class="page-link">@(fundReturnPageActive - 1)</span></li>
+                                }
+                                else
+                                {
+                                    <li class="page-item px-1 disabled dis-paging-style"><span class="page-link">Previous</span></li>
+                                    <li class="page-item disabled dis-paging-style"><span class="page-link">. . .</span></li>
+                                }
+
+                                <li class="page-item active dis-paging-style"><span class="page-link">@fundReturnPageActive</span></li>
+
+                                @if (fundReturnPageActive < fundReturnNumberofPage)
+                                {
+                                    <li class="page-item paging-style" @onclick="(() => fundReturnPageSelect((fundReturnPageActive + 1)))"><span class="page-link">@(fundReturnPageActive + 1)</span></li>
+                                    <li class="page-item px-1 paging-style" @onclick="(() => fundReturnPageSelect((fundReturnPageActive + 1)))"><span class="page-link">Next</span></li>
+                                }
+                                else
+                                {
+                                    <li class="page-item disabled dis-paging-style"><span class="page-link">. . .</span></li>
+                                    <li class="page-item px-1 disabled dis-paging-style"><span class="page-link">Next</span></li>
+                                }
+                            </ul>
+                        </nav>
+                    }
+                    else
+                    {
+                        <p class="fw-bold text-center">. . . There is no Document . . .</p>
+                    }
                 </div>
 
             </div>
@@ -80,3 +174,209 @@ else
         <BPIWebApplication.Client.Shared.CustomLayout.SplashScreen></BPIWebApplication.Client.Shared.CustomLayout.SplashScreen>
     </div>
 }
+
+@*Preview Fund Return Document*@
+<div class="modal fade" id="previewFundReturnModal" tabindex="-2" role="dialog" aria-labelledby="previewFundReturnModalLabel" aria-hidden="true" style="background: rgba(0,0,0, 0.2);">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header cus-bg">
+                <h5 class="modal-title fw-bold" id="previewFundReturnModalLabel"><i class="oi oi-file"></i> Preview Refund Return Document</h5>
+                <button type="button" class="close" data-dismiss="modal" data-target="#previewFundReturnModal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col fw-bold">Refund ID</div>
+                    <div class="col">: @previewRefundDocument.dataHeader.DocumentID</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Refund Request Date</div>
+                    <div class="col">: @previewRefundDocument.dataHeader.RequestDate.ToString("dddd, dd MMMM yyyy")</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Location</div>
+                    <div class="col">: @previewRefundDocument.dataHeader.LocationID</div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col fw-bold">Commercial Type</div>
+                    <div class="col">: @previewRefundDocument.dataHeader.CommercialType</div>
+                </div>
+
+                @*blank*@
+
+                <div class="row">
+                    <div class="col fw-bold">Customer Name</div>
+                    <div class="col">: @previewRefundDocument.dataHeader.CustomerName</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Customer Type</div>
+                    <div class="col">: @previewRefundDocument.dataHeader.CustomerType</div>
+                </div>
+                @if (previewRefundDocument.dataHeader.CustomerType.Equals("MEMBER"))
+                {
+                    <div class="row">
+                        <div class="col fw-bold">Customer Member ID</div>
+                        <div class="col">: @previewRefundDocument.dataHeader.CustomerMemberID</div>
+                    </div>
+                }
+                <div class="row mb-4">
+                    <div class="col fw-bold">Customer Contact No.</div>
+                    @{
+                        var ctnb = CommonLibrary.Base64Decode(previewRefundDocument.dataHeader.CustomerContactNo);
+                    }
+                    <div class="col">: @if (ctnb != null) { @ctnb } else { @previewRefundDocument.dataHeader.CustomerContactNo }</div>
+                </div>
+
+                @*blank*@
+
+                <div class="row">
+                    <div class="col fw-bold">Refund Type</div>
+                    @{
+                        var refundCat = FundReturnService.fundReturnCategories.SingleOrDefault(x => x.FundReturnCategoryID.Equals(previewRefundDocument.dataHeader.FundReturnCategoryID));
+                    }
+                    <div class="col">:
+                        @if (refundCat != null)
+                        {
+                            @refundCat.FundReturnCategoryDescription
+                        }
+                        else
+                        {
+                            @previewRefundDocument.dataHeader.FundReturnCategoryID                            
+                        }
+                    </div>
+                </div>
+                @if (!previewRefundDocument.dataHeader.FundReturnCategoryID.Equals("RQST"))
+                {
+                    <div class="row">
+                        <div class="col fw-bold">Receipt</div>
+                        <div class="col">: @previewRefundDocument.dataHeader.ReceiptDocument</div>
+                    </div>
+                }
+                @if (previewRefundDocument.dataHeader.CommercialType.Equals("ONLINE"))
+                {
+                    <div class="row">
+                        <div class="col fw-bold">External Document</div>
+                        <div class="col">: @previewRefundDocument.dataHeader.ExternalDocument</div>
+                    </div>
+                }
+                <div class="row">
+                    <div class="col fw-bold">Refund Amount</div>
+                    <div class="col">: Rp. @previewRefundDocument.dataHeader.RefundAmount.ToString("N0") ,-</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Transaction Amount</div>
+                    <div class="col">: Rp. @previewRefundDocument.dataHeader.TransactionAmount.ToString("N0") ,-</div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col fw-bold">Reason</div>
+                    <div class="col">: @previewRefundDocument.dataHeader.Reason</div>
+                </div>
+
+                @*blank*@
+
+                <div class="row">
+                    <div class="col fw-bold">Bank Holder Name</div>
+                    <div class="col">: @previewRefundDocument.dataHeader.BankHolderName</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Bank Account</div>
+                    <div class="col">: @previewRefundDocument.dataHeader.BankAccount</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Bank</div>
+                    <div class="col">: 
+                        @{
+                            var bk = FundReturnService.banks.SingleOrDefault(x => x.BankID.Equals(previewRefundDocument.dataHeader.BankID));
+                        }
+                        @if (bk != null)
+                        {
+                            @bk.BankShortName
+                        }
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col fw-bold">Document Status</div>
+                    <div class="col">: @previewRefundDocument.dataHeader.DocumentStatus</div>
+                </div>
+
+                @if (checkPreviewRefundApprovalLine())
+                {
+                    <div id="accordion" style="width: 100%;">
+
+                        <div class="card" style="width: 100%;">
+                            <div class="card-header" id="refundAccordionHeader">
+                                <div class="border border-1">
+                                    <button id="refundtitle" class="btn w-100" data-toggle="collapse" data-target="#refundApprovalLists" aria-expanded="true" aria-controls="refundApprovalLists">
+                                        <b>Fund Return Approval List(s)</b>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="refundApprovalLists" class="collapse bg-special" aria-labelledby="refundtitle" data-parent="#accordion">
+                                <div class="card-body">
+                                    @foreach (var apv in previewRefundDocument.dataApproval)
+                                    {
+                                        <div class="row">
+                                            <div class="col">
+                                                <label class="fw-bold" for="@(apv.ApprovalAction)_user">@apv.ApprovalAction User :</label>
+                                                <input type="text" id="@(@apv.ApprovalAction)_user" value="@apv.Approver" class="form-control-sm w-100 border-1" readonly />
+                                            </div>
+                                            <div class="col">
+                                                <label class="fw-bold" for="@(@apv.ApprovalAction)_date">@apv.ApprovalAction Date :</label>
+                                                <input type="text" id="@(@apv.ApprovalAction)_date" value="@apv.ApproveDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")" class="form-control-sm w-100 border-1" readonly />
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                }
+
+                @if (checkPreviewRefundLines())
+                {
+                    <div class="row mt-4">
+                        <div class="col">
+                            <p class="fw-bold text-center align-middle"><i class="oi oi-list"></i> Item List(s) </p>
+
+                                <div class="table-responsive my-0">
+                                    <table class="table table-sm table-hover" style="width: 100%">
+                                        <thead>
+                                            <tr>
+                                                <th class="text-center align-middle text-wrap" style="width: 19%; font-size: 15px;">Item Code</th>
+                                                <th class="text-center align-middle text-wrap" style="width: 32%; font-size: 15px;">Item Description</th>
+                                                <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Request Qty</th>
+                                                <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">NP Qty</th>
+                                                <th class="text-center align-middle text-wrap" style="width: 11%; font-size: 15px;">UOM</th>
+                                                <th class="text-center align-middle text-wrap" style="width: 18%; font-size: 15px;">Item Value (Rp.)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in previewRefundDocument.dataItemLines)
+                                            {
+                                                <tr>
+                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemCode</td>
+                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemDescription</td>
+                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemQuantity.ToString("N0")</td>
+                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.UOM</td>
+                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">Rp. @item.ItemAmount.ToString("N0") ,-</td>
+                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemDiscount %</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer cus-bg">
+                
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#previewFundReturnModal"><i class="oi oi-x"></i> Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+

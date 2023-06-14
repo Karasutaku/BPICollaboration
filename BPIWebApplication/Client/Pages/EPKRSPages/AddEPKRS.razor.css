@@ -7,3 +7,7 @@
     .btn-primary-cus:hover {
         opacity: 0.9;
     }
+
+.dropdown-menu {
+    width: 500px !important;
+}

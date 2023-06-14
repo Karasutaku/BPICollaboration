@@ -8,6 +8,7 @@ namespace BPIFacade.Models.MainModel.EPKRS
         public ItemCase itemCase { get; set; } = new();
         public List<ItemLine> itemLine { get; set; } = new();
         public List<CaseAttachment> attachment { get; set; } = new();
+        public List<DocumentApproval> Approval { get; set; } = new();
     }
 
     public class EPKRSUploadIncidentAccident

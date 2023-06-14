@@ -1,6 +1,7 @@
 ﻿using BPILibrary;
 using BPIWebApplication.Shared.DbModel;
 using BPIWebApplication.Shared.MainModel;
+using BPIWebApplication.Shared.MainModel.EPKRS;
 using BPIWebApplication.Shared.MainModel.POMF;
 using System.Net.Http.Json;
 
@@ -272,6 +273,56 @@ namespace BPIWebApplication.Client.Services.POMFServices
                     resData.isSuccess = result.isSuccess;
                     resData.ErrorCode = result.ErrorCode;
                     resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
+        public async Task<ResultModel<List<NPwithReceiptNoResp>>> getDetailsItemByReceiptNoAndNPNo(NPwithReceiptNotoTMS param, string token)
+        {
+            ResultModel<List<NPwithReceiptNoResp>> resData = new();
+
+            try
+            {
+                _http.DefaultRequestHeaders.Clear();
+                _http.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+                var result = await _http.PostAsJsonAsync<NPwithReceiptNotoTMS>("api/endUser/TMS/getDetailsItemByReceiptNoAndNPNo", param);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<NPwithReceiptNoResp>>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                    else
+                    {
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<NPwithReceiptNoResp>>>();
+
+                    resData.Data = respBody.Data;
+                    resData.isSuccess = respBody.isSuccess;
+                    resData.ErrorCode = respBody.ErrorCode;
+                    resData.ErrorMessage = respBody.ErrorMessage;
                 }
             }
             catch (Exception ex)

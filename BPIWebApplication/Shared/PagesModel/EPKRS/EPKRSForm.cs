@@ -16,16 +16,16 @@ namespace BPIWebApplication.Shared.PagesModel.EPKRS
         public DateTime ItemPickupDate { get; set; } = DateTime.Now;
         public string LoadingDocumentID { get; set; } = string.Empty;
         public DateTime LoadingDocumentDate { get; set; } = DateTime.Now;
-        public int VarianceDate { get; set; } = 0;
-        public bool isLate { get; set; } = false;
-        public bool isCCTVCoverable { get; set; } = false;
-        public bool isReportedtoSender { get; set; } = false;
         public string ExtendedMitigationPlan { get; set; } = string.Empty;
         public string DocumentStatus { get; set; } = string.Empty;
     }
 
     public class ItemLineForm
     {
+        private bool late = false;
+        private bool cctv = false;
+        private bool reported = false;
+
         public string DocumentID { get; set; } = string.Empty;
         public int LineNum { get; set; } = 0;
         public string TRID { get; set; } = string.Empty;
@@ -38,6 +38,10 @@ namespace BPIWebApplication.Shared.PagesModel.EPKRS
         public string UOM { get; set; } = string.Empty;
         public decimal ItemValue { get; set; } = decimal.Zero;
         public int ItemStock { get; set; } = 0;
+        public int VarianceDate { get; set; } = 0;
+        public string isLate { get => late ? "TRUE" : "FALSE"; set { if (bool.TryParse(value.ToString(), out var result)) late = result; } }
+        public string isCCTVCoverable { get => cctv ? "TRUE" : "FALSE"; set { if (bool.TryParse(value.ToString(), out var result)) cctv = result; } }
+        public string isReportedtoSender { get => reported ? "TRUE" : "FALSE"; set { if (bool.TryParse(value.ToString(), out var result)) reported = result; } }
     }
 
     public class IncidentAccidentForm

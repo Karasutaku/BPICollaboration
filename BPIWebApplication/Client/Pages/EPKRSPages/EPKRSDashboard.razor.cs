@@ -252,8 +252,13 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 }
             }
 
-            await EPKRSService.getEPKRSInitializationDocumentDiscussions(docParams);
-            await EPKRSService.getEPKRSDocumentDiscussionReadHistory(docParams);
+            Task.Run(async () =>
+            {
+                await EPKRSService.getEPKRSInitializationDocumentDiscussions(docParams);
+                await EPKRSService.getEPKRSDocumentDiscussionReadHistory(docParams);
+
+                StateHasChanged();
+            });
 
             if (activeUser.location.Equals(""))
             {
@@ -307,13 +312,19 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 await Task.Run(async () => 
                 {
                     string regionalStatsParam = $"WHERE a.ReportDate BETWEEN \'{selectedYearFilter}-01-01 00:00:00\' AND \'{selectedYearFilter}-12-31\'";
-                    var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(regionalStatsParam));
+                    QueryModel<string> param = new();
+                    param.Data = CommonLibrary.Base64Encode(regionalStatsParam);
+                    var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(param);
 
                     string involvedbyPosParam = $"WHERE a.ReportDate BETWEEN \'{selectedYearFilter}-01-01 00:00:00\' AND \'{selectedYearFilter}-12-31\'!_!AND x.ReportDate BETWEEN '{selectedYearFilter}-01-01' AND '{selectedYearFilter}-12-31'";
-                    var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(involvedbyPosParam));
+                    param = new();
+                    param.Data = CommonLibrary.Base64Encode(involvedbyPosParam);
+                    var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(param);
 
                     string involvedbyDeptParam = $"WHERE a.ReportDate BETWEEN \'{selectedYearFilter}-01-01 00:00:00\' AND \'{selectedYearFilter}-12-31\'!_!AND x.ReportDate BETWEEN '{selectedYearFilter}-01-01' AND '{selectedYearFilter}-12-31'";
-                    var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(involvedbyDeptParam));
+                    param = new();
+                    param.Data = CommonLibrary.Base64Encode(involvedbyDeptParam);
+                    var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(param);
 
                     if (resRegionalStats.isSuccess)
                     {
@@ -446,7 +457,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                         arrayLabels,
                         arrayDecimalValues,
                         "Item Case Value by Risk Type",
-                        "Total Values"
+                        "Loss Estimation"
                     );
                 }
 
@@ -578,7 +589,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                     arrayLabels,
                     arrayDecimalValues,
                     "Item Case Value by Risk Type",
-                    "Total Values"
+                    "Loss Estimation"
                 );
             }
 
@@ -771,11 +782,18 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 previewItemCase = data.itemCase;
                 previewItemLine = data.itemLine;
                 previewCaseAttachment = data.attachment;
+                previewDocumentListApproval = data.Approval;
 
                 updateItemCase = data.itemCase;
 
                 EPKRSService.fileStreams.Clear();
-                await EPKRSService.getEPKRSFileStream(CommonLibrary.Base64Encode(previewItemCase.DocumentID));
+                #pragma warning disable CS4014 
+                Task.Run(async () =>
+                {
+                    await EPKRSService.getEPKRSFileStream(CommonLibrary.Base64Encode(previewItemCase.DocumentID));
+                    StateHasChanged();
+                });
+                #pragma warning restore CS4014
 
                 //if (!res.isSuccess)
                 //{
@@ -805,8 +823,14 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 updateIncidentAccident = data.incidentAccident;
 
                 EPKRSService.fileStreams.Clear();
-                await EPKRSService.getEPKRSFileStream(CommonLibrary.Base64Encode(previewIncidentAccident.DocumentID));
-                
+                #pragma warning disable CS4014
+                Task.Run(async () =>
+                {
+                    await EPKRSService.getEPKRSFileStream(CommonLibrary.Base64Encode(previewIncidentAccident.DocumentID));
+                    StateHasChanged();
+                });
+                #pragma warning restore CS4014
+
                 //if (!res.isSuccess)
                 //{
                 //    await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
@@ -1192,13 +1216,18 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                     var a = EPKRSService.itemCases.SingleOrDefault(x => x.itemCase.DocumentID.Equals(res.Data.Data.DocumentID));
 
                     if (a != null)
-                        EPKRSService.itemCases.SingleOrDefault(x => x.itemCase.DocumentID.Equals(res.Data.Data.DocumentID)).itemCase.DocumentStatus = param;
+                    {
+                        previewDocumentListApproval.Add(previewDocumentApproval);
+                        a.itemCase.DocumentStatus = param;
+                    }
 
                     var b = EPKRSService.incidentAccidents.SingleOrDefault(x => x.incidentAccident.DocumentID.Equals(res.Data.Data.DocumentID));
 
                     if (b != null)
-                        EPKRSService.incidentAccidents.SingleOrDefault(x => x.incidentAccident.DocumentID.Equals(res.Data.Data.DocumentID)).incidentAccident.DocumentStatus = param;
-
+                    {
+                        previewDocumentListApproval.Add(previewDocumentApproval);
+                        b.incidentAccident.DocumentStatus = param;
+                    }
 
                     await _jsModule.InvokeVoidAsync("showAlert", "Update Status Success !");
                 }
@@ -1271,17 +1300,32 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
                 if (res.isSuccess)
                 {
-                    string param = approveType.Equals("Approve") ? "Approved" : approveType.Equals("OnProgress") ? "On Progress" : approveType.Equals("Close") ? "Closed" : "NAN";
+                    string param = approveType.Equals("Approve") ? "Approved" : approveType.Equals("OnProgress") ? "OnProgress" : approveType.Equals("Close") ? "Closed" : "NAN";
 
                     var a = EPKRSService.itemCases.SingleOrDefault(x => x.itemCase.DocumentID.Equals(res.Data.Data.approval.DocumentID));
 
                     if (a != null)
-                        EPKRSService.itemCases.SingleOrDefault(x => x.itemCase.DocumentID.Equals(res.Data.Data.approval.DocumentID)).itemCase.DocumentStatus = param;
+                    {
+                        if (param.Equals("OnProgress"))
+                            a.itemCase.ExtendedMitigationPlan = updateItemCase.ExtendedMitigationPlan;
+
+                        previewDocumentListApproval.Add(previewDocumentApproval);
+                        a.itemCase.DocumentStatus = param;
+                    }
 
                     var b = EPKRSService.incidentAccidents.SingleOrDefault(x => x.incidentAccident.DocumentID.Equals(res.Data.Data.approval.DocumentID));
 
                     if (b != null)
-                        EPKRSService.incidentAccidents.SingleOrDefault(x => x.incidentAccident.DocumentID.Equals(res.Data.Data.approval.DocumentID)).incidentAccident.DocumentStatus = param;
+                    {
+                        if (param.Equals("OnProgress"))
+                        {
+                            b.incidentAccident.ExtendedRootCause = updateIncidentAccident.ExtendedRootCause;
+                            b.incidentAccident.ExtendedMitigationPlan = updateIncidentAccident.ExtendedMitigationPlan;
+                        }
+
+                        previewDocumentListApproval.Add(previewDocumentApproval);
+                        b.incidentAccident.DocumentStatus = param;
+                    }
 
 
                     await _jsModule.InvokeVoidAsync("showAlert", "Update Status Success !");
@@ -1369,10 +1413,85 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             }
         }
 
-        private async void incidentAccidentPageSelect(int currPage)
+        private async Task itemCasePageSelect(int currPage)
+        {
+            itemCasePageActive = currPage;
+            isLoading = true;
+            triggerReplyButton = false;
+
+            if (itemCaseFilterActive)
+            {
+                if (itemCaseFilterType.Equals("ID"))
+                {
+                    string paramGetItemCaseInitialization = activeUser.location + $"!_!WHERE a.DocumentID LIKE \'%{itemCaseFilterValue}%\'!_!" + itemCasePageActive.ToString();
+                    await EPKRSService.getEPKRSItemCaseData(CommonLibrary.Base64Encode(paramGetItemCaseInitialization));
+                }
+                else if (itemCaseFilterType.Equals("LOC"))
+                {
+                    string paramGetItemCaseInitialization = activeUser.location + $"!_!WHERE a.SiteReporter = \'{itemCaseFilterValue}\'!_!" + itemCasePageActive.ToString();
+                    await EPKRSService.getEPKRSItemCaseData(CommonLibrary.Base64Encode(paramGetItemCaseInitialization));
+                }
+                else if (itemCaseFilterType.Equals("STATUS"))
+                {
+                    string paramGetItemCaseInitialization = activeUser.location + $"!_!WHERE a.DocumentStatus LIKE \'%{itemCaseFilterValue}%\'!_!" + itemCasePageActive.ToString();
+                    await EPKRSService.getEPKRSItemCaseData(CommonLibrary.Base64Encode(paramGetItemCaseInitialization));
+                }
+            }
+            else
+            {
+                string paramGetItemCaseInitialization = activeUser.location + "!_!!_!" + itemCasePageActive.ToString();
+                await EPKRSService.getEPKRSItemCaseData(CommonLibrary.Base64Encode(paramGetItemCaseInitialization));
+            }
+
+            List<DocumentListParams> docParams = new();
+
+            if (EPKRSService.itemCases != null)
+            {
+                if (EPKRSService.itemCases.Count > 0)
+                {
+                    EPKRSService.itemCases.ForEach(x =>
+                    {
+                        docParams.Add(new DocumentListParams
+                        {
+                            LocationID = x.itemCase.SiteReporter,
+                            DocumentID = x.itemCase.DocumentID
+                        });
+                    });
+                }
+            }
+
+            if (EPKRSService.incidentAccidents != null)
+            {
+                if (EPKRSService.incidentAccidents.Count > 0)
+                {
+                    EPKRSService.incidentAccidents.ForEach(x =>
+                    {
+                        docParams.Add(new DocumentListParams
+                        {
+                            LocationID = x.incidentAccident.SiteReporter,
+                            DocumentID = x.incidentAccident.DocumentID
+                        });
+                    });
+                }
+            }
+
+            Task.Run(async () =>
+            {
+                await EPKRSService.getEPKRSInitializationDocumentDiscussions(docParams);
+                await EPKRSService.getEPKRSDocumentDiscussionReadHistory(docParams);
+
+                StateHasChanged();
+            });
+
+            isLoading = false;
+            StateHasChanged();
+        }
+
+        private async Task incidentAccidentPageSelect(int currPage)
         {
             incidentAccidentPageActive = currPage;
             isLoading = true;
+            triggerReplyButton = false;
 
             if (incidentAccidentFilterActive)
             {
@@ -1430,14 +1549,105 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 }
             }
 
-            await EPKRSService.getEPKRSInitializationDocumentDiscussions(docParams);
-            await EPKRSService.getEPKRSDocumentDiscussionReadHistory(docParams);
+            Task.Run(async () =>
+            {
+                await EPKRSService.getEPKRSInitializationDocumentDiscussions(docParams);
+                await EPKRSService.getEPKRSDocumentDiscussionReadHistory(docParams);
+
+                StateHasChanged();
+            });
 
             isLoading = false;
             StateHasChanged();
         }
 
-        private async void incidentAccidentFilter()
+        private async Task itemCaseFilter()
+        {
+            if (itemCaseFilterType.Length > 0)
+            {
+                itemCaseFilterActive = true;
+                isLoading = true;
+                EPKRSService.itemCases.Clear();
+                itemCasePageActive = 1;
+
+                if (itemCaseFilterType.Equals("ID"))
+                {
+                    string itemCaseParampz = $"[EPKRS].ItemCase!_!{activeUser.location}!_!WHERE DocumentID LIKE '%{itemCaseFilterValue}%'";
+                    var itemCasepz = await EPKRSService.getEPKRSModuleNumberOfPage(CommonLibrary.Base64Encode(itemCaseParampz));
+                    incidentAccidentNumberofPages = itemCasepz.Data;
+
+                    string paramGetItemCaseInitialization = activeUser.location + $"!_!WHERE a.DocumentID LIKE \'%{itemCaseFilterValue}%\'!_!1";
+                    await EPKRSService.getEPKRSItemCaseData(CommonLibrary.Base64Encode(paramGetItemCaseInitialization));
+                }
+                else if (itemCaseFilterType.Equals("LOC"))
+                {
+                    string itemCaseParampz = $"[EPKRS].ItemCase!_!{activeUser.location}!_!WHERE SiteReporter = \'{itemCaseFilterValue}\'";
+                    var itemCasepz = await EPKRSService.getEPKRSModuleNumberOfPage(CommonLibrary.Base64Encode(itemCaseParampz));
+                    incidentAccidentNumberofPages = itemCasepz.Data;
+
+                    string paramGetItemCaseInitialization = activeUser.location + $"!_!WHERE a.SiteReporter = \'{itemCaseFilterValue}\'!_!1";
+                    await EPKRSService.getEPKRSItemCaseData(CommonLibrary.Base64Encode(paramGetItemCaseInitialization));
+                }
+                else if (itemCaseFilterType.Equals("STATUS"))
+                {
+                    string itemCaseParampz = $"[EPKRS].ItemCase!_!{activeUser.location}!_!WHERE DocumentStatus LIKE \'%{itemCaseFilterValue}%\'";
+                    var itemCasepz = await EPKRSService.getEPKRSModuleNumberOfPage(CommonLibrary.Base64Encode(itemCaseParampz));
+                    incidentAccidentNumberofPages = itemCasepz.Data;
+
+                    string paramGetItemCaseInitialization = activeUser.location + $"!_!WHERE a.DocumentStatus LIKE \'%{itemCaseFilterValue}%\'!_!1";
+                    await EPKRSService.getEPKRSItemCaseData(CommonLibrary.Base64Encode(paramGetItemCaseInitialization));
+                }
+
+                List<DocumentListParams> docParams = new();
+
+                if (EPKRSService.itemCases != null)
+                {
+                    if (EPKRSService.itemCases.Count > 0)
+                    {
+                        EPKRSService.itemCases.ForEach(x =>
+                        {
+                            docParams.Add(new DocumentListParams
+                            {
+                                LocationID = x.itemCase.SiteReporter,
+                                DocumentID = x.itemCase.DocumentID
+                            });
+                        });
+                    }
+                }
+
+                if (EPKRSService.incidentAccidents != null)
+                {
+                    if (EPKRSService.incidentAccidents.Count > 0)
+                    {
+                        EPKRSService.incidentAccidents.ForEach(x =>
+                        {
+                            docParams.Add(new DocumentListParams
+                            {
+                                LocationID = x.incidentAccident.SiteReporter,
+                                DocumentID = x.incidentAccident.DocumentID
+                            });
+                        });
+                    }
+                }
+
+                Task.Run(async () =>
+                {
+                    await EPKRSService.getEPKRSInitializationDocumentDiscussions(docParams);
+                    await EPKRSService.getEPKRSDocumentDiscussionReadHistory(docParams);
+
+                    StateHasChanged();
+                });
+
+                isLoading = false;
+                StateHasChanged();
+            }
+            else
+            {
+                await _jsModule.InvokeVoidAsync("showAlert", "Please Select Filter Type !");
+            }
+        }
+
+        private async Task incidentAccidentFilter()
         {
             if (incidentAccidentFilterType.Length > 0)
             {
@@ -1506,8 +1716,13 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                     }
                 }
 
-                await EPKRSService.getEPKRSInitializationDocumentDiscussions(docParams);
-                await EPKRSService.getEPKRSDocumentDiscussionReadHistory(docParams);
+                Task.Run(async () =>
+                {
+                    await EPKRSService.getEPKRSInitializationDocumentDiscussions(docParams);
+                    await EPKRSService.getEPKRSDocumentDiscussionReadHistory(docParams);
+
+                    StateHasChanged();
+                });
 
                 isLoading = false;
                 StateHasChanged();
@@ -1518,7 +1733,71 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             }
         }
 
-        private async void resetIncidentAccidentFilter()
+        private async Task resetItemCaseFilter()
+        {
+            try
+            {
+                isLoading = true;
+                itemCasePageActive = 1;
+
+                string itemCaseParampz = $"[EPKRS].ItemCase!_!{activeUser.location}!_!";
+                var itemCasepz = await EPKRSService.getEPKRSModuleNumberOfPage(CommonLibrary.Base64Encode(itemCaseParampz));
+                incidentAccidentNumberofPages = itemCasepz.Data;
+
+                string paramGetItemCaseInitialization = activeUser.location + "!_!!_!1";
+                await EPKRSService.getEPKRSItemCaseData(CommonLibrary.Base64Encode(paramGetItemCaseInitialization));
+
+                List<DocumentListParams> docParams = new();
+
+                if (EPKRSService.itemCases != null)
+                {
+                    if (EPKRSService.itemCases.Count > 0)
+                    {
+                        EPKRSService.itemCases.ForEach(x =>
+                        {
+                            docParams.Add(new DocumentListParams
+                            {
+                                LocationID = x.itemCase.SiteReporter,
+                                DocumentID = x.itemCase.DocumentID
+                            });
+                        });
+                    }
+                }
+
+                if (EPKRSService.incidentAccidents != null)
+                {
+                    if (EPKRSService.incidentAccidents.Count > 0)
+                    {
+                        EPKRSService.incidentAccidents.ForEach(x =>
+                        {
+                            docParams.Add(new DocumentListParams
+                            {
+                                LocationID = x.incidentAccident.SiteReporter,
+                                DocumentID = x.incidentAccident.DocumentID
+                            });
+                        });
+                    }
+                }
+
+                Task.Run(async () =>
+                {
+                    await EPKRSService.getEPKRSInitializationDocumentDiscussions(docParams);
+                    await EPKRSService.getEPKRSDocumentDiscussionReadHistory(docParams);
+
+                    StateHasChanged();
+                });
+
+                itemCaseFilterActive = false;
+                isLoading = false;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} from {ex.Source} {ex.InnerException} !");
+            }
+        }
+
+        private async Task resetIncidentAccidentFilter()
         {
             try
             {
@@ -1564,8 +1843,13 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                     }
                 }
 
-                await EPKRSService.getEPKRSInitializationDocumentDiscussions(docParams);
-                await EPKRSService.getEPKRSDocumentDiscussionReadHistory(docParams);
+                Task.Run(async () =>
+                {
+                    await EPKRSService.getEPKRSInitializationDocumentDiscussions(docParams);
+                    await EPKRSService.getEPKRSDocumentDiscussionReadHistory(docParams);
+
+                    StateHasChanged();
+                });
 
                 incidentAccidentFilterActive = false;
                 isLoading = false;
@@ -1593,13 +1877,19 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 var resGeneralStat = await EPKRSService.getEPKRSGeneralStatistics(CommonLibrary.Base64Encode(generalStatisticsConditions));
 
                 string regionalStatsParam = $"WHERE a.ReportDate BETWEEN \'{year}-01-01 00:00:00\' AND \'{year}-12-31\'";
-                var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(regionalStatsParam));
+                QueryModel<string> param = new();
+                param.Data = CommonLibrary.Base64Encode(regionalStatsParam);
+                var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(param);
 
                 string involvedbyPosParam = $"WHERE a.ReportDate BETWEEN \'{year}-01-01 00:00:00\' AND \'{year}-12-31\'!_!AND (x.ReportDate BETWEEN \'{year}-01-01\' AND \'{year}-12-31\')";
-                var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(involvedbyPosParam));
+                param = new();
+                param.Data = CommonLibrary.Base64Encode(involvedbyPosParam);
+                var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(param);
 
                 string involvedbyDeptParam = $"WHERE a.ReportDate BETWEEN \'{year}-01-01 00:00:00\' AND \'{year}-12-31\'!_!AND (x.ReportDate BETWEEN \'{year}-01-01\' AND \'{year}-12-31\')";
-                var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(involvedbyDeptParam));
+                param = new();
+                param.Data = CommonLibrary.Base64Encode(involvedbyDeptParam);
+                var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(param);
 
                 if (resGeneralStat.isSuccess)
                 {
@@ -1675,7 +1965,9 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                     dinamicGeneralStatisticsDateFilter = dinamicGeneralStatisticsDateFilter.Substring(0, dinamicGeneralStatisticsDateFilter.Length - 4);
 
                     var resGeneralStat = await EPKRSService.getEPKRSGeneralStatistics(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDateFilter));
-                    var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDateFilter));
+                    QueryModel<string> param = new();
+                    param.Data = CommonLibrary.Base64Encode(dinamicGeneralStatisticsDateFilter);
+                    var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(param);
 
                     dinamicGeneralStatisticsDateFilter += "!_!AND (";
 
@@ -1687,8 +1979,10 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                     dinamicGeneralStatisticsDateFilter = dinamicGeneralStatisticsDateFilter.Substring(0, dinamicGeneralStatisticsDateFilter.Length - 4);
                     dinamicGeneralStatisticsDateFilter += ")";
 
-                    var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDateFilter));
-                    var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDateFilter));
+                    param = new();
+                    param.Data = CommonLibrary.Base64Encode(dinamicGeneralStatisticsDateFilter);
+                    var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(param);
+                    var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(param);
 
                     if (resGeneralStat.isSuccess)
                     {
@@ -1759,7 +2053,9 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                         dinamicGeneralStatisticsRiskTypeFilter += dinamicGeneralStatisticsDateFilter + $" AND c.RiskID = \'{riskId}\'";
 
                         //var resGeneralStat = await EPKRSService.getEPKRSGeneralStatistics(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRiskTypeFilter));
-                        var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRiskTypeFilter));
+                        QueryModel<string> param = new();
+                        param.Data = CommonLibrary.Base64Encode(dinamicGeneralStatisticsRiskTypeFilter);
+                        var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(param);
 
                         dinamicGeneralStatisticsDateFilter += "!_!AND (";
 
@@ -1773,8 +2069,10 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
                         dinamicGeneralStatisticsRiskTypeFilter += dinamicGeneralStatisticsDateFilter + $" AND v.RiskID = \'{riskId}\'";
 
-                        var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDateFilter));
-                        var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDateFilter));
+                        param = new();
+                        param.Data = CommonLibrary.Base64Encode(dinamicGeneralStatisticsDateFilter);
+                        var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(param);
+                        var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(param);
 
                         //if (resGeneralStat.isSuccess)
                         //{
@@ -1804,13 +2102,19 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                     {
                         dinamicGeneralStatisticsRiskTypeFilter = $"WHERE c.RiskID = \'{riskId}\'";
 
+                        QueryModel<string> param = new();
+                        param.Data = CommonLibrary.Base64Encode(dinamicGeneralStatisticsRiskTypeFilter);
+
                         //var resGeneralStat = await EPKRSService.getEPKRSGeneralStatistics(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRiskTypeFilter));
-                        var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRiskTypeFilter));
+                        var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(param);
 
                         dinamicGeneralStatisticsRiskTypeFilter += $"!_!AND v.RiskID = \'{riskId}\'";
 
-                        var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRiskTypeFilter));
-                        var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRiskTypeFilter));
+                        param = new();
+                        param.Data = CommonLibrary.Base64Encode(dinamicGeneralStatisticsRiskTypeFilter);
+
+                        var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(param);
+                        var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(param);
 
                         //if (resGeneralStat.isSuccess)
                         //{
@@ -1883,7 +2187,10 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                     dinamicGeneralStatisticsRegionalFilter = dinamicGeneralStatisticsRegionalFilter.Substring(0, dinamicGeneralStatisticsRegionalFilter.Length - 4);
                     dinamicGeneralStatisticsRegionalFilter += $") AND z.DORMEmail = \'{dormEmail}\')";
 
-                    var resGeneralStat = await EPKRSService.getEPKRSGeneralIncidentAccidentStatistics(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRegionalFilter));
+                    QueryModel<string> param = new();
+                    param.Data = CommonLibrary.Base64Encode(dinamicGeneralStatisticsRegionalFilter);
+
+                    var resGeneralStat = await EPKRSService.getEPKRSGeneralIncidentAccidentStatistics(param);
                     //var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRiskTypeFilter));
 
                     dinamicGeneralStatisticsRegionalFilter = string.Empty;
@@ -1897,8 +2204,10 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                     dinamicGeneralStatisticsRegionalFilter = dinamicGeneralStatisticsRegionalFilter.Substring(0, dinamicGeneralStatisticsRegionalFilter.Length - 4);
                     dinamicGeneralStatisticsRegionalFilter += $") AND x.DORMEmail = \'{dormEmail}\'";
 
-                    var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRegionalFilter));
-                    var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRegionalFilter));
+                    param = new();
+                    param.Data = CommonLibrary.Base64Encode(dinamicGeneralStatisticsRegionalFilter);
+                    var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(param);
+                    var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(param);
 
                     if (resGeneralStat.isSuccess)
                     {
@@ -1928,13 +2237,18 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 {
                     dinamicGeneralStatisticsRegionalFilter = $"WHERE a.DORMEmail = \'{dormEmail}\'!_!AND z.DORMEmail = \'{dormEmail}\'";
 
-                    var resGeneralStat = await EPKRSService.getEPKRSGeneralIncidentAccidentStatistics(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRegionalFilter));
+                    QueryModel<string> param = new();
+                    param.Data = CommonLibrary.Base64Encode(dinamicGeneralStatisticsRegionalFilter);
+
+                    var resGeneralStat = await EPKRSService.getEPKRSGeneralIncidentAccidentStatistics(param);
                     //var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRiskTypeFilter));
 
                     dinamicGeneralStatisticsRegionalFilter = $"WHERE a.DORMEmail = \'{dormEmail}\'!_!AND x.DORMEmail = \'{dormEmail}\'";
+                    param = new();
+                    param.Data = CommonLibrary.Base64Encode(dinamicGeneralStatisticsRegionalFilter);
 
-                    var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRegionalFilter));
-                    var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(dinamicGeneralStatisticsRegionalFilter));
+                    var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(param);
+                    var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(param);
 
                     if (resGeneralStat.isSuccess)
                     {
@@ -2008,12 +2322,17 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                     dinamicGeneralStatisticsPositionFilter = dinamicGeneralStatisticsPositionFilter.Substring(0, dinamicGeneralStatisticsPositionFilter.Length - 4);
                     dinamicGeneralStatisticsPositionFilter += $") AND m.InvolverPosition = \'{involverPos}\')";
 
-                    var resGeneralStat = await EPKRSService.getEPKRSGeneralIncidentAccidentStatistics(CommonLibrary.Base64Encode(joinA + dinamicGeneralStatisticsPositionFilter));
+                    QueryModel<string> param = new();
+                    param.Data = CommonLibrary.Base64Encode(joinA + dinamicGeneralStatisticsPositionFilter);
+
+                    var resGeneralStat = await EPKRSService.getEPKRSGeneralIncidentAccidentStatistics(param);
 
                     dinamicGeneralStatisticsPositionFilter = string.Empty;
                     dinamicGeneralStatisticsPositionFilter += dinamicGeneralStatisticsDateFilter + $") AND d.InvolverPosition = \'{involverPos}\'";
+                    param = new();
+                    param.Data = CommonLibrary.Base64Encode(joinB + dinamicGeneralStatisticsPositionFilter);
 
-                    var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(joinB + dinamicGeneralStatisticsPositionFilter));
+                    var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(param);
 
                     dinamicGeneralStatisticsPositionFilter = string.Empty;
                     dinamicGeneralStatisticsPositionFilter += dinamicGeneralStatisticsDateFilter + $") AND b.InvolverPosition = \'{involverPos}\'!_!AND (";
@@ -2025,9 +2344,11 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
                     dinamicGeneralStatisticsPositionFilter = dinamicGeneralStatisticsPositionFilter.Substring(0, dinamicGeneralStatisticsPositionFilter.Length - 4);
                     dinamicGeneralStatisticsPositionFilter += $") AND z.InvolverPosition = \'{involverPos}\'";
+                    param = new();
+                    param.Data = CommonLibrary.Base64Encode(dinamicGeneralStatisticsPositionFilter);
 
                     //var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(dinamicGeneralStatisticsPositionFilter));
-                    var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(dinamicGeneralStatisticsPositionFilter));
+                    var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(param);
 
                     if (resGeneralStat.isSuccess)
                     {
@@ -2057,16 +2378,23 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 {
                     dinamicGeneralStatisticsPositionFilter = $"INNER JOIN (SELECT DISTINCT l.DocumentID, l.InvolverPosition FROM [EPKRS].IncidentAccidentInvolverDetails l) b on a.DocumentID = b.DocumentID WHERE b.InvolverPosition = \'{involverPos}\'!_!AND m.InvolverPosition = \'{involverPos}\'";
 
-                    var resGeneralStat = await EPKRSService.getEPKRSGeneralIncidentAccidentStatistics(CommonLibrary.Base64Encode(dinamicGeneralStatisticsPositionFilter));
+                    QueryModel<string> param = new();
+                    param.Data = CommonLibrary.Base64Encode(dinamicGeneralStatisticsPositionFilter);
+
+                    var resGeneralStat = await EPKRSService.getEPKRSGeneralIncidentAccidentStatistics(param);
 
                     dinamicGeneralStatisticsPositionFilter = $"INNER JOIN (SELECT DISTINCT l.DocumentID, l.InvolverPosition FROM [EPKRS].IncidentAccidentInvolverDetails l) d on a.DocumentID = d.DocumentID WHERE d.InvolverPosition = \'{involverPos}\'";
+                    param = new();
+                    param.Data = CommonLibrary.Base64Encode(dinamicGeneralStatisticsPositionFilter);
 
-                    var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(dinamicGeneralStatisticsPositionFilter));
+                    var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(param);
 
                     dinamicGeneralStatisticsPositionFilter = $"WHERE b.InvolverPosition = \'{involverPos}\'!_!AND z.InvolverPosition = \'{involverPos}\'";
+                    param = new();
+                    param.Data = CommonLibrary.Base64Encode(dinamicGeneralStatisticsPositionFilter);
 
                     //var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(dinamicGeneralStatisticsPositionFilter));
-                    var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(dinamicGeneralStatisticsPositionFilter));
+                    var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(param);
 
                     if (resGeneralStat.isSuccess)
                     {
@@ -2140,12 +2468,17 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                     dinamicGeneralStatisticsDepartmentFilter = dinamicGeneralStatisticsDepartmentFilter.Substring(0, dinamicGeneralStatisticsDepartmentFilter.Length - 4);
                     dinamicGeneralStatisticsDepartmentFilter += $") AND m.InvolverDept = \'{involverPos}\')";
 
-                    var resGeneralStat = await EPKRSService.getEPKRSGeneralIncidentAccidentStatistics(CommonLibrary.Base64Encode(joinA + dinamicGeneralStatisticsDepartmentFilter));
+                    QueryModel<string> param = new();
+                    param.Data = CommonLibrary.Base64Encode(joinA + dinamicGeneralStatisticsDepartmentFilter);
+
+                    var resGeneralStat = await EPKRSService.getEPKRSGeneralIncidentAccidentStatistics(param);
 
                     dinamicGeneralStatisticsDepartmentFilter = string.Empty;
                     dinamicGeneralStatisticsDepartmentFilter += dinamicGeneralStatisticsDateFilter + $") AND d.InvolverDept = \'{involverPos}\'";
+                    param = new();
+                    param.Data = CommonLibrary.Base64Encode(joinB + dinamicGeneralStatisticsDepartmentFilter);
 
-                    var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(joinB + dinamicGeneralStatisticsDepartmentFilter));
+                    var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(param);
 
                     dinamicGeneralStatisticsDepartmentFilter = string.Empty;
                     dinamicGeneralStatisticsDepartmentFilter += dinamicGeneralStatisticsDateFilter + $") AND b.InvolverDept = \'{involverPos}\'!_!AND (";
@@ -2157,8 +2490,10 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
                     dinamicGeneralStatisticsDepartmentFilter = dinamicGeneralStatisticsDepartmentFilter.Substring(0, dinamicGeneralStatisticsDepartmentFilter.Length - 4);
                     dinamicGeneralStatisticsDepartmentFilter += $") AND z.InvolverDept = \'{involverPos}\'";
+                    param = new();
+                    param.Data = CommonLibrary.Base64Encode(dinamicGeneralStatisticsDepartmentFilter);
 
-                    var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDepartmentFilter));
+                    var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(param);
                     //var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDepartmentFilter));
 
                     if (resGeneralStat.isSuccess)
@@ -2189,15 +2524,22 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 {
                     dinamicGeneralStatisticsDepartmentFilter = $"INNER JOIN (SELECT DISTINCT l.DocumentID, l.InvolverDept FROM [EPKRS].IncidentAccidentInvolverDetails l) b on a.DocumentID = b.DocumentID WHERE b.InvolverDept = \'{involverPos}\'!_!AND m.InvolverDept = \'{involverPos}\'";
 
-                    var resGeneralStat = await EPKRSService.getEPKRSGeneralIncidentAccidentStatistics(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDepartmentFilter));
+                    QueryModel<string> param = new();
+                    param.Data = CommonLibrary.Base64Encode(dinamicGeneralStatisticsDepartmentFilter);
+
+                    var resGeneralStat = await EPKRSService.getEPKRSGeneralIncidentAccidentStatistics(param);
 
                     dinamicGeneralStatisticsDepartmentFilter = $"INNER JOIN (SELECT DISTINCT l.DocumentID, l.InvolverDept FROM [EPKRS].IncidentAccidentInvolverDetails l) d on a.DocumentID = d.DocumentID WHERE d.InvolverDept = \'{involverPos}\'";
+                    param = new();
+                    param.Data = CommonLibrary.Base64Encode(dinamicGeneralStatisticsDepartmentFilter);
 
-                    var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDepartmentFilter));
+                    var resRegionalStats = await EPKRSService.getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(param);
 
                     dinamicGeneralStatisticsDepartmentFilter = $"WHERE b.InvolverDept = \'{involverPos}\'!_!AND z.InvolverDept = \'{involverPos}\'";
+                    param = new();
+                    param.Data = CommonLibrary.Base64Encode(dinamicGeneralStatisticsDepartmentFilter);
 
-                    var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(CommonLibrary.Base64Encode(dinamicGeneralStatisticsDepartmentFilter));
+                    var resInvolvedbyPos = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(param);
                     //var resInvolvedbyDept = await EPKRSService.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(CommonLibrary.Base64Encode(dinamicGeneralStatisticsPositionFilter));
 
                     if (resGeneralStat.isSuccess)

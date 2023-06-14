@@ -69,6 +69,30 @@ export function initializeDoughnutChart(chartId, arrayLabels, arrayValue, chartT
                     text: chartTitle,
                     fontSize: 12
                 }
+            },
+            tooltips: {
+                callbacks: {
+                    label: function (tooltipItem, data) {
+                        // get the data label and data value to display
+                        // convert the data value to local string so it uses a comma seperated number
+                        var dataLabel = data.labels[tooltipItem.index];
+                        // var dataLabel = 'Loss Estimation ';
+                        var value = ': ' + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString();
+
+                        // make this isn't a multi-line label (e.g. [["label 1 - line 1, "line 2, ], [etc...]])
+                        if (Chart.helpers.isArray(dataLabel)) {
+                            // show value on first line of multiline label
+                            // need to clone because we are changing the value
+                            dataLabel = dataLabel.slice();
+                            dataLabel[0] += value;
+                        } else {
+                            dataLabel += value;
+                        }
+
+                        // return the text to display on the tooltip
+                        return dataLabel;
+                    }
+                }
             }
         });
     }
@@ -112,6 +136,30 @@ export function updateDoughnutChart(element, chartId, arrayLabels, arrayValue, c
                     display: true,
                     text: chartTitle,
                     fontSize: 12
+                }
+            },
+            tooltips: {
+                callbacks: {
+                    label: function (tooltipItem, data) {
+                        // get the data label and data value to display
+                        // convert the data value to local string so it uses a comma seperated number
+                        var dataLabel = data.labels[tooltipItem.index];
+                        // var dataLabel = 'Loss Estimation ';
+                        var value = ': ' + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString();
+
+                        // make this isn't a multi-line label (e.g. [["label 1 - line 1, "line 2, ], [etc...]])
+                        if (Chart.helpers.isArray(dataLabel)) {
+                            // show value on first line of multiline label
+                            // need to clone because we are changing the value
+                            dataLabel = dataLabel.slice();
+                            dataLabel[0] += value;
+                        } else {
+                            dataLabel += value;
+                        }
+
+                        // return the text to display on the tooltip
+                        return dataLabel;
+                    }
                 }
             }
         });
@@ -160,6 +208,30 @@ export function initializeBarChart(chartId, arrayLabels, arrayValue, chartTitle,
                             beginAtZero: true
                         }
                     }]
+                },
+                tooltips: {
+                    callbacks: {
+                        label: function (tooltipItem, data) {
+                            // get the data label and data value to display
+                            // convert the data value to local string so it uses a comma seperated number
+                            var dataLabel = data.labels[tooltipItem.index];
+                            // var dataLabel = 'Loss Estimation ';
+                            var value = ': ' + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString();
+
+                            // make this isn't a multi-line label (e.g. [["label 1 - line 1, "line 2, ], [etc...]])
+                            if (Chart.helpers.isArray(dataLabel)) {
+                                // show value on first line of multiline label
+                                // need to clone because we are changing the value
+                                dataLabel = dataLabel.slice();
+                                dataLabel[0] += value;
+                            } else {
+                                dataLabel += value;
+                            }
+
+                            // return the text to display on the tooltip
+                            return dataLabel;
+                        }
+                    }
                 }
             }
         });
@@ -190,6 +262,30 @@ export function initializeBarChart(chartId, arrayLabels, arrayValue, chartTitle,
                             beginAtZero: true
                         }
                     }]
+                },
+                tooltips: {
+                    callbacks: {
+                        label: function (tooltipItem, data) {
+                            // get the data label and data value to display
+                            // convert the data value to local string so it uses a comma seperated number
+                            var dataLabel = data.labels[tooltipItem.index];
+                            // var dataLabel = 'Loss Estimation ';
+                            var value = ': ' + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString();
+
+                            // make this isn't a multi-line label (e.g. [["label 1 - line 1, "line 2, ], [etc...]])
+                            if (Chart.helpers.isArray(dataLabel)) {
+                                // show value on first line of multiline label
+                                // need to clone because we are changing the value
+                                dataLabel = dataLabel.slice();
+                                dataLabel[0] += value;
+                            } else {
+                                dataLabel += value;
+                            }
+
+                            // return the text to display on the tooltip
+                            return dataLabel;
+                        }
+                    }
                 }
             }
         });
@@ -219,6 +315,30 @@ export function initializeBarChart(chartId, arrayLabels, arrayValue, chartTitle,
                             beginAtZero: true
                         }
                     }]
+                },
+                tooltips: {
+                    callbacks: {
+                        label: function (tooltipItem, data) {
+                            // get the data label and data value to display
+                            // convert the data value to local string so it uses a comma seperated number
+                            // var dataLabel = data.labels[tooltipItem.index];
+                            var dataLabel = 'Loss Estimation ';
+                            var value = ': Rp. ' + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString() + ' ,-';
+
+                            // make this isn't a multi-line label (e.g. [["label 1 - line 1, "line 2, ], [etc...]])
+                            if (Chart.helpers.isArray(dataLabel)) {
+                                // show value on first line of multiline label
+                                // need to clone because we are changing the value
+                                dataLabel = dataLabel.slice();
+                                dataLabel[0] += value;
+                            } else {
+                                dataLabel += value;
+                            }
+
+                            // return the text to display on the tooltip
+                            return dataLabel;
+                        }
+                    }
                 }
             }
         });
@@ -278,6 +398,30 @@ export function updateBarChart(element, chartId, arrayLabels, arrayValue, chartT
                             beginAtZero: true
                         }
                     }]
+                },
+                tooltips: {
+                    callbacks: {
+                        label: function (tooltipItem, data) {
+                            // get the data label and data value to display
+                            // convert the data value to local string so it uses a comma seperated number
+                            var dataLabel = data.labels[tooltipItem.index];
+                            // var dataLabel = 'Loss Estimation ';
+                            var value = ': ' + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString();
+
+                            // make this isn't a multi-line label (e.g. [["label 1 - line 1, "line 2, ], [etc...]])
+                            if (Chart.helpers.isArray(dataLabel)) {
+                                // show value on first line of multiline label
+                                // need to clone because we are changing the value
+                                dataLabel = dataLabel.slice();
+                                dataLabel[0] += value;
+                            } else {
+                                dataLabel += value;
+                            }
+
+                            // return the text to display on the tooltip
+                            return dataLabel;
+                        }
+                    }
                 }
             }
         });
@@ -307,6 +451,30 @@ export function updateBarChart(element, chartId, arrayLabels, arrayValue, chartT
                             beginAtZero: true
                         }
                     }]
+                },
+                tooltips: {
+                    callbacks: {
+                        label: function (tooltipItem, data) {
+                            // get the data label and data value to display
+                            // convert the data value to local string so it uses a comma seperated number
+                            var dataLabel = data.labels[tooltipItem.index];
+                            // var dataLabel = 'Loss Estimation ';
+                            var value = ': ' + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString();
+
+                            // make this isn't a multi-line label (e.g. [["label 1 - line 1, "line 2, ], [etc...]])
+                            if (Chart.helpers.isArray(dataLabel)) {
+                                // show value on first line of multiline label
+                                // need to clone because we are changing the value
+                                dataLabel = dataLabel.slice();
+                                dataLabel[0] += value;
+                            } else {
+                                dataLabel += value;
+                            }
+
+                            // return the text to display on the tooltip
+                            return dataLabel;
+                        }
+                    }
                 }
             }
         });
@@ -336,6 +504,29 @@ export function updateBarChart(element, chartId, arrayLabels, arrayValue, chartT
                             beginAtZero: true
                         }
                     }]
+                },
+                tooltips: {
+                    callbacks: {
+                        label: function (tooltipItem, data) {
+                            // get the data label and data value to display
+                            // convert the data value to local string so it uses a comma seperated number
+                            var dataLabel = data.labels[tooltipItem.index];
+                            var value = ': Rp. ' + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString() + ' ,-';
+
+                            // make this isn't a multi-line label (e.g. [["label 1 - line 1, "line 2, ], [etc...]])
+                            if (Chart.helpers.isArray(dataLabel)) {
+                                // show value on first line of multiline label
+                                // need to clone because we are changing the value
+                                dataLabel = dataLabel.slice();
+                                dataLabel[0] += value;
+                            } else {
+                                dataLabel += value;
+                            }
+
+                            // return the text to display on the tooltip
+                            return dataLabel;
+                        }
+                    }
                 }
             }
         });
@@ -371,6 +562,30 @@ export function initializeLineChart(chartId, arrayLabels, arrayValue, chartTitle
                     display: true,
                     text: chartTitle,
                     fontSize: 12
+                }
+            },
+            tooltips: {
+                callbacks: {
+                    label: function (tooltipItem, data) {
+                        // get the data label and data value to display
+                        // convert the data value to local string so it uses a comma seperated number
+                        var dataLabel = data.labels[tooltipItem.index];
+                        // var dataLabel = 'Loss Estimation ';
+                        var value = ': ' + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString();
+
+                        // make this isn't a multi-line label (e.g. [["label 1 - line 1, "line 2, ], [etc...]])
+                        if (Chart.helpers.isArray(dataLabel)) {
+                            // show value on first line of multiline label
+                            // need to clone because we are changing the value
+                            dataLabel = dataLabel.slice();
+                            dataLabel[0] += value;
+                        } else {
+                            dataLabel += value;
+                        }
+
+                        // return the text to display on the tooltip
+                        return dataLabel;
+                    }
                 }
             }
         });
@@ -410,6 +625,30 @@ export function updateLineChart(element, chartId, arrayLabels, arrayValue, chart
                     display: true,
                     text: chartTitle,
                     fontSize: 12
+                }
+            },
+            tooltips: {
+                callbacks: {
+                    label: function (tooltipItem, data) {
+                        // get the data label and data value to display
+                        // convert the data value to local string so it uses a comma seperated number
+                        var dataLabel = data.labels[tooltipItem.index];
+                        // var dataLabel = 'Loss Estimation ';
+                        var value = ': ' + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString();
+
+                        // make this isn't a multi-line label (e.g. [["label 1 - line 1, "line 2, ], [etc...]])
+                        if (Chart.helpers.isArray(dataLabel)) {
+                            // show value on first line of multiline label
+                            // need to clone because we are changing the value
+                            dataLabel = dataLabel.slice();
+                            dataLabel[0] += value;
+                        } else {
+                            dataLabel += value;
+                        }
+
+                        // return the text to display on the tooltip
+                        return dataLabel;
+                    }
                 }
             }
         });

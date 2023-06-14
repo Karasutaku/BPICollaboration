@@ -8,6 +8,7 @@ namespace BPIWebApplication.Shared.MainModel.EPKRS
         public ItemCase itemCase { get; set; } = new();
         public List<ItemLine> itemLine { get; set; } = new();
         public List<CaseAttachment> attachment { get; set; } = new();
+        public List<DocumentApproval> Approval { get; set; } = new();
     }
 
     public class EPKRSUploadIncidentAccident
@@ -62,4 +63,35 @@ namespace BPIWebApplication.Shared.MainModel.EPKRS
         public string LocationID { get; set; } = string.Empty;
         public string DocumentID { get; set; } = string.Empty;
     }
+
+    public class LMNotoTMS
+    {
+        public string lmNo { get; set; } = string.Empty;
+    }
+
+    public class LoadingManifestResp
+    {
+        private string loc = string.Empty;
+        private DateTime date;
+
+        public string lmNo { get; set; } = string.Empty;
+        public string siteNo {
+            get => loc;
+            set {
+                loc = new string(value.ToCharArray().Where(c => !Char.IsWhiteSpace(c)).ToArray());
+            }
+        }
+        public string trNo { get; set; } = string.Empty;
+        public string itemCode { get; set; } = string.Empty;
+        public string itemDesc { get; set; } = string.Empty;
+        public decimal itemValue { get; set; } = decimal.Zero;
+        public string uom { get; set; } = string.Empty;
+        public string sentRequestDate { 
+            get => date.ToString("yyyy-MM-dd");
+            set { 
+                date = Convert.ToDateTime(new string(value.ToCharArray().Where(c => !Char.IsWhiteSpace(c)).ToArray()));
+            } 
+        }
+    }
+
 }

@@ -26,7 +26,7 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
         Task<ResultModel<QueryModel<DocumentApproval>>> createEPKRSDocumentApprovalData(QueryModel<DocumentApproval> data);
         Task<ResultModel<QueryModel<RISKApprovalExtended>>> createEPKRSDocumentApprovalExtendedData(QueryModel<RISKApprovalExtended> data);
 
-        Task<ResultModel<QueryModel<ItemCase>>> editEPKRSItemCaseData(QueryModel<ItemCase> data);
+        Task<ResultModel<QueryModel<EPKRSUploadItemCase>>> editEPKRSItemCaseData(QueryModel<EPKRSUploadItemCase> data);
         Task<ResultModel<QueryModel<IncidentAccident>>> editEPKRSIncidentAccidentData(QueryModel<IncidentAccident> data);
 
         Task<ResultModel<QueryModel<string>>> deleteEPKRSItemCaseDocumentData(QueryModel<string> data);
@@ -44,13 +44,16 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
         Task<ResultModel<List<DocumentDiscussionReadHistory>>> getEPKRSDocumentDiscussionReadHistory(List<DocumentListParams> param);
         Task<ResultModel<List<BPIWebApplication.Shared.MainModel.Stream.FileStream>>> getEPKRSFileStream(string param);
         Task<ResultModel<List<EPKRSDocumentStatistics>>> getEPKRSGeneralStatistics(string param);
-        Task<ResultModel<List<EPKRSDocumentStatistics>>> getEPKRSGeneralIncidentAccidentStatistics(string param);
+        Task<ResultModel<List<EPKRSDocumentStatistics>>> getEPKRSGeneralIncidentAccidentStatistics(QueryModel<string> param);
         Task<ResultModel<List<EPKRSItemCaseCategoryStatistics>>> getEPKRSItemCaseCategoryStatistics(string param);
         Task<ResultModel<List<EPKRSTopLocationReportStatistics>>> getEPKRSTopLocationReportStatistics(string param);
         Task<ResultModel<List<EPKRSItemCaseItemCategoryStatistics>>> getEPKRSItemCategoriesStatistics(string param);
-        Task<ResultModel<List<EPKRSIncidentAccidentRegionalStatistics>>> getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(string param);
-        Task<ResultModel<List<EPKRSIncidentAccidentInvolverStatisticsbyPosition>>> getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(string param);
-        Task<ResultModel<List<EPKRSIncidentAccidentInvolverStatisticsbyDept>>> getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(string param);
+        Task<ResultModel<List<EPKRSIncidentAccidentRegionalStatistics>>> getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail(QueryModel<string> param);
+        Task<ResultModel<List<EPKRSIncidentAccidentInvolverStatisticsbyPosition>>> getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(QueryModel<string> param);
+        Task<ResultModel<List<EPKRSIncidentAccidentInvolverStatisticsbyDept>>> getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(QueryModel<string> param);
+
+        // TMS
+        Task<ResultModel<List<LoadingManifestResp>>> getEPKRSItemDetailsbyLMNo(LMNotoTMS param, string token);
 
         Task<int> getEPKRSMaxFileSize();
         Task<ResultModel<int>> getEPKRSModuleNumberOfPage(string param);

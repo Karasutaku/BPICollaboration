@@ -8,7 +8,7 @@
         opacity: 0.9;
     }
 
-#epkrsstats, #epkrsmpanel, epkrsApprovalLists, epkrsInvolverLists {
+#epkrsstats, #epkrsmpanel, #epkrsAccordionHeaderApr, #epkrsAccordionHeaderInv {
     background-color: #213555;
 }
 
@@ -55,6 +55,10 @@
     margin-bottom: 12px;
     height: 120px;
     cursor: pointer;
+}
+
+.dropdown-menu {
+    width: 500px !important;
 }
 
 .separator {

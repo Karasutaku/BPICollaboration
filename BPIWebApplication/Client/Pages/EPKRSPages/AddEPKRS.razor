@@ -107,7 +107,7 @@ else
                                 <div class="row my-2">
                                     <div class="col">
                                         <label for="risk_id">Tipe Risiko :</label>
-                                        <InputSelect id="risk_id" @bind-Value="RiskID" class="form-select">
+                                        <InputSelect id="risk_id" @bind-Value="RiskID" class="form-select" disabled="@(isLoading || successUpload)">
                                             @if (checkRiskType())
                                             {
                                                 <option hidden value="BLANK">Select Risk Type</option>
@@ -127,7 +127,7 @@ else
                                     </div>
                                     <div class="col">
                                         <label for="subrisk_id">Sub Tipe Risiko :</label>
-                                        <InputSelect id="subrisk_id" @bind-Value="itemCaseData.SubRiskID" class="form-select">
+                                        <InputSelect id="subrisk_id" @bind-Value="itemCaseData.SubRiskID" class="form-select" disabled="@(isLoading || successUpload)">
                                             @if (checkSubRiskType())
                                             {
                                                 <option hidden value="BLANK">Select Risk Sub Type</option>
@@ -161,7 +161,7 @@ else
                                     </div>
                                     <div class="col">
                                         <label for="site_sender">Site Pengirim :</label>
-                                        <InputSelect id="site_sender" @bind-Value="itemCaseData.SiteSender" class="form-select">
+                                        <InputSelect id="site_sender" @bind-Value="itemCaseData.SiteSender" class="form-select" disabled="@(isLoading || successUpload)">
                                             @if (checkLocation())
                                             {
                                                 @foreach (var location in ManagementService.locations)
@@ -184,14 +184,14 @@ else
                                     </div>
                                     <div class="col">
                                         <label for="pickup_date">Tanggal Penerimaan Barang :</label>
-                                        <InputDate id="pickup_date" @bind-Value="itemCaseData.ItemPickupDate" class="form-control"></InputDate>
+                                        <InputDate id="pickup_date" @bind-Value="itemCaseData.ItemPickupDate" class="form-control" disabled="@(isLoading || successUpload)"></InputDate>
                                     </div>
                                 </div>
 
-                                <div class="row my-2">
+                                @*<div class="row my-2">
                                     <div class="col">
                                         <label for="late">Apakah Penerimaan Barang Terlambat?</label>
-                                        <select id="late" class="form-select" @bind="isLate">
+                                        <select id="late" class="form-select" @bind="isLate" disabled="@(isLoading || successUpload)">
                                             <option hidden disabled value="BLANK">Select Condition</option>
                                             <option value="YES">Yes</option>
                                             <option value="NO">No</option>
@@ -202,7 +202,7 @@ else
                                 <div class="row my-2">
                                     <div class="col">
                                         <label for="cctv_covered">Apakah Penerimaan Barang Tercover CCTV?</label>
-                                        <select id="cctv_covered" class="form-select" @bind="isCCTVCovered">
+                                        <select id="cctv_covered" class="form-select" @bind="isCCTVCovered" disabled="@(isLoading || successUpload)">
                                             <option hidden disabled value="BLANK">Select Condition</option>
                                             <option value="YES">Yes</option>
                                             <option value="NO">No</option>
@@ -213,13 +213,13 @@ else
                                 <div class="row my-2">
                                     <div class="col">
                                         <label class="text-wrap" for="reported">Apakah Berita Acara Investigasi serta bukti CCTV sudah disampaikan ke LP Pengirim Barang?</label>
-                                        <select id="reported" class="form-select" @bind="isReportedtoSender">
+                                        <select id="reported" class="form-select" @bind="isReportedtoSender" disabled="@(isLoading || successUpload)">
                                             <option hidden disabled value="BLANK">Select Condition</option>
                                             <option value="YES">Yes</option>
                                             <option value="NO">No</option>
                                         </select>
                                     </div>
-                                </div>
+                                </div>*@
 
                             }
 
@@ -229,49 +229,126 @@ else
                                     <div class="col">
                                         <label for="ld_id">Loading Document ID :</label>
                                         <div id="ld_id" class="input-group">
-                                            <InputText @bind-Value="itemCaseData.LoadingDocumentID" class="form-control" readonly></InputText>
-                                            <button type="button" class="btn btn-sm btn-primary-cus" @onclick="selectItembyLoadingDocumentID">...</button>
+                                            <InputText @bind-Value="itemCaseData.LoadingDocumentID" class="form-control" disabled="@(isLoading || successUpload)"></InputText>
+                                            <button type="button" class="btn btn-sm btn-primary-cus" data-toggle="modal" data-target="#selectitembyLMModal" @onclick="selectItembyLoadingDocumentID" disabled="@(isLoading || successUpload)">...</button>
                                         </div>
                                     </div>
                                     <div class="col">
                                         <label for="ld_date">Loading Document Date :</label>
-                                        <InputDate id="ld_date" @bind-Value="itemCaseData.LoadingDocumentDate" class="form-control"></InputDate>
+                                        <InputDate id="ld_date" @bind-Value="itemCaseData.LoadingDocumentDate" class="form-control" disabled="@(isLoading || successUpload)"></InputDate>
                                     </div>
                                 </div>
 
                                 @if (checkItemLine())
                                 {
-                                    <table class="table table-sm table-bordered" style="width: 100%">
-                                        <thead>
-                                            <tr>
-                                                <th class="text-center align-middle text-wrap" style="width: 5%;">Action</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 15%;">TR ID</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 15%;">Item Code</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 30%;">Description</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 5%;">Qty</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 10%;">UOM</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 15%;">Item Value</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 5%;">Qty Stock</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var line in itemLineData)
-                                            {
-                                                <tr>
-                                                    <td class="text-center align-middle text-wrap">
-                                                        <button type="button" class="btn btn-sm btn-danger h-100 w-100" disabled="@((isLoading || successUpload) ? "disabled" : null)" @onclick="(() => itemLineData.Remove(line))"><i class="oi oi-delete"></i></button>
-                                                    </td>
-                                                    <td class="text-center align-middle text-wrap">@line.TRID</td>
-                                                    <td class="text-center align-middle text-wrap">@line.ItemCode</td>
-                                                    <td class="text-center align-middle text-wrap">@line.ItemDescription</td>
-                                                    <td class="text-center align-middle text-wrap">@line.ItemQuantity</td>
-                                                    <td class="text-center align-middle text-wrap">@line.UOM</td>
-                                                    <td class="text-center align-middle text-wrap">@line.ItemValue</td>
-                                                    <td class="text-center align-middle text-wrap"><input type="number" class="form-control" @bind-value="@line.ItemStock" /></td>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered" style="width: 100%">
+                                            <thead>
+                                                <tr class="table-primary">
+                                                    <th class="text-center align-middle text-wrap" style="width: 13%;">TR ID</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 11%;">Item Code</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 30%;">Description</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 8%;">Qty</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 6%;">UOM</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 17%;">Item Value</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 8%;">Qty Stock</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 5%;">Item Status</th>
                                                 </tr>
-                                            }
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var line in itemLineData.OrderBy(x => x.LineNum))
+                                                {
+                                                    <tr>
+                                                        <td class="text-center align-middle text-wrap">@line.TRID</td>
+                                                        <td class="text-center align-middle text-wrap">@line.ItemCode</td>
+                                                        <td class="text-center align-middle text-wrap">@line.ItemDescription</td>
+                                                        <td class="text-center align-middle text-wrap"><input type="number" class="form-control" @bind-value="@line.ItemQuantity" disabled="@(isLoading || successUpload)" /></td>
+                                                        <td class="text-center align-middle text-wrap">@line.UOM</td>
+                                                        <td class="text-center align-middle text-wrap">Rp. @line.ItemValue.ToString("N0") ,-</td>
+                                                        <td class="text-center align-middle text-wrap"><input type="number" class="form-control" @bind-value="@line.ItemStock" disabled="@(isLoading || successUpload)" /></td>
+                                                        <td class="text-center align-middle text-wrap">
+                                                            <div class="btn-group dropdown">
+                                                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-toggle="dropdown" data-boundary="viewport" aria-haspopup="true" aria-expanded="false">
+                                                                    <i class="oi oi-expand-down"></i>
+                                                                </button>
+                                                                <div class="dropdown-menu dropdown-menu-right" id="dropdownSelector" onclick="event.stopPropagation();">
+                                                                    <form class="px-4 py-2">
+
+                                                                        <div class="row my-1">
+                                                                            <div class="col">
+                                                                                <label for="epkrs_itemcat">Tipe Barang Bermasalah :</label>
+                                                                                <select id="epkrs_itemcat" class="form-select" @bind="@line.ItemRiskCategoryID" disabled="@(isLoading || successUpload)">
+                                                                                    <option value="BLANK" hidden>Select Sub Cat.</option>
+                                                                                    @if (checkItemRiskCategory())
+                                                                                    {
+                                                                                        @foreach (var itemCat in EPKRSService.itemRiskCategories)
+                                                                                        {
+                                                                                            <option value="@itemCat.ItemRiskCategoryID">@itemCat.CategoryDescription</option>
+                                                                                        }
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <option value="" disabled>No Sub Category Found</option>
+                                                                                    }
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div class="row my-1">
+                                                                            <div class="col">
+                                                                                <label for="late">Apakah Penerimaan Barang Terlambat ?</label>
+                                                                                <select id="late" class="form-select" @bind="line.isLate" disabled="@(isLoading || successUpload)">
+                                                                                    <option hidden disabled value="BLANK">Select Condition</option>
+                                                                                    <option value="TRUE">Ya</option>
+                                                                                    <option value="FALSE">Tidak</option>
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div class="row my-1">
+                                                                            <div class="col">
+                                                                                <label for="cctv_covered">Apakah Penerimaan Barang Tercover CCTV ?</label>
+                                                                                <select id="cctv_covered" class="form-select" @bind="line.isCCTVCoverable" disabled="@(isLoading || successUpload)">
+                                                                                    <option hidden disabled value="BLANK">Select Condition</option>
+                                                                                    <option value="TRUE">Ya</option>
+                                                                                    <option value="FALSE">Tidak</option>
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div class="row my-1">
+                                                                            <div class="col">
+                                                                                <label class="text-wrap" for="reported">Apakah Berita Acara Investigasi serta bukti CCTV sudah disampaikan ke LP Pengirim Barang ?</label>
+                                                                                <select id="reported" class="form-select" @bind="line.isReportedtoSender" disabled="@(isLoading || successUpload)">
+                                                                                    <option hidden disabled value="BLANK">Select Condition</option>
+                                                                                    <option value="TRUE">Ya</option>
+                                                                                    <option value="FALSE">Tidak</option>
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <td class="text-center align-middle text-wrap fw-bold" colspan="5">Total Value</td>
+                                                    @{
+                                                        var sum = decimal.Zero;
+                                                        itemLineData.ForEach(x =>
+                                                        {
+                                                            sum += (x.ItemQuantity * x.ItemValue);
+                                                        });
+                                                    }
+                                                    <td class="text-center align-middle text-wrap fw-bold" colspan="3">Rp. @sum.ToString("N0") ,-</td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
                                 }
                                 else
                                 {
@@ -280,40 +357,43 @@ else
                                     </div>
                                 }
 
-                                <div class="row my-3">
-                                    <div class="col">
-                                        <button type="button" title="Add New Line" class="btn btn-sm btn-warning" @onclick="@(() => fileUploads.Add(new BPIWebApplication.Shared.MainModel.Stream.FileStream()))"><b>Add</b></button>
+                                @if (param == null)
+                                {
+                                    <div class="row my-3">
+                                        <div class="col">
+                                            <button type="button" title="Add New Line" class="btn btn-sm btn-warning" @onclick="@(() => fileUploads.Add(new BPIWebApplication.Shared.MainModel.Stream.FileStream()))" disabled="@(isLoading || successUpload)"><b>Add</b></button>
+                                        </div>
                                     </div>
-                                </div>
 
-                                @if (checkFileAttachment())
-                                {
-                                    <table class="table table-sm table-bordered" style="width: 100%">
-                                        <caption>&lowast; Max File Size Upload @maxFileSize MB(s)</caption>
-                                        <thead>
-                                            <tr>
-                                                <th class="text-center align-middle text-wrap" style="width: 5%;">Action</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 40%;">File Name</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 25%; background-color:aquamarine;">Select File</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var file in fileUploads)
-                                            {
+                                    @if (checkFileAttachment())
+                                    {
+                                        <table class="table table-sm table-bordered" style="width: 100%">
+                                            <caption>&lowast; Max File Size Upload @maxFileSize MB(s)</caption>
+                                            <thead>
                                                 <tr>
-                                                    <td class="text-center align-middle text-wrap"><button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="(() => fileUploads.Remove(file))"><i class="oi oi-delete"></i></button></td>
-                                                    <td class="text-center align-middle text-wrap">@file.fileName</td>
-                                                    <td class="text-center align-middle text-wrap"><InputFile class="form-control form-control-file" accept=".pdf"></InputFile></td>
+                                                    <th class="text-center align-middle text-wrap" style="width: 5%;">Action</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 40%;">File Name</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 25%; background-color:aquamarine;">Select File</th>
                                                 </tr>
-                                            }
-                                        </tbody>
-                                    </table>
-                                }
-                                else
-                                {
-                                    <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
-                                        <strong>Tambahkan Attachment dengan Tombol Diatas !</strong>
-                                    </div>                                
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var file in fileUploads)
+                                                {
+                                                    <tr>
+                                                        <td class="text-center align-middle text-wrap"><button type="button" class="btn btn-sm btn-danger h-100 w-100" disabled="@(isLoading || successUpload)" @onclick="(() => fileUploads.Remove(file))"><i class="oi oi-delete"></i></button></td>
+                                                        <td class="text-center align-middle text-wrap">@file.fileName</td>
+                                                        <td class="text-center align-middle text-wrap"><InputFile class="form-control form-control-file" accept=".pdf" disabled="@(isLoading || successUpload)" OnChange="@((InputFileChangeEventArgs args) => UploadHandleSelection(args, file))"></InputFile></td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
+                                            <strong>Tambahkan Attachment dengan Tombol Diatas !</strong>
+                                        </div>                                
+                                    }
                                 }
                             }
 
@@ -333,13 +413,13 @@ else
                                     <div class="col">
                                         @if (param == null)
                                         {
-                                            <button type="submit" title="Submit" class="btn btn-sm btn-primary-cus" @onclick="submitItemCase">
+                                            <button type="submit" title="Submit" class="btn btn-sm btn-primary-cus" disabled="@(isLoading || successUpload)" @onclick="submitItemCase">
                                                 Create Report
                                             </button>
                                         }
                                         else
                                         {
-                                            <button type="submit" title="Edit" class="btn btn-sm btn-primary-cus">
+                                            <button type="submit" title="Edit" class="btn btn-sm btn-primary-cus" disabled="@(isLoading || successUpload)" @onclick="editItemCase">
                                                 Edit Report
                                             </button>
                                         }
@@ -703,3 +783,83 @@ else
         <BPIWebApplication.Client.Shared.CustomLayout.SplashScreen></BPIWebApplication.Client.Shared.CustomLayout.SplashScreen>
     </div>
 }
+
+@*Document Onprogress Modal*@
+<div class="modal fade" id="selectitembyLMModal" tabindex="-3" role="dialog" aria-labelledby="selectitembyLMModalLabel" aria-hidden="true" style="background: rgba(0,0,0, 0.2);">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header cus-bg">
+                <h5 class="modal-title fw-bold" id="selectitembyLMModalLabel"><i class="oi oi-pin"></i> Select Item from List</h5>
+                <button type="button" class="close" data-dismiss="modal" data-target="#selectitembyLMModal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                
+                <div class="row">
+                    <div class="col">
+                        @if (isMiniLoading)
+                        {
+                            <p class="text-center">
+                                <span class="spinner-border"></span> <br />FETCH DATA FROM SERVER, PLEASE WAIT !
+                            </p>
+                        }
+                        else
+                        {
+                            @if (checkLMData())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover" style="width: 100%">
+                                        <caption>
+                                            Loading Manifest ID : @itemCaseData.LoadingDocumentID
+                                        </caption>
+                                        <thead>
+                                            <tr>
+                                                <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">#</th>
+                                                <th scope="col" class="text-center align-middle text-wrap" style="width: 11%; font-size: 15px;">Location ID</th>
+                                                <th scope="col" class="text-center align-middle text-wrap" style="width: 19%; font-size: 15px;">TR No</th>
+                                                <th scope="col" class="text-center align-middle text-wrap" style="width: 15%; font-size: 15px;">Item Code</th>
+                                                <th scope="col" class="text-center align-middle text-wrap" style="width: 26%; font-size: 15px;">Item Desc.</th>
+                                                <th scope="col" class="text-center align-middle text-wrap" style="width: 15%; font-size: 15px;">Value</th>
+                                                <th scope="col" class="text-center align-middle text-wrap" style="width: 9%; font-size: 15px;">UOM</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var dt in lmData)
+                                            {
+                                                <tr>
+                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                                        <input class="form-check-input" type="checkbox" id="itemCheck" checked="@(selectedLMData.FirstOrDefault(x => x.siteNo.Equals(dt.siteNo) && x.trNo.Equals(dt.trNo) && x.itemCode.Equals(dt.itemCode)) != null)" @onclick="@(() => appendSelectedLMItem(dt))" />
+                                                    </td>
+                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">@dt.siteNo</td>
+                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">@dt.trNo</td>
+                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">@dt.itemCode</td>
+                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">@dt.itemDesc</td>
+                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">Rp. @dt.itemValue.ToString("N0") ,-</td>
+                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">@dt.uom</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-primary" role="alert">
+                                    <b>Data Empty !</b>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer cus-bg">
+                <button type="button" class="btn btn-success" data-dismiss="modal" data-target="#selectitembyLMModal" @onclick="selectItembyLoadingDocument"><i class="oi oi-thumb-up"></i> Select</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#selectitembyLMModal"><i class="oi oi-thumb-down"></i> Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
