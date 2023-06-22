@@ -4,9 +4,9 @@ namespace BPIWebApplication.Shared.PagesModel.EPKRS
 {
     public class ItemCaseForm
     {
+        [Required(ErrorMessage = "Kolom Sub Tipe Risiko Kosong!")]
         public string SubRiskID { get; set; } = string.Empty;
         public string DocumentID { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Kolom Site Pelapor Kosong!")]
         public string SiteReporter { get; set; } = string.Empty;
         [Required(ErrorMessage = "Kolom Site Pengirim Kosong!")]
         public string SiteSender { get; set; } = string.Empty;
@@ -14,7 +14,9 @@ namespace BPIWebApplication.Shared.PagesModel.EPKRS
         public DateTime ReportDate { get; set; } = DateTime.Now;
         [Required(ErrorMessage = "Kolom Tanggal Pengambilan Barang Kosong!")]
         public DateTime ItemPickupDate { get; set; } = DateTime.Now;
+        [Required(ErrorMessage = "Kolom Nomor Loading Document Kosong!")]
         public string LoadingDocumentID { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Kolom Tanggal Pengambilan Barang Kosong!")]
         public DateTime LoadingDocumentDate { get; set; } = DateTime.Now;
         public string ExtendedMitigationPlan { get; set; } = string.Empty;
         public string DocumentStatus { get; set; } = string.Empty;
@@ -46,6 +48,7 @@ namespace BPIWebApplication.Shared.PagesModel.EPKRS
 
     public class IncidentAccidentForm
     {
+        [Required(ErrorMessage = "Kolom Sub Tipe Risiko Kosong!")]
         public string SubRiskID { get; set; } = string.Empty;
         public string DocumentID { get; set; } = string.Empty;
         [Required(ErrorMessage = "Tanggal Pelaporan Kosong!")]

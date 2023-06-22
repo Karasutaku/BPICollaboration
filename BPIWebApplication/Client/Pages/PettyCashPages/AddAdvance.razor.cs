@@ -239,7 +239,13 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
 
                         if (res.isSuccess)
                         {
-                            string temp = "PettyCash!_!AddDocument!_!" + activeUser.location + "!_!" + activeUser.userName + "!_!" + advanceId.Data;
+                            string temp = string.Empty;
+
+                            if (!activeUser.location.Equals(""))
+                                temp = "PettyCash!_!AddDocument!_!" + activeUser.location + "!_!" + activeUser.userName + "!_!" + advanceId.Data;
+                            else
+                                temp = "PettyCash!_!DirectEmail!_!" + activeUser.location + "!_!" + activeUser.userName + "!_!" + advanceId.Data + "!_!" + res.Data.Data.Approver.ToLower();
+
                             var res2 = await PettyCashService.autoEmail(Base64Encode(temp));
 
                             if (res2.isSuccess)

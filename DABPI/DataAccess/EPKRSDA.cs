@@ -9,13 +9,14 @@ namespace BPIDA.DataAccess
     public class EPKRSDA
     {
         private readonly IConfiguration _configuration;
-        private readonly string _conString;
+        private readonly string _conString, _moduleConnection;
         private readonly int _rowPerPage;
 
         public EPKRSDA(IConfiguration config)
         {
             _configuration = config;
-            _conString = _configuration.GetValue<string>("ConnectionStrings:Bpi");
+            _moduleConnection = _configuration.GetValue<string>("ModuleConnection:EPKRS");
+            _conString = _configuration.GetValue<string>($"ConnectionStrings:{_moduleConnection}");
             _rowPerPage = _configuration.GetValue<int>("Paging:EPKRS:RowPerPage");
         }
 

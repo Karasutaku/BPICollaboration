@@ -3,6 +3,7 @@ using BPIWebApplication.Client.Services.CashierLogbookServices;
 using BPIWebApplication.Client.Services.ManagementServices;
 using BPIWebApplication.Client.Services.PettyCashServices;
 using BPIWebApplication.Shared.DbModel;
+using BPIWebApplication.Shared.MainModel;
 using BPIWebApplication.Shared.MainModel.EPKRS;
 using BPIWebApplication.Shared.MainModel.Login;
 using BPIWebApplication.Shared.PagesModel.EPKRS;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
+using System.ComponentModel.DataAnnotations;
 
 namespace BPIWebApplication.Client.Pages.EPKRSPages
 {
@@ -21,6 +23,8 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
         private ActiveUser activeUser = new();
         private UserPrivileges privilegeDataParam = new();
         private List<string> userPriv = new();
+
+        private Location paramGetCompanyLocation = new();
 
         private ItemCaseForm itemCaseData = new();
         private List<ItemLineForm> itemLineData = new();
@@ -34,9 +38,6 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
         private string ReportingType { get; set; } = string.Empty;
         private string RiskID { get; set; } = string.Empty;
-        private string isLate { get; set; } = string.Empty;
-        private string isCCTVCovered { get; set; } = string.Empty;
-        private string isReportedtoSender { get; set; } = string.Empty;
 
         private int formPage { get; set; } = 0;
         private int maxFileSize { get; set; } = 0;
@@ -139,6 +140,14 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
             string loc = activeUser.location.Equals("") ? "HO" : activeUser.location;
 
+            paramGetCompanyLocation.Condition = $"a.CompanyId={Convert.ToInt32(activeUser.company)}";
+            paramGetCompanyLocation.PageIndex = 1;
+            paramGetCompanyLocation.PageSize = 100;
+            paramGetCompanyLocation.FieldOrder = "a.CompanyId";
+            paramGetCompanyLocation.MethodOrder = "ASC";
+
+            await ManagementService.GetCompanyLocations(paramGetCompanyLocation);
+
             await EPKRSService.getEPRKSReportingType();
             await EPKRSService.getEPRKSRiskType();
             await EPKRSService.getEPRKSRiskSubType();
@@ -148,9 +157,6 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
             formPage = 1;
             ReportingType = "BLANK";
-            isLate = "BLANK";
-            isCCTVCovered = "BLANK";
-            isReportedtoSender = "BLANK";
             incidentaccidentData.SiteReporter = loc;
             itemCaseData.SiteReporter = loc;
 
@@ -327,6 +333,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 selectedLMData.Add(new LoadingManifestResp
                 {
                     lmNo = data.lmNo,
+                    createdDate = data.createdDate,
                     siteNo = data.siteNo,
                     trNo = data.trNo,
                     sentRequestDate = data.sentRequestDate,
@@ -346,7 +353,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             }
         }
 
-        private void selectItembyLoadingDocument()
+        private async void selectItembyLoadingDocument()
         {
             if (selectedLMData.Count > 0)
             {
@@ -376,6 +383,16 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                         isReportedtoSender = "FALSE"
                     });
                 });
+
+                var lmdate = selectedLMData.DistinctBy(x => x.createdDate);
+
+                if (lmdate.Count() > 1)
+                {
+                    await _jsModule.InvokeVoidAsync("showAlert", "NP Type is More than 1 Type : Please Contact IT OPS !");
+                    return;
+                }
+
+                itemCaseData.LoadingDocumentDate = Convert.ToDateTime(lmdate.First().createdDate);
             }
 
             StateHasChanged();
@@ -430,10 +447,85 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             }
         }
 
+        private bool validateIncidentAccident()
+        {
+            if (RiskID.IsNullOrEmpty() || RiskID.Equals("BLANK")) { return false; }
+            if (incidentaccidentData.SubRiskID.IsNullOrEmpty() || incidentaccidentData.SubRiskID.Equals("BLANK")) { return false; }
+            //if (incidentaccidentData.DocumentID.IsNullOrEmpty()) { return false; }
+            //incidentaccidentData.ReportDate
+            //incidentaccidentData.OccurenceDate
+            if (incidentaccidentData.SiteReporter.IsNullOrEmpty()) { return false; }
+            if (incidentaccidentData.DepartmentReporter.IsNullOrEmpty()) { return false; }
+            if (incidentaccidentData.RiskRPName.IsNullOrEmpty()) { return false; }
+            if (incidentaccidentData.RiskRPEmail.IsNullOrEmpty()) { return false; }
+            if (incidentaccidentData.DORMName.IsNullOrEmpty()) { return false; }
+            if (incidentaccidentData.DORMEmail.IsNullOrEmpty()) { return false; }
+            if (incidentaccidentData.CaseDescription.IsNullOrEmpty()) { return false; }
+            if (incidentaccidentData.DepartmentAffected.IsNullOrEmpty()) { return false; }
+            if (incidentaccidentData.Cronology.IsNullOrEmpty()) { return false; }
+            if (incidentaccidentData.RootCause.IsNullOrEmpty()) { return false; }
+            if (incidentaccidentData.LossDescription.IsNullOrEmpty()) { return false; }
+            if (incidentaccidentData.LossEstimation < 0) { return false; }
+            if (incidentaccidentData.ReturnAmount < 0) { return false; }
+            if (incidentaccidentData.RiskDescription.IsNullOrEmpty()) { return false; }
+            if (incidentaccidentData.CauseDescription.IsNullOrEmpty()) { return false; }
+            if (incidentaccidentData.PIC.IsNullOrEmpty()) { return false; }
+            if (incidentaccidentData.ActionPlan.IsNullOrEmpty()) { return false; }
+            //incidentaccidentData.TargetDate
+            if (incidentaccidentData.MitigationPlan.IsNullOrEmpty()) { return false; }
+            //incidentaccidentData.MitigationDate
+            //incidentaccidentData.ExtendedRootCause
+            //incidentaccidentData.ExtendedMitigationPlan
+            //incidentaccidentData.DocumentStatus
+
+            return true;
+        }
+
+        private bool validateItemCase()
+        {
+            if (RiskID.IsNullOrEmpty() || RiskID.Equals("BLANK")) { return false; }
+            if (itemCaseData.SubRiskID.IsNullOrEmpty() || itemCaseData.SubRiskID.Equals("BLANK")) { return false; }
+            //itemCaseData.DocumentID
+            if (itemCaseData.SiteReporter.IsNullOrEmpty()) { return false; }
+            if (itemCaseData.SiteSender.IsNullOrEmpty()) { return false; }
+            //itemCaseData.ReportDate
+            //itemCaseData.ItemPickupDate
+            if (itemCaseData.LoadingDocumentID.IsNullOrEmpty()) { return false; }
+            //itemCaseData.LoadingDocumentDate
+            //if (itemCaseData.ExtendedMitigationPlan.IsNullOrEmpty()) { return false; }
+            //itemCaseData.DocumentStatus
+            //itemLineData.DocumentID
+            if (itemLineData.Count < 1) { return false; }
+            if (itemLineData.Any(x => x.LineNum <= 0)) { return false; }
+            if (itemLineData.Any(x => x.TRID.IsNullOrEmpty())) { return false; }
+            //if (itemLineData.Any(x => x.TRDate)) { }
+            if (itemLineData.Any(x => x.ItemCode.IsNullOrEmpty())) { return false; }
+            if (itemLineData.Any(x => x.ItemDescription.IsNullOrEmpty())) { return false; }
+            if (itemLineData.Any(x => x.ItemRiskCategoryID.Equals("BLANK"))) { return false; }
+            //if (itemLineData.Any(x => x.).CategoryID) { }
+            if (itemLineData.Any(x => x.ItemQuantity <= 0)) { return false; }
+            if (itemLineData.Any(x => x.UOM.IsNullOrEmpty())) { return false; }
+            if (itemLineData.Any(x => x.ItemValue < 0)) { return false; }
+            if (itemLineData.Any(x => x.ItemStock < 0)) { return false; }
+            //if (itemLineData.Any(x => x.).VarianceDate) { }
+            if (itemLineData.Any(x => x.isLate.Equals("BLANK"))) { return false; }
+            if (itemLineData.Any(x => x.isCCTVCoverable.Equals("BLANK"))) { return false; }
+            if (itemLineData.Any(x => x.isReportedtoSender.Equals("BLANK"))) { return false; }
+
+            return true;
+        }
+
         private async void submitIncidentAccident()
         {
             try
             {
+                if (!validateIncidentAccident())
+                {
+                    StateHasChanged();
+                    await _jsModule.InvokeVoidAsync("showAlert", "Form Validation : Please Check your input Field !");
+                    return;
+                }
+
                 isLoading = true;
                 StateHasChanged();
 
@@ -521,6 +613,13 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
         {
             try
             {
+                if (!validateIncidentAccident())
+                {
+                    StateHasChanged();
+                    await _jsModule.InvokeVoidAsync("showAlert", "Form Validation : Please Check your input Field !");
+                    return;
+                }
+
                 isLoading = true;
                 StateHasChanged();
 
@@ -585,6 +684,13 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
         {
             try
             {
+                if (!validateItemCase())
+                {
+                    StateHasChanged();
+                    await _jsModule.InvokeVoidAsync("showAlert", "Form Validation : Please Check your input Field !");
+                    return;
+                }
+
                 isLoading = true;
                 StateHasChanged();
 
@@ -685,6 +791,13 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
         {
             try
             {
+                if (!validateItemCase())
+                {
+                    StateHasChanged();
+                    await _jsModule.InvokeVoidAsync("showAlert", "Form Validation : Please Check your input Field !");
+                    return;
+                }
+
                 isLoading = true;
                 StateHasChanged();
 

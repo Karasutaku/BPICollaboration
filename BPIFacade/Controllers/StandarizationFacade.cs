@@ -1,39 +1,37 @@
-﻿using BPIBR.Models.DbModel;
-using BPIBR.Models.MainModel;
-using BPIBR.Models.MainModel.CashierLogbook;
-using BPIBR.Models.MainModel.Company;
+﻿using BPIFacade.Models.DbModel;
+using BPIFacade.Models.MainModel;
+using BPIFacade.Models.MainModel.Standarizations;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BPIBR.Controllers
+namespace BPIFacade.Controllers
 {
-    [Route("api/BR/CashierLogbook")]
+    [Route("api/Facade/Standarization")]
     [ApiController]
-    public class CashierLogbookController : ControllerBase
+    public class StandarizationFacade : ControllerBase
     {
         private readonly HttpClient _http;
         private readonly IConfiguration _configuration;
 
-        public CashierLogbookController(HttpClient http, IConfiguration config)
+        public StandarizationFacade(HttpClient http, IConfiguration config)
         {
             _http = http;
             _configuration = config;
-            _http.BaseAddress = new Uri(_configuration.GetValue<string>("BaseUri:BpiDA"));
+            _http.BaseAddress = new Uri(_configuration.GetValue<string>("BaseUri:BpiBR"));
         }
 
-
-        [HttpPost("createLogData")]
-        public async Task<IActionResult> createLogData(QueryModel<CashierLogData> data)
+        [HttpPost("createStandarizationData")]
+        public async Task<IActionResult> createStandarizationDataTable(StandarizationStream data)
         {
-            ResultModel<QueryModel<CashierLogData>> res = new ResultModel<QueryModel<CashierLogData>>();
+            ResultModel<QueryModel<Standarizations>> res = new ResultModel<QueryModel<Standarizations>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<CashierLogData>>($"api/DA/CashierLogbook/createLogData", data);
+                var result = await _http.PostAsJsonAsync<StandarizationStream>($"api/BR/Standarization/createStandarizationData", data);
 
                 if (result.IsSuccessStatusCode)
                 {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<CashierLogData>>>();
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<Standarizations>>>();
 
                     res.Data = respBody.Data;
 
@@ -49,7 +47,7 @@ namespace BPIBR.Controllers
 
                     res.isSuccess = result.IsSuccessStatusCode;
                     res.ErrorCode = "01";
-                    res.ErrorMessage = "Fail settle from createLogData DA";
+                    res.ErrorMessage = $"Fail settle from createStandarizationData BR";
 
                     actionResult = Ok(res);
                 }
@@ -67,19 +65,19 @@ namespace BPIBR.Controllers
             return actionResult;
         }
 
-        [HttpPost("editLogData")]
-        public async Task<IActionResult> editLogData(QueryModel<CashierLogData> data)
+        [HttpPost("editStandarizationData")]
+        public async Task<IActionResult> editStandarizationDataTable(StandarizationStream data)
         {
-            ResultModel<QueryModel<CashierLogData>> res = new ResultModel<QueryModel<CashierLogData>>();
+            ResultModel<QueryModel<Standarizations>> res = new ResultModel<QueryModel<Standarizations>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<CashierLogData>>($"api/DA/CashierLogbook/editLogData", data);
+                var result = await _http.PostAsJsonAsync<StandarizationStream>($"api/BR/Standarization/editStandarizationData", data);
 
                 if (result.IsSuccessStatusCode)
                 {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<CashierLogData>>>();
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<Standarizations>>>();
 
                     res.Data = respBody.Data;
 
@@ -95,7 +93,7 @@ namespace BPIBR.Controllers
 
                     res.isSuccess = result.IsSuccessStatusCode;
                     res.ErrorCode = "01";
-                    res.ErrorMessage = "Fail settle from editLogData DA";
+                    res.ErrorMessage = $"Fail settle from editStandarizationData BR";
 
                     actionResult = Ok(res);
                 }
@@ -113,15 +111,15 @@ namespace BPIBR.Controllers
             return actionResult;
         }
 
-        [HttpPost("editBrankasDocumentStatus")]
-        public async Task<IActionResult> updateBrankasDocumentStatusDataTable(QueryModel<string> data)
+        [HttpPost("deleteStandarizationData")]
+        public async Task<IActionResult> deleteStandarizationDataTable(QueryModel<string> data)
         {
             ResultModel<QueryModel<string>> res = new ResultModel<QueryModel<string>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<string>>($"api/DA/CashierLogbook/editBrankasDocumentStatus", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>($"api/BR/Standarization/deleteStandarizationData", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -141,7 +139,7 @@ namespace BPIBR.Controllers
 
                     res.isSuccess = result.IsSuccessStatusCode;
                     res.ErrorCode = "01";
-                    res.ErrorMessage = "Fail settle from editBrankasDocumentStatus DA";
+                    res.ErrorMessage = $"Fail settle from deleteStandarizationData BR";
 
                     actionResult = Ok(res);
                 }
@@ -159,15 +157,15 @@ namespace BPIBR.Controllers
             return actionResult;
         }
 
-        [HttpGet("getLogData/{locPage}")]
-        public async Task<IActionResult> getLogDataTable(string locPage)
+        [HttpGet("getStandarizationTypes")]
+        public async Task<IActionResult> getStandarizationTypesDataTable()
         {
-            ResultModel<List<CashierLogData>> res = new ResultModel<List<CashierLogData>>();
+            ResultModel<List<StandarizationType>> res = new ResultModel<List<StandarizationType>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<CashierLogData>>>($"api/DA/CashierLogbook/getLogData/{locPage}");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<StandarizationType>>>("api/BR/Standarization/getStandarizationTypes");
 
                 if (result.isSuccess)
                 {
@@ -203,15 +201,15 @@ namespace BPIBR.Controllers
             return actionResult;
         }
 
-        [HttpGet("getBrankasActionLogData/{locPage}")]
-        public async Task<IActionResult> getBrankasActionLogDataTable(string locPage)
+        [HttpGet("getStandarizationData/{param}")]
+        public async Task<IActionResult> getStandarizationDataTable(string param)
         {
-            ResultModel<List<CashierLogAction>> res = new ResultModel<List<CashierLogAction>>();
+            ResultModel<List<Standarizations>> res = new ResultModel<List<Standarizations>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<CashierLogAction>>>($"api/DA/CashierLogbook/getBrankasActionLogData/{locPage}");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<Standarizations>>>($"api/BR/Standarization/getStandarizationData/{param}");
 
                 if (result.isSuccess)
                 {
@@ -247,59 +245,15 @@ namespace BPIBR.Controllers
             return actionResult;
         }
 
-        [HttpGet("getShiftbyModule/{moduleName}")]
-        public async Task<IActionResult> getShiftbyModuleData(string moduleName)
+        [HttpGet("getStandarizationAttachment/{param}")]
+        public async Task<IActionResult> getAttachFileStream(string param)
         {
-            ResultModel<List<Shift>> res = new ResultModel<List<Shift>>();
+            ResultModel<List<BPIFacade.Models.MainModel.Stream.FileStream>> res = new ResultModel<List<BPIFacade.Models.MainModel.Stream.FileStream>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<Shift>>>($"api/DA/CashierLogbook/getShiftbyModule/{moduleName}");
-
-                if (result.isSuccess)
-                {
-                    res.Data = result.Data;
-
-                    res.isSuccess = result.isSuccess;
-                    res.ErrorCode = result.ErrorCode;
-                    res.ErrorMessage = result.ErrorMessage;
-
-                    actionResult = Ok(res);
-                }
-                else
-                {
-                    res.Data = null;
-
-                    res.isSuccess = result.isSuccess;
-                    res.ErrorCode = result.ErrorCode;
-                    res.ErrorMessage = result.ErrorMessage;
-
-                    actionResult = Ok(res);
-                }
-            }
-            catch (Exception ex)
-            {
-                res.Data = null;
-                res.isSuccess = false;
-                res.ErrorCode = "99";
-                res.ErrorMessage = ex.Message;
-
-                actionResult = BadRequest(res);
-            }
-
-            return actionResult;
-        }
-
-        [HttpGet("getCashierLogbookCategories")]
-        public async Task<IActionResult> getCashierLogbookCategories()
-        {
-            ResultModel<CashierLogbookCategories> res = new ResultModel<CashierLogbookCategories>();
-            IActionResult actionResult = null;
-
-            try
-            {
-                var result = await _http.GetFromJsonAsync<ResultModel<CashierLogbookCategories>>($"api/DA/CashierLogbook/getCashierLogbookCategories");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<BPIFacade.Models.MainModel.Stream.FileStream>>>($"api/BR/Standarization/getStandarizationAttachment/{param}");
 
                 if (result.isSuccess)
                 {
@@ -343,7 +297,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/DA/CashierLogbook/getModulePageSize/{Table}");
+                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/BR/Standarization/getModulePageSize/{Table}");
 
                 if (result.isSuccess)
                 {
@@ -376,96 +330,6 @@ namespace BPIBR.Controllers
                 actionResult = BadRequest(res);
             }
 
-            return actionResult;
-        }
-
-        [HttpGet("getNumberofLogExisting/{param}")]
-        public async Task<IActionResult> getNumberofLogExisting(string param)
-        {
-            ResultModel<int> res = new ResultModel<int>();
-            IActionResult actionResult = null;
-
-            try
-            {
-                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/DA/CashierLogbook/getNumberofLogExisting/{param}");
-
-                if (result.isSuccess)
-                {
-                    res.Data = result.Data;
-
-                    res.isSuccess = result.isSuccess;
-                    res.ErrorCode = result.ErrorCode;
-                    res.ErrorMessage = result.ErrorMessage;
-
-                    actionResult = Ok(res);
-                }
-                else
-                {
-                    res.Data = 0;
-
-                    res.isSuccess = result.isSuccess;
-                    res.ErrorCode = result.ErrorCode;
-                    res.ErrorMessage = result.ErrorMessage;
-
-                    actionResult = Ok(res);
-                }
-            }
-            catch (Exception ex)
-            {
-                res.Data = 0;
-                res.isSuccess = false;
-                res.ErrorCode = "99";
-                res.ErrorMessage = ex.Message;
-
-                actionResult = BadRequest(res);
-            }
-
-            return actionResult;
-        }
-
-        [HttpPost("editBrankasApproveLogOnConfirm")]
-        public async Task<IActionResult> editBrankasApproveLogOnConfirm(QueryModel<CashierLogApproval> data)
-        {
-            ResultModel<QueryModel<CashierLogApproval>> res = new ResultModel<QueryModel<CashierLogApproval>>();
-            IActionResult actionResult = null;
-
-            try
-            {
-                var result = await _http.PostAsJsonAsync<QueryModel<CashierLogApproval>>($"api/DA/CashierLogbook/editBrankasApproveLogOnConfirm", data);
-
-                if (result.IsSuccessStatusCode)
-                {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<CashierLogApproval>>>();
-
-                    res.Data = respBody.Data;
-
-                    res.isSuccess = respBody.isSuccess;
-                    res.ErrorCode = respBody.ErrorCode;
-                    res.ErrorMessage = respBody.ErrorMessage;
-
-                    actionResult = Ok(res);
-                }
-                else
-                {
-                    res.Data = null;
-
-                    res.isSuccess = result.IsSuccessStatusCode;
-                    res.ErrorCode = "01";
-                    res.ErrorMessage = $"Fail settle from editBrankasApproveLogOnConfirm DA";
-
-                    actionResult = Ok(res);
-                }
-
-            }
-            catch (Exception ex)
-            {
-                res.Data = null;
-                res.isSuccess = false;
-                res.ErrorCode = "99";
-                res.ErrorMessage = ex.Message;
-
-                actionResult = BadRequest(res);
-            }
             return actionResult;
         }
 

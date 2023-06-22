@@ -5,6 +5,7 @@
 @inject ILoginService LoginService
 @inject IManagementService ManagementService
 @inject IJSRuntime JS
+@using System.Text.Json
 
 <PageTitle>EPKRS - Add POMF</PageTitle>
 
@@ -83,26 +84,13 @@ else
                                     </div>
                                 </div>
 
-                                @*<div class="row">
-                                    <div class="col">
-                                        <label for="receipt_no">Receipt No :</label>
-                                        <InputText id="receipt_no" @bind-Value="pomfData.ReceiptNo" class="form-control" readonly="@(successUpload ? "readonly" : null)"></InputText>
-                                        <ValidationMessage For="(() => pomfData.ReceiptNo)" />
-                                    </div>
-                                    <div class="col">
-                                        <label for="np_no">NP No :</label>
-                                        <InputText id="np_no" @bind-Value="pomfData.NPNo" class="form-control" readonly="@(successUpload ? "readonly" : null)"></InputText>
-                                        <ValidationMessage For="(() => pomfData.NPNo)" />
-                                    </div>
-                                </div>*@
-
-                                <div class="row mb-4">
+                                <div class="row my-2">
                                     <div class="col">
                                         <label for="np_type">NP Type :</label>
-                                        <InputSelect id="np_type" @bind-Value="pomfData.NPTypeID" class="form-select" disabled="@(successUpload ? "readonly" : null)">
+                                        <InputSelect id="np_type" @bind-Value="pomfData.NPTypeID" class="form-select" disabled>
                                             @if (checkPOMFNPType())
                                             {
-                                                <option hidden value="">Select NP Type</option>
+                                                <option hidden value="">Input NP Number</option>
 
                                                 @foreach (var nptype in POMFService.npTypes)
                                                 {
@@ -112,11 +100,6 @@ else
                                             else
                                             {
                                                 <option hidden value="">NP Type Empty</option>
-
-                                                @*<option value="CCPND">Cash and Carry via PND</option>
-                                                <option value="CCGST">Cash and Carry via Gudang Store</option>
-                                                <option value="CDATS">Cash and Delivery Antar Site</option>
-                                                <option value="CDSPL">Cash and Delivery Supplier</option>*@
                                             }
                                         </InputSelect>
                                         <ValidationMessage For="(() => pomfData.NPTypeID)" />
@@ -132,17 +115,11 @@ else
                                             </div>
                                             <InputText id="np_no" @bind-Value="pomfData.NPNo" class="form-control" placeholder="NP Number" readonly="@(successUpload ? "readonly" : null)"></InputText>
                                             <div class="input-group-append">
-                                                <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#selectitembyNPandReceiptModal" @onclick="selectItembyNPandReceiptID">...</button>
+                                                <button class="btn btn-primary-cus" type="button" data-toggle="modal" data-target="#selectitembyNPandReceiptModal" @onclick="selectItembyNPandReceiptID" disabled="@(successUpload)">...</button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-
-                                @*<div class="row my-3">
-                                    <div class="col">
-                                        <button type="button" class="btn btn-sm btn-warning" @onclick="(() => pomfLines.Add(new()))"><b>Add</b></button>
-                                    </div>
-                                </div>*@
 
                                 @if (checkPOMFLine())
                                 {
@@ -150,26 +127,54 @@ else
                                         <thead>
                                             <tr class="table-primary">
                                                 <th class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Action</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 17%; font-size: 15px;">Item Code</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 30%; font-size: 15px;">Item Description</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Request Qty</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">NP Qty</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">UOM</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 18%; font-size: 15px;">Item Value</th>
+                                                <th class="text-center align-middle text-wrap" style="width: 20%; font-size: 15px;">Item Code</th>
+                                                <th class="text-center align-middle text-wrap" style="width: 32%; font-size: 15px;">Item Description</th>
+                                                @if (pomfData.NPTypeID.Equals("3") || pomfData.NPTypeID.Equals("4"))
+                                                {
+                                                    <th class="text-center align-middle text-wrap" style="width: 15%; font-size: 15px;">Request Qty</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 15%; font-size: 15px;">NP Qty</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 15%; font-size: 15px;">UOM</th>
+                                                }
+                                                else
+                                                {
+                                                    <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Request Qty</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">NP Qty</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">UOM</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 15%; font-size: 15px;">Request To</th>
+                                                }
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @foreach (var line in pomfLines)
                                             {
                                                 <tr>
-                                                    <td><button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="(() => pomfLines.Remove(line))" disabled="@(successUpload ? "disabled" : null)"><i class="oi oi-delete"></i></button></td>
+                                                    <td class="text-center align-middle text-wrap"><button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="(() => pomfLines.Remove(line))" disabled="@(successUpload ? "disabled" : null)"><i class="oi oi-delete"></i></button></td>
 
                                                     <td class="text-center align-middle text-wrap">@line.ItemCode</td>
                                                     <td class="text-center align-middle text-wrap">@line.ItemDescription</td>
-                                                    <td><input type="number" class="form-control" @bind-value="line.RequestQuantity" readonly="@(successUpload ? "readonly" : null)" /></td>
+                                                    <td class="text-center align-middle text-wrap"><input type="number" class="form-control my-auto" @bind-value="line.RequestQuantity" readonly="@(successUpload ? "readonly" : null)" /></td>
                                                     <td class="text-center align-middle text-wrap">@line.NPQuantity</td>
                                                     <td class="text-center align-middle text-wrap">@line.ItemUOM</td>
-                                                    <td><input type="text" class="form-control" @bind-value="line.ItemValue" readonly="@(successUpload ? "readonly" : null)" /></td>
+                                                    @if (!new[] {"3", "4"}.Contains(pomfData.NPTypeID))
+                                                    {
+                                                        <td>
+                                                            <InputSelect id="site_sender" @bind-Value="line.RequestToSite" class="form-select" disabled="@(successUpload)">
+                                                                @if (checkLocation())
+                                                                {
+                                                                    <option hidden disabled value="">Select Request Location</option>
+
+                                                                    @foreach (var location in ManagementService.locations)
+                                                                    {
+                                                                        <option value="@location.locationId">@location.locationId - @location.locationName</option>
+                                                                    }
+                                                                }
+                                                                else
+                                                                {
+                                                                    <option disabled value="BLANK">Location Empty</option>
+                                                                }
+                                                            </InputSelect>
+                                                        </td>
+                                                    }
                                                 </tr>
                                             }
                                         </tbody>

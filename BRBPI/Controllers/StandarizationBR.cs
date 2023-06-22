@@ -8,14 +8,14 @@ namespace BPIBR.Controllers
 {
     [Route("api/BR/Standarization")]
     [ApiController]
-    public class StandarizationController : ControllerBase
+    public class StandarizationBR : ControllerBase
     {
         private readonly HttpClient _http;
         private readonly IConfiguration _configuration;
         private readonly string _uploadPath;
         private readonly string[] _compressedFileExtensions;
 
-        public StandarizationController(HttpClient http, IConfiguration config)
+        public StandarizationBR(HttpClient http, IConfiguration config)
         {
             _http = http;
             _configuration = config;

@@ -621,7 +621,7 @@ namespace BPIDA.Controllers
 
                         temp2.AmountSubCategoryID = dt["AmountSubCategoryID"].ToString();
                         temp2.AmountSubCategoryName = dt["CategoryName"].ToString();
-                        temp2.AmountType = "";
+                        temp2.AmountType = dt["AmountType"].ToString();
 
                         subCategoryLines.Add(temp2);
                     }

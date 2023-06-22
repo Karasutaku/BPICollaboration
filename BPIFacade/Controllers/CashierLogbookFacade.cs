@@ -1,41 +1,41 @@
 ﻿using BPIFacade.Models.DbModel;
 using BPIFacade.Models.MainModel;
+using BPIFacade.Models.MainModel.CashierLogbook;
 using BPIFacade.Models.MainModel.Company;
-using BPIFacade.Models.MainModel.FundReturn;
-using BPIFacade.Models.MainModel.POMF;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BPIFacade.Controllers
 {
-    [Route("api/Facade/FundReturn")]
+    [Route("api/Facade/CashierLogbook")]
     [ApiController]
-    public class FundReturnController : ControllerBase
+    public class CashierLogbookFacade : ControllerBase
     {
         private readonly HttpClient _http;
         private readonly IConfiguration _configuration;
 
-        public FundReturnController(HttpClient http, IConfiguration config)
+        public CashierLogbookFacade(HttpClient http, IConfiguration config)
         {
             _http = http;
             _configuration = config;
             _http.BaseAddress = new Uri(_configuration.GetValue<string>("BaseUri:BpiBR"));
         }
 
-        [HttpPost("createFundReturnDocument")]
-        public async Task<IActionResult> createFundReturnDocument(QueryModel<FundReturnDocument> data)
+        [HttpPost("createLogData")]
+        public async Task<IActionResult> createLogData(QueryModel<CashierLogData> data)
         {
-            ResultModel<QueryModel<FundReturnDocument>> res = new ResultModel<QueryModel<FundReturnDocument>>();
+            ResultModel<QueryModel<CashierLogData>> res = new ResultModel<QueryModel<CashierLogData>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<FundReturnDocument>>("api/BR/FundReturn/createFundReturnDocument", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<CashierLogData>>($"api/BR/CashierLogbook/createLogData", data);
 
                 if (result.IsSuccessStatusCode)
                 {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<FundReturnDocument>>>();
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<CashierLogData>>>();
 
                     res.Data = respBody.Data;
+
                     res.isSuccess = respBody.isSuccess;
                     res.ErrorCode = respBody.ErrorCode;
                     res.ErrorMessage = respBody.ErrorMessage;
@@ -44,16 +44,15 @@ namespace BPIFacade.Controllers
                 }
                 else
                 {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<FundReturnDocument>>>();
-
                     res.Data = null;
 
                     res.isSuccess = result.IsSuccessStatusCode;
-                    res.ErrorCode = respBody.ErrorCode;
-                    res.ErrorMessage = respBody.ErrorMessage;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fail settle from createLogData BR";
 
                     actionResult = Ok(res);
                 }
+
             }
             catch (Exception ex)
             {
@@ -67,21 +66,22 @@ namespace BPIFacade.Controllers
             return actionResult;
         }
 
-        [HttpPost("createFundReturnApproval")]
-        public async Task<IActionResult> createFundReturnApproval(QueryModel<FundReturnApprovalStream> data)
+        [HttpPost("editLogData")]
+        public async Task<IActionResult> editLogData(QueryModel<CashierLogData> data)
         {
-            ResultModel<QueryModel<FundReturnApprovalStream>> res = new ResultModel<QueryModel<FundReturnApprovalStream>>();
+            ResultModel<QueryModel<CashierLogData>> res = new ResultModel<QueryModel<CashierLogData>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<FundReturnApprovalStream>>("api/BR/FundReturn/createFundReturnApproval", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<CashierLogData>>($"api/BR/CashierLogbook/editLogData", data);
 
                 if (result.IsSuccessStatusCode)
                 {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<FundReturnApprovalStream>>>();
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<CashierLogData>>>();
 
                     res.Data = respBody.Data;
+
                     res.isSuccess = respBody.isSuccess;
                     res.ErrorCode = respBody.ErrorCode;
                     res.ErrorMessage = respBody.ErrorMessage;
@@ -90,16 +90,15 @@ namespace BPIFacade.Controllers
                 }
                 else
                 {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<POMFApprovalStream>>>();
-
                     res.Data = null;
 
                     res.isSuccess = result.IsSuccessStatusCode;
-                    res.ErrorCode = respBody.ErrorCode;
-                    res.ErrorMessage = respBody.ErrorMessage;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fail settle from editLogData DA";
 
                     actionResult = Ok(res);
                 }
+
             }
             catch (Exception ex)
             {
@@ -113,21 +112,22 @@ namespace BPIFacade.Controllers
             return actionResult;
         }
 
-        [HttpPost("deleteFundReturnDocument")]
-        public async Task<IActionResult> deleteFundReturnDocument(QueryModel<string> data)
+        [HttpPost("editBrankasDocumentStatus")]
+        public async Task<IActionResult> updateBrankasDocumentStatusDataTable(QueryModel<string> data)
         {
             ResultModel<QueryModel<string>> res = new ResultModel<QueryModel<string>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/BR/FundReturn/deleteFundReturnDocument", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>($"api/BR/CashierLogbook/editBrankasDocumentStatus", data);
 
                 if (result.IsSuccessStatusCode)
                 {
                     var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<string>>>();
 
                     res.Data = respBody.Data;
+
                     res.isSuccess = respBody.isSuccess;
                     res.ErrorCode = respBody.ErrorCode;
                     res.ErrorMessage = respBody.ErrorMessage;
@@ -136,16 +136,15 @@ namespace BPIFacade.Controllers
                 }
                 else
                 {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<string>>>();
-
                     res.Data = null;
 
                     res.isSuccess = result.IsSuccessStatusCode;
-                    res.ErrorCode = respBody.ErrorCode;
-                    res.ErrorMessage = respBody.ErrorMessage;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fail settle from editBrankasDocumentStatus BR";
 
                     actionResult = Ok(res);
                 }
+
             }
             catch (Exception ex)
             {
@@ -159,15 +158,15 @@ namespace BPIFacade.Controllers
             return actionResult;
         }
 
-        [HttpGet("getFundReturnDocuments/{param}")]
-        public async Task<IActionResult> getFundReturnDocuments(string param)
+        [HttpGet("getLogData/{locPage}")]
+        public async Task<IActionResult> getLogDataTable(string locPage)
         {
-            ResultModel<List<FundReturnDocument>> res = new ResultModel<List<FundReturnDocument>>();
+            ResultModel<List<CashierLogData>> res = new ResultModel<List<CashierLogData>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<FundReturnDocument>>>($"api/BR/FundReturn/getFundReturnDocuments/{param}");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<CashierLogData>>>($"api/BR/CashierLogbook/getLogData/{locPage}");
 
                 if (result.isSuccess)
                 {
@@ -203,15 +202,15 @@ namespace BPIFacade.Controllers
             return actionResult;
         }
 
-        [HttpGet("getFundReturnBankData")]
-        public async Task<IActionResult> getFundReturnBank()
+        [HttpGet("getBrankasActionLogData/{locPage}")]
+        public async Task<IActionResult> getBrankasActionLogDataTable(string locPage)
         {
-            ResultModel<List<Bank>> res = new ResultModel<List<Bank>>();
+            ResultModel<List<CashierLogAction>> res = new ResultModel<List<CashierLogAction>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<Bank>>>("api/BR/FundReturn/getFundReturnBankData");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<CashierLogAction>>>($"api/BR/CashierLogbook/getBrankasActionLogData/{locPage}");
 
                 if (result.isSuccess)
                 {
@@ -247,15 +246,15 @@ namespace BPIFacade.Controllers
             return actionResult;
         }
 
-        [HttpGet("getFundReturnCategory")]
-        public async Task<IActionResult> getFundReturnCategory()
+        [HttpGet("getShiftbyModule/{moduleName}")]
+        public async Task<IActionResult> getShiftbyModuleData(string moduleName)
         {
-            ResultModel<List<FundReturnCategory>> res = new ResultModel<List<FundReturnCategory>>();
+            ResultModel<List<Shift>> res = new ResultModel<List<Shift>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<FundReturnCategory>>>("api/BR/FundReturn/getFundReturnCategory");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<Shift>>>($"api/BR/CashierLogbook/getShiftbyModule/{moduleName}");
 
                 if (result.isSuccess)
                 {
@@ -291,15 +290,59 @@ namespace BPIFacade.Controllers
             return actionResult;
         }
 
-        [HttpGet("getFundReturnModuleNumberOfPage/{param}")]
-        public async Task<IActionResult> getFundReturnModuleNumberOfPage(string param)
+        [HttpGet("getCashierLogbookCategories")]
+        public async Task<IActionResult> getCashierLogbookCategories()
+        {
+            ResultModel<CashierLogbookCategories> res = new ResultModel<CashierLogbookCategories>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<CashierLogbookCategories>>($"api/BR/CashierLogbook/getCashierLogbookCategories");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getModulePageSize/{Table}")]
+        public async Task<IActionResult> getModulePageSize(string Table)
         {
             ResultModel<int> res = new ResultModel<int>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/BR/FundReturn/getFundReturnModuleNumberOfPage/{param}");
+                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/BR/CashierLogbook/getModulePageSize/{Table}");
 
                 if (result.isSuccess)
                 {
@@ -332,6 +375,96 @@ namespace BPIFacade.Controllers
                 actionResult = BadRequest(res);
             }
 
+            return actionResult;
+        }
+
+        [HttpGet("getNumberofLogExisting/{param}")]
+        public async Task<IActionResult> getNumberofLogExisting(string param)
+        {
+            ResultModel<int> res = new ResultModel<int>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/BR/CashierLogbook/getNumberofLogExisting/{param}");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = 0;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = 0;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpPost("editBrankasApproveLogOnConfirm")]
+        public async Task<IActionResult> editBrankasApproveLogOnConfirm(QueryModel<CashierLogApproval> data)
+        {
+            ResultModel<QueryModel<CashierLogApproval>> res = new ResultModel<QueryModel<CashierLogApproval>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<QueryModel<CashierLogApproval>>($"api/BR/CashierLogbook/editBrankasApproveLogOnConfirm", data);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<CashierLogApproval>>>();
+
+                    res.Data = respBody.Data;
+
+                    res.isSuccess = respBody.isSuccess;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = $"Fail settle from editBrankasApproveLogOnConfirm BR";
+
+                    actionResult = Ok(res);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
             return actionResult;
         }
 

@@ -1,26 +1,24 @@
-﻿using BPIBR.Models.DbModel;
-using BPIBR.Models.MainModel;
-using BPIBR.Models.MainModel.Company;
-using BPIBR.Models.MainModel.FundReturn;
-using BPIBR.Models.MainModel.POMF;
+﻿using BPIFacade.Models.DbModel;
+using BPIFacade.Models.MainModel;
+using BPIFacade.Models.MainModel.Company;
+using BPIFacade.Models.MainModel.FundReturn;
+using BPIFacade.Models.MainModel.POMF;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BPIBR.Controllers
+namespace BPIFacade.Controllers
 {
-    [Route("api/BR/FundReturn")]
+    [Route("api/Facade/FundReturn")]
     [ApiController]
-    public class FundReturnController : ControllerBase
+    public class FundReturnFacade : ControllerBase
     {
         private readonly HttpClient _http;
         private readonly IConfiguration _configuration;
-        //private readonly string _uploadPath;
 
-        public FundReturnController(HttpClient http, IConfiguration config)
+        public FundReturnFacade(HttpClient http, IConfiguration config)
         {
             _http = http;
             _configuration = config;
-            _http.BaseAddress = new Uri(_configuration.GetValue<string>("BaseUri:BpiDA"));
-            //_uploadPath = _configuration.GetValue<string>("File:EPKRS:UploadPath");
+            _http.BaseAddress = new Uri(_configuration.GetValue<string>("BaseUri:BpiBR"));
         }
 
         [HttpPost("createFundReturnDocument")]
@@ -31,17 +29,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                HttpResponseMessage? result = new();
-                result = null;
-
-                if (data.Data.dataHeader.FundReturnCategoryID.Equals("XNTF"))
-                {
-                    result = await _http.PostAsJsonAsync<QueryModel<FundReturnDocument>>("api/DA/FundReturn/createFundReturnDocument", data);
-                }
-                else
-                {
-                    result = await _http.PostAsJsonAsync<QueryModel<FundReturnDocument>>("api/DA/FundReturn/createFundReturnHeader", data);
-                }
+                var result = await _http.PostAsJsonAsync<QueryModel<FundReturnDocument>>("api/BR/FundReturn/createFundReturnDocument", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -87,7 +75,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<FundReturnApprovalStream>>("api/DA/FundReturn/createFundReturnApproval", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<FundReturnApprovalStream>>("api/BR/FundReturn/createFundReturnApproval", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -133,7 +121,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/DA/FundReturn/deleteFundReturnDocument", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/BR/FundReturn/deleteFundReturnDocument", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -179,7 +167,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<FundReturnDocument>>>($"api/DA/FundReturn/getFundReturnDocuments/{param}");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<FundReturnDocument>>>($"api/BR/FundReturn/getFundReturnDocuments/{param}");
 
                 if (result.isSuccess)
                 {
@@ -223,7 +211,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<Bank>>>("api/DA/FundReturn/getFundReturnBankData");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<Bank>>>("api/BR/FundReturn/getFundReturnBankData");
 
                 if (result.isSuccess)
                 {
@@ -267,7 +255,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<FundReturnCategory>>>("api/DA/FundReturn/getFundReturnCategory");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<FundReturnCategory>>>("api/BR/FundReturn/getFundReturnCategory");
 
                 if (result.isSuccess)
                 {
@@ -311,7 +299,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/DA/FundReturn/getFundReturnModuleNumberOfPage/{param}");
+                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/BR/FundReturn/getFundReturnModuleNumberOfPage/{param}");
 
                 if (result.isSuccess)
                 {

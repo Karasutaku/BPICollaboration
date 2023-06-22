@@ -8,13 +8,14 @@ namespace BPIDA.DataAccess
     public class StandarizationDA
     {
         private readonly IConfiguration _configuration;
-        private readonly string _conString;
+        private readonly string _conString, _moduleConnection;
         private readonly int _rowPerPage;
 
         public StandarizationDA(IConfiguration config)
         {
             _configuration = config;
-            _conString = _configuration.GetValue<string>("ConnectionStrings:Bpi");
+            _moduleConnection = _configuration.GetValue<string>("ModuleConnection:Standarization");
+            _conString = _configuration.GetValue<string>($"ConnectionStrings:{_moduleConnection}");
             _rowPerPage = _configuration.GetValue<int>("Paging:Standarization:RowPerPage");
         }
         

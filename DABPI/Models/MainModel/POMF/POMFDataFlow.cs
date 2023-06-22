@@ -15,7 +15,8 @@
 
     public class POMFApprovalStreamExtended
     {
-        public POMFHeader pomfHeader { get; set; } = new();
+        public string LocationID { get; set; } = string.Empty;
+        public List<POMFItemLine> pomfItemLines { get; set; } = new();
         public POMFApproval approvalData { get; set; } = new();
     }
 }

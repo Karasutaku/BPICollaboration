@@ -13,10 +13,10 @@
         public POMFApproval Data { get; set; } = new();
     }
 
-
     public class POMFApprovalStreamExtended
     {
-        public POMFHeader pomfHeader { get; set; } = new();
+        public string LocationID { get; set; } = string.Empty;
+        public List<POMFItemLine> pomfItemLines { get; set; } = new();
         public POMFApproval approvalData { get; set; } = new();
     }
 
@@ -29,6 +29,7 @@
     public class NPwithReceiptNoResp
     {
         private int qtyrcp = 0;
+        private int nptype = 0;
 
         public string itemCode { get; set; } = string.Empty;
         public string itemDesc { get; set; } = string.Empty;
@@ -45,5 +46,16 @@
             }
         }
         public string uom { get; set; } = string.Empty;
+        public string type {
+            get => nptype.ToString();
+            set
+            {
+                var x = 0;
+
+                x = Convert.ToInt32(value);
+
+                nptype = x;
+            }
+        }
     }
 }

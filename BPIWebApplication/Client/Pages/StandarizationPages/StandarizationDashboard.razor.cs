@@ -228,7 +228,8 @@ namespace BPIWebApplication.Client.Pages.StandarizationPages
                 }
                 else if (standarizationFilterType.Equals("TagDescriptions"))
                 {
-                    conditions = $"WHERE StandarizationID IN (SELECT StandarizationID FROM StandarizationTags WHERE CONTAINS({standarizationFilterType}, \' \"{standarizationFilterValue}*\" \'))";
+                    //conditions = $"WHERE StandarizationID IN (SELECT StandarizationID FROM StandarizationTags WHERE CONTAINS({standarizationFilterType}, \' \"{standarizationFilterValue}*\" \'))";
+                    conditions = $"WHERE StandarizationID IN (SELECT Standarization ID FROM StandarizationTags WHERE TagDescriptions LIKE \'%{standarizationFilterValue}%\')";
 
                     temp = conditions + "!_!" + standarizationPageActive.ToString();
                 }

@@ -1,22 +1,22 @@
-﻿using BPIFacade.Models.DbModel;
-using BPIFacade.Models.MainModel;
-using BPIFacade.Models.MainModel.Procedure;
-using BPIFacade.Models.MainModel.Procedure.Filter;
-using BPIFacade.Models.MainModel.Procedure.Report;
+﻿using BPIBR.Models.DbModel;
+using BPIBR.Models.MainModel;
+using BPIBR.Models.MainModel.Procedure;
+using BPIBR.Models.MainModel.Procedure.Filter;
+using BPIBR.Models.MainModel.Procedure.Report;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BPIFacade.Controllers
+namespace BPIBR.Controllers
 {
-    [Route("api/Facade/Procedure")]
+    [Route("api/BR/Procedure")]
     [ApiController]
-    public class ProcedureController : Controller
+    public class ProcedureBR : Controller
     {
         private readonly HttpClient _http;
 
-        public ProcedureController(HttpClient http, IConfiguration config)
+        public ProcedureBR(HttpClient http, IConfiguration config)
         {
             _http = http;
-            _http.BaseAddress = new Uri(config.GetValue<string>("BaseUri:BpiBR"));
+            _http.BaseAddress = new Uri(config.GetValue<string>("BaseUri:BpiDA"));
         }
 
 
@@ -28,7 +28,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<Procedure>>>("api/BR/Procedure/getAllProcedureData");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<Procedure>>>("api/DA/Procedure/getAllProcedureData");
 
                 if (result.isSuccess)
                 {
@@ -72,7 +72,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<DepartmentProcedure>>>("api/BR/Procedure/getDepartmentProcedureData");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<DepartmentProcedure>>>("api/DA/Procedure/getDepartmentProcedureData");
 
                 if (result.isSuccess)
                 {
@@ -116,7 +116,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<DepartmentProcedure>>>($"api/BR/Procedure/getDepartmentProcedureDatawithPaging/{param}");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<DepartmentProcedure>>>($"api/DA/Procedure/getDepartmentProcedureDatawithPaging/{param}");
 
                 if (result.isSuccess)
                 {
@@ -160,7 +160,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<DashboardFilter>($"api/BR/Procedure/getDepartmentProcedureDatawithFilterbyPaging", data);
+                var result = await _http.PostAsJsonAsync<DashboardFilter>($"api/DA/Procedure/getDepartmentProcedureDatawithFilterbyPaging", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -180,7 +180,7 @@ namespace BPIFacade.Controllers
 
                     res.isSuccess = result.IsSuccessStatusCode;
                     res.ErrorCode = "01";
-                    res.ErrorMessage = "Fail Fetch data from getDepartmentProcedureDatawithFilterbyPaging BR";
+                    res.ErrorMessage = "Fail Fetch data from getDepartmentProcedureDatawithFilterbyPaging DA";
 
                     actionResult = Ok(res);
                 }
@@ -206,7 +206,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<HistoryAccess>>>($"api/BR/Procedure/getAllHistoryAccessDatawithPaging/{pageNo}");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<HistoryAccess>>>($"api/DA/Procedure/getAllHistoryAccessDatawithPaging/{pageNo}");
 
                 if (result.isSuccess)
                 {
@@ -250,7 +250,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<AccessHistoryFilter>($"api/BR/Procedure/getAllHistoryAccessDatabyFilterwithPaging", data);
+                var result = await _http.PostAsJsonAsync<AccessHistoryFilter>($"api/DA/Procedure/getAllHistoryAccessDatabyFilterwithPaging", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -270,7 +270,7 @@ namespace BPIFacade.Controllers
 
                     res.isSuccess = result.IsSuccessStatusCode;
                     res.ErrorCode = "01";
-                    res.ErrorMessage = "Fail Fetch data from getAllHistoryAccessDatabyFilterwithPaging BR";
+                    res.ErrorMessage = "Fail Fetch data from getAllHistoryAccessDatabyFilterwithPaging DA";
 
                     actionResult = Ok(res);
                 }
@@ -296,7 +296,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<AccessHistoryReport>($"api/BR/Procedure/getAllHistoryAccessDataReportbyFilter", data);
+                var result = await _http.PostAsJsonAsync<AccessHistoryReport>($"api/DA/Procedure/getAllHistoryAccessDataReportbyFilter", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -316,7 +316,7 @@ namespace BPIFacade.Controllers
 
                     res.isSuccess = result.IsSuccessStatusCode;
                     res.ErrorCode = "01";
-                    res.ErrorMessage = "Fail Fetch data from getAllHistoryAccessDataReportbyFilter BR";
+                    res.ErrorMessage = "Fail Fetch data from getAllHistoryAccessDataReportbyFilter DA";
 
                     actionResult = Ok(res);
                 }
@@ -342,7 +342,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/BR/Procedure/getDepartmentProcedureNumberofPage/{param}");
+                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/DA/Procedure/getDepartmentProcedureNumberofPage/{param}");
 
                 if (result.isSuccess)
                 {
@@ -386,7 +386,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<DashboardFilter>($"api/BR/Procedure/getDepartmentProcedurewithFilterNumberofPage", data);
+                var result = await _http.PostAsJsonAsync<DashboardFilter>($"api/DA/Procedure/getDepartmentProcedurewithFilterNumberofPage", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -406,7 +406,7 @@ namespace BPIFacade.Controllers
 
                     res.isSuccess = result.IsSuccessStatusCode;
                     res.ErrorCode = "01";
-                    res.ErrorMessage = "Fail Fetch data from getDepartmentProcedurewithFilterNumberofPage BR";
+                    res.ErrorMessage = "Fail Fetch data from getDepartmentProcedurewithFilterNumberofPage DA";
 
                     actionResult = Ok(res);
                 }
@@ -432,7 +432,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<int>>("api/BR/Procedure/getHistoryAccessNumberofPage");
+                var result = await _http.GetFromJsonAsync<ResultModel<int>>("api/DA/Procedure/getHistoryAccessNumberofPage");
 
                 if (result.isSuccess)
                 {
@@ -476,7 +476,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<AccessHistoryFilter>($"api/BR/Procedure/getHistoryAccessbyFilterwithPagingNumberofPage", data);
+                var result = await _http.PostAsJsonAsync<AccessHistoryFilter>($"api/DA/Procedure/getHistoryAccessbyFilterwithPagingNumberofPage", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -496,7 +496,7 @@ namespace BPIFacade.Controllers
 
                     res.isSuccess = result.IsSuccessStatusCode;
                     res.ErrorCode = "01";
-                    res.ErrorMessage = "Fail Fetch data from getHistoryAccessbyFilterwithPagingNumberofPage BR";
+                    res.ErrorMessage = "Fail Fetch data from getHistoryAccessbyFilterwithPagingNumberofPage DA";
 
                     actionResult = Ok(res);
                 }
@@ -517,12 +517,12 @@ namespace BPIFacade.Controllers
         [HttpGet("getFile/{path}")]
         public async Task<IActionResult> getFiletoDownload(string path)
         {
-            ResultModel<BPIFacade.Models.MainModel.Stream.FileStream> res = new ResultModel<BPIFacade.Models.MainModel.Stream.FileStream>();
+            ResultModel<BPIBR.Models.MainModel.Stream.FileStream> res = new ResultModel<BPIBR.Models.MainModel.Stream.FileStream>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<BPIFacade.Models.MainModel.Stream.FileStream>>($"api/BR/Procedure/getFile/{path}");
+                var result = await _http.GetFromJsonAsync<ResultModel<BPIBR.Models.MainModel.Stream.FileStream>>($"api/DA/Procedure/getFile/{path}");
 
                 if (result.isSuccess)
                 {
@@ -567,7 +567,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<string>>($"api/BR/Procedure/isProcedureDataPresent/{ProcNo}");
+                var result = await _http.GetFromJsonAsync<ResultModel<string>>($"api/DA/Procedure/isProcedureDataPresent/{ProcNo}");
 
                 if (result.isSuccess)
                 {
@@ -614,7 +614,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<ProcedureStream>($"api/BR/Procedure/createProcedureData", data);
+                var result = await _http.PostAsJsonAsync<ProcedureStream>($"api/DA/Procedure/createProcedureData", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -634,7 +634,7 @@ namespace BPIFacade.Controllers
 
                     res.isSuccess = result.IsSuccessStatusCode;
                     res.ErrorCode = "01";
-                    res.ErrorMessage = "Fail Fetch data from createProcedureData BR";
+                    res.ErrorMessage = "Fail Fetch data from createProcedureData DA";
 
                     actionResult = Ok(res);
                 }
@@ -662,7 +662,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<List<DepartmentProcedure>>>($"api/BR/Procedure/createDepartmentProcedureData", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<List<DepartmentProcedure>>>($"api/DA/Procedure/createDepartmentProcedureData", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -682,7 +682,7 @@ namespace BPIFacade.Controllers
 
                     res.isSuccess = result.IsSuccessStatusCode;
                     res.ErrorCode = "01";
-                    res.ErrorMessage = "Fail Fetch data from createDepartmentProcedureData BR";
+                    res.ErrorMessage = "Fail Fetch data from createDepartmentProcedureData DA";
 
                     actionResult = Ok(res);
                 }
@@ -709,7 +709,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<HistoryAccess>>($"api/BR/Procedure/createHistoryAccessData", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<HistoryAccess>>($"api/DA/Procedure/createHistoryAccessData", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -729,7 +729,7 @@ namespace BPIFacade.Controllers
 
                     res.isSuccess = result.IsSuccessStatusCode;
                     res.ErrorCode = "01";
-                    res.ErrorMessage = "Fail Fetch data from createHistoryAccessData BR";
+                    res.ErrorMessage = "Fail Fetch data from createHistoryAccessData DA";
 
                     actionResult = Ok(res);
                 }
@@ -755,7 +755,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<ProcedureStream>($"api/BR/Procedure/editProcedureData", data);
+                var result = await _http.PostAsJsonAsync<ProcedureStream>($"api/DA/Procedure/editProcedureData", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -775,7 +775,7 @@ namespace BPIFacade.Controllers
 
                     res.isSuccess = result.IsSuccessStatusCode;
                     res.ErrorCode = "01";
-                    res.ErrorMessage = "Fail Fetch data from editProcedureData BR";
+                    res.ErrorMessage = "Fail Fetch data from editProcedureData DA";
 
                     actionResult = Ok(res);
                 }
@@ -802,7 +802,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<List<DepartmentProcedure>>>($"api/BR/Procedure/deleteDepartmentProcedureData", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<List<DepartmentProcedure>>>($"api/DA/Procedure/deleteDepartmentProcedureData", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -822,7 +822,7 @@ namespace BPIFacade.Controllers
 
                     res.isSuccess = result.IsSuccessStatusCode;
                     res.ErrorCode = "01";
-                    res.ErrorMessage = "Fail Fetch data from deleteDepartmentProcedureData BR";
+                    res.ErrorMessage = "Fail Fetch data from deleteDepartmentProcedureData DA";
 
                     actionResult = Ok(res);
                 }
@@ -850,7 +850,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<long>>("api/BR/Procedure/getProcedureMaxSizeUpload");
+                var result = await _http.GetFromJsonAsync<ResultModel<long>>("api/DA/Procedure/getProcedureMaxSizeUpload");
 
                 if (result.isSuccess)
                 {

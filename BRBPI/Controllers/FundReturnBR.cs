@@ -1,40 +1,53 @@
-﻿using BPIFacade.Models.DbModel;
-using BPIFacade.Models.MainModel;
-using BPIFacade.Models.MainModel.Standarizations;
+﻿using BPIBR.Models.DbModel;
+using BPIBR.Models.MainModel;
+using BPIBR.Models.MainModel.Company;
+using BPIBR.Models.MainModel.FundReturn;
+using BPIBR.Models.MainModel.POMF;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BPIFacade.Controllers
+namespace BPIBR.Controllers
 {
-    [Route("api/Facade/Standarization")]
+    [Route("api/BR/FundReturn")]
     [ApiController]
-    public class StandarizationController : ControllerBase
+    public class FundReturnBR : ControllerBase
     {
         private readonly HttpClient _http;
         private readonly IConfiguration _configuration;
+        //private readonly string _uploadPath;
 
-        public StandarizationController(HttpClient http, IConfiguration config)
+        public FundReturnBR(HttpClient http, IConfiguration config)
         {
             _http = http;
             _configuration = config;
-            _http.BaseAddress = new Uri(_configuration.GetValue<string>("BaseUri:BpiBR"));
+            _http.BaseAddress = new Uri(_configuration.GetValue<string>("BaseUri:BpiDA"));
+            //_uploadPath = _configuration.GetValue<string>("File:EPKRS:UploadPath");
         }
 
-        [HttpPost("createStandarizationData")]
-        public async Task<IActionResult> createStandarizationDataTable(StandarizationStream data)
+        [HttpPost("createFundReturnDocument")]
+        public async Task<IActionResult> createFundReturnDocument(QueryModel<FundReturnDocument> data)
         {
-            ResultModel<QueryModel<Standarizations>> res = new ResultModel<QueryModel<Standarizations>>();
+            ResultModel<QueryModel<FundReturnDocument>> res = new ResultModel<QueryModel<FundReturnDocument>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.PostAsJsonAsync<StandarizationStream>($"api/BR/Standarization/createStandarizationData", data);
+                HttpResponseMessage? result = new();
+                result = null;
+
+                if (data.Data.dataHeader.FundReturnCategoryID.Equals("XNTF"))
+                {
+                    result = await _http.PostAsJsonAsync<QueryModel<FundReturnDocument>>("api/DA/FundReturn/createFundReturnDocument", data);
+                }
+                else
+                {
+                    result = await _http.PostAsJsonAsync<QueryModel<FundReturnDocument>>("api/DA/FundReturn/createFundReturnHeader", data);
+                }
 
                 if (result.IsSuccessStatusCode)
                 {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<Standarizations>>>();
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<FundReturnDocument>>>();
 
                     res.Data = respBody.Data;
-
                     res.isSuccess = respBody.isSuccess;
                     res.ErrorCode = respBody.ErrorCode;
                     res.ErrorMessage = respBody.ErrorMessage;
@@ -43,15 +56,16 @@ namespace BPIFacade.Controllers
                 }
                 else
                 {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<FundReturnDocument>>>();
+
                     res.Data = null;
 
                     res.isSuccess = result.IsSuccessStatusCode;
-                    res.ErrorCode = "01";
-                    res.ErrorMessage = $"Fail settle from createStandarizationData BR";
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
 
                     actionResult = Ok(res);
                 }
-
             }
             catch (Exception ex)
             {
@@ -65,22 +79,21 @@ namespace BPIFacade.Controllers
             return actionResult;
         }
 
-        [HttpPost("editStandarizationData")]
-        public async Task<IActionResult> editStandarizationDataTable(StandarizationStream data)
+        [HttpPost("createFundReturnApproval")]
+        public async Task<IActionResult> createFundReturnApproval(QueryModel<FundReturnApprovalStream> data)
         {
-            ResultModel<QueryModel<Standarizations>> res = new ResultModel<QueryModel<Standarizations>>();
+            ResultModel<QueryModel<FundReturnApprovalStream>> res = new ResultModel<QueryModel<FundReturnApprovalStream>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.PostAsJsonAsync<StandarizationStream>($"api/BR/Standarization/editStandarizationData", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<FundReturnApprovalStream>>("api/DA/FundReturn/createFundReturnApproval", data);
 
                 if (result.IsSuccessStatusCode)
                 {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<Standarizations>>>();
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<FundReturnApprovalStream>>>();
 
                     res.Data = respBody.Data;
-
                     res.isSuccess = respBody.isSuccess;
                     res.ErrorCode = respBody.ErrorCode;
                     res.ErrorMessage = respBody.ErrorMessage;
@@ -89,15 +102,16 @@ namespace BPIFacade.Controllers
                 }
                 else
                 {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<POMFApprovalStream>>>();
+
                     res.Data = null;
 
                     res.isSuccess = result.IsSuccessStatusCode;
-                    res.ErrorCode = "01";
-                    res.ErrorMessage = $"Fail settle from editStandarizationData BR";
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
 
                     actionResult = Ok(res);
                 }
-
             }
             catch (Exception ex)
             {
@@ -111,22 +125,21 @@ namespace BPIFacade.Controllers
             return actionResult;
         }
 
-        [HttpPost("deleteStandarizationData")]
-        public async Task<IActionResult> deleteStandarizationDataTable(QueryModel<string> data)
+        [HttpPost("deleteFundReturnDocument")]
+        public async Task<IActionResult> deleteFundReturnDocument(QueryModel<string> data)
         {
             ResultModel<QueryModel<string>> res = new ResultModel<QueryModel<string>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<string>>($"api/BR/Standarization/deleteStandarizationData", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/DA/FundReturn/deleteFundReturnDocument", data);
 
                 if (result.IsSuccessStatusCode)
                 {
                     var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<string>>>();
 
                     res.Data = respBody.Data;
-
                     res.isSuccess = respBody.isSuccess;
                     res.ErrorCode = respBody.ErrorCode;
                     res.ErrorMessage = respBody.ErrorMessage;
@@ -135,15 +148,16 @@ namespace BPIFacade.Controllers
                 }
                 else
                 {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<string>>>();
+
                     res.Data = null;
 
                     res.isSuccess = result.IsSuccessStatusCode;
-                    res.ErrorCode = "01";
-                    res.ErrorMessage = $"Fail settle from deleteStandarizationData BR";
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
 
                     actionResult = Ok(res);
                 }
-
             }
             catch (Exception ex)
             {
@@ -157,15 +171,15 @@ namespace BPIFacade.Controllers
             return actionResult;
         }
 
-        [HttpGet("getStandarizationTypes")]
-        public async Task<IActionResult> getStandarizationTypesDataTable()
+        [HttpGet("getFundReturnDocuments/{param}")]
+        public async Task<IActionResult> getFundReturnDocuments(string param)
         {
-            ResultModel<List<StandarizationType>> res = new ResultModel<List<StandarizationType>>();
+            ResultModel<List<FundReturnDocument>> res = new ResultModel<List<FundReturnDocument>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<StandarizationType>>>("api/BR/Standarization/getStandarizationTypes");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<FundReturnDocument>>>($"api/DA/FundReturn/getFundReturnDocuments/{param}");
 
                 if (result.isSuccess)
                 {
@@ -201,15 +215,15 @@ namespace BPIFacade.Controllers
             return actionResult;
         }
 
-        [HttpGet("getStandarizationData/{param}")]
-        public async Task<IActionResult> getStandarizationDataTable(string param)
+        [HttpGet("getFundReturnBankData")]
+        public async Task<IActionResult> getFundReturnBank()
         {
-            ResultModel<List<Standarizations>> res = new ResultModel<List<Standarizations>>();
+            ResultModel<List<Bank>> res = new ResultModel<List<Bank>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<Standarizations>>>($"api/BR/Standarization/getStandarizationData/{param}");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<Bank>>>("api/DA/FundReturn/getFundReturnBankData");
 
                 if (result.isSuccess)
                 {
@@ -245,15 +259,15 @@ namespace BPIFacade.Controllers
             return actionResult;
         }
 
-        [HttpGet("getStandarizationAttachment/{param}")]
-        public async Task<IActionResult> getAttachFileStream(string param)
+        [HttpGet("getFundReturnCategory")]
+        public async Task<IActionResult> getFundReturnCategory()
         {
-            ResultModel<List<BPIFacade.Models.MainModel.Stream.FileStream>> res = new ResultModel<List<BPIFacade.Models.MainModel.Stream.FileStream>>();
+            ResultModel<List<FundReturnCategory>> res = new ResultModel<List<FundReturnCategory>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<BPIFacade.Models.MainModel.Stream.FileStream>>>($"api/BR/Standarization/getStandarizationAttachment/{param}");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<FundReturnCategory>>>("api/DA/FundReturn/getFundReturnCategory");
 
                 if (result.isSuccess)
                 {
@@ -289,15 +303,15 @@ namespace BPIFacade.Controllers
             return actionResult;
         }
 
-        [HttpGet("getModulePageSize/{Table}")]
-        public async Task<IActionResult> getModulePageSize(string Table)
+        [HttpGet("getFundReturnModuleNumberOfPage/{param}")]
+        public async Task<IActionResult> getFundReturnModuleNumberOfPage(string param)
         {
             ResultModel<int> res = new ResultModel<int>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/BR/Standarization/getModulePageSize/{Table}");
+                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/DA/FundReturn/getFundReturnModuleNumberOfPage/{param}");
 
                 if (result.isSuccess)
                 {

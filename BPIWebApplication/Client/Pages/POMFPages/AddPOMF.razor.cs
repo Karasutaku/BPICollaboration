@@ -1,15 +1,12 @@
 ﻿using BPILibrary;
-using BPIWebApplication.Client.Services.EPKRSServices;
 using BPIWebApplication.Shared.DbModel;
-using BPIWebApplication.Shared.MainModel.EPKRS;
+using BPIWebApplication.Shared.MainModel;
 using BPIWebApplication.Shared.MainModel.Login;
 using BPIWebApplication.Shared.MainModel.POMF;
 using BPIWebApplication.Shared.PagesModel.POMF;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
-using System.ComponentModel;
 
 namespace BPIWebApplication.Client.Pages.POMFPages
 {
@@ -18,6 +15,8 @@ namespace BPIWebApplication.Client.Pages.POMFPages
         private ActiveUser activeUser = new();
         private UserPrivileges privilegeDataParam = new();
         private List<string> userPriv = new();
+
+        private Location paramGetCompanyLocation = new();
 
         private POMFHeaderForm pomfData = new();
         private List<POMFItemLineForm> pomfLines = new();
@@ -104,6 +103,14 @@ namespace BPIWebApplication.Client.Pages.POMFPages
             pomfData.LocationID = loc;
             pomfData.NPTypeID = "";
 
+            paramGetCompanyLocation.Condition = $"a.CompanyId={Convert.ToInt32(activeUser.company)}";
+            paramGetCompanyLocation.PageIndex = 1;
+            paramGetCompanyLocation.PageSize = 100;
+            paramGetCompanyLocation.FieldOrder = "a.CompanyId";
+            paramGetCompanyLocation.MethodOrder = "ASC";
+
+            await ManagementService.GetCompanyLocations(paramGetCompanyLocation);
+
             await POMFService.getPOMFNPType();
 
             _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/POMFPages/AddPOMF.razor.js");
@@ -169,7 +176,8 @@ namespace BPIWebApplication.Client.Pages.POMFPages
                     itemCode = data.itemCode,
                     itemDesc = data.itemDesc,
                     qtyNP = data.qtyNP,
-                    uom = data.uom
+                    uom = data.uom,
+                    type = data.type
                 });
             }
             else
@@ -182,7 +190,7 @@ namespace BPIWebApplication.Client.Pages.POMFPages
             }
         }
 
-        private void selectItembyNPandReceipt()
+        private async void selectItembyNPandReceipt()
         {
             if (selectedNPReceiptData.Count > 0)
             {
@@ -201,9 +209,24 @@ namespace BPIWebApplication.Client.Pages.POMFPages
                         RequestQuantity = 0,
                         NPQuantity = Convert.ToInt32(x.qtyNP),
                         ItemUOM = x.uom,
-                        ItemValue = "0"
+                        ItemValue = "0",
+                        RequestToSite = "",
+                        ExternalRequestDocument = "",
+                        RequestDocumentDate = DateTime.MinValue,
+                        ExternalReceiveDocument = "",
+                        ReceiveDocumentDate = DateTime.MinValue
                     });
                 });
+
+                var tp = selectedNPReceiptData.DistinctBy(x => x.type);
+
+                if (tp.Count() > 1)
+                {
+                    await _jsModule.InvokeVoidAsync("showAlert", "NP Type is More than 1 Type : Please Contact IT OPS !");
+                    return;
+                }
+
+                pomfData.NPTypeID = tp.First().type;
             }
 
             StateHasChanged();
@@ -239,8 +262,6 @@ namespace BPIWebApplication.Client.Pages.POMFPages
                         uploadData.Data.dataHeader.ReceiptNo = pomfData.ReceiptNo;
                         uploadData.Data.dataHeader.NPNo = pomfData.NPNo;
                         uploadData.Data.dataHeader.NPTypeID = pomfData.NPTypeID;
-                        uploadData.Data.dataHeader.ExternalRequestDocument = "";
-                        uploadData.Data.dataHeader.ExternalReceiveDocument = "";
                         uploadData.Data.dataHeader.Requester = activeUser.userName;
                 
                         var doc = POMFService.npTypes.FirstOrDefault(x => x.NPTypeID.Equals(pomfData.NPTypeID));
@@ -277,7 +298,12 @@ namespace BPIWebApplication.Client.Pages.POMFPages
                                 RequestQuantity = x.RequestQuantity,
                                 NPQuantity = x.NPQuantity,
                                 ItemUOM = x.ItemUOM.ToUpper(),
-                                ItemValue = Convert.ToDecimal(res)
+                                ItemValue = Convert.ToDecimal(res),
+                                RequestToSite = x.RequestToSite,
+                                ExternalRequestDocument = x.ExternalRequestDocument,
+                                RequestDocumentDate = null,
+                                ExternalReceiveDocument = x.ExternalReceiveDocument,
+                                ReceiveDocumentDate = null
                             });
                         });
 
@@ -317,6 +343,8 @@ namespace BPIWebApplication.Client.Pages.POMFPages
             if (pomfData.NPTypeID.IsNullOrEmpty()) return false;
 
             if (pomfLines.Any(x => x.RequestQuantity > x.NPQuantity)) return false;
+
+            if (pomfLines.Any(x => x.RequestQuantity <= 0)) { return false; }
 
             return true;
         }
@@ -364,6 +392,25 @@ namespace BPIWebApplication.Client.Pages.POMFPages
             try
             {
                 if (npReceiptData.Any())
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        private bool checkLocation()
+        {
+            try
+            {
+                if (ManagementService.locations.Any())
                 {
                     return true;
                 }

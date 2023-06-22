@@ -5,6 +5,7 @@ using BPIDA.Models.MainModel.POMF;
 using BPILibrary;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using System.Data.SqlTypes;
 
 namespace BPIDA.Controllers
 {
@@ -71,7 +72,12 @@ namespace BPIDA.Controllers
                         RequestQuantity = x.RequestQuantity,
                         NPQuantity = x.NPQuantity,
                         ItemUOM = x.ItemUOM,
-                        ItemValue = x.ItemValue
+                        ItemValue = x.ItemValue,
+                        RequestToSite = x.RequestToSite,
+                        ExternalRequestDocument = x.ExternalRequestDocument,
+                        RequestDocumentDate = null,
+                        ExternalReceiveDocument = x.ExternalReceiveDocument,
+                        ReceiveDocumentDate = null
                     });
                 });
 
@@ -167,7 +173,13 @@ namespace BPIDA.Controllers
 
             try
             {
-                if (da.editPOMFApprovalExtendedData(data))
+                if (da.editPOMFApprovalExtendedData(
+                    data.Data.LocationID
+                    , CommonLibrary.ListToDataTable<POMFItemLine>(data.Data.pomfItemLines, data.userEmail, data.userAction, data.userActionDate, "items")
+                    , data.Data.approvalData
+                    , data.userEmail
+                    , data.userAction
+                    , data.userActionDate))
                 {
                     res.Data = data;
                     res.isSuccess = true;
@@ -270,10 +282,6 @@ namespace BPIDA.Controllers
                     "ReceiptNo",
                     "NPNo",
                     "NPTypeID",
-                    "ExternalRequestDocument",
-                    "RequestDocumentDate",
-                    "ExternalReceiveDocument",
-                    "ReceiveDocumentDate",
                     "Requester",
                     "DocumentStatus",
                     "AuditUser",
@@ -310,10 +318,6 @@ namespace BPIDA.Controllers
                         temp1.dataHeader.ReceiptNo = dt["ReceiptNo"].ToString();
                         temp1.dataHeader.NPNo = dt["NPNo"].ToString();
                         temp1.dataHeader.NPTypeID = dt["NPTypeID"].ToString();
-                        temp1.dataHeader.ExternalRequestDocument = dt["ExternalRequestDocument"].ToString();
-                        temp1.dataHeader.RequestDocumentDate = dt.IsNull("RequestDocumentDate") ? DateTime.MinValue : Convert.ToDateTime(dt["RequestDocumentDate"]);
-                        temp1.dataHeader.ExternalReceiveDocument = dt["ExternalReceiveDocument"].ToString();
-                        temp1.dataHeader.ReceiveDocumentDate = dt.IsNull("ReceiveDocumentDate") ? DateTime.MinValue : Convert.ToDateTime(dt["ReceiveDocumentDate"]);
                         temp1.dataHeader.Requester = dt["Requester"].ToString();
                         temp1.dataHeader.DocumentStatus = dt["DocumentStatus"].ToString();
 
@@ -326,7 +330,12 @@ namespace BPIDA.Controllers
                             RequestQuantity = Convert.ToInt32(x["RequestQuantity"]),
                             NPQuantity = Convert.ToInt32(x["NPQuantity"]),
                             ItemUOM = x["ItemUOM"].ToString(),
-                            ItemValue = Convert.ToDecimal(x["ItemValue"])
+                            ItemValue = Convert.ToDecimal(x["ItemValue"]),
+                            RequestToSite = x["RequestToSite"].ToString(),
+                            ExternalRequestDocument = x.IsNull("ExternalRequestDocument") ? "" : x["ExternalRequestDocument"].ToString(),
+                            RequestDocumentDate = x.IsNull("RequestDocumentDate") ? new DateTime(DateTime.Now.Year, 1, 1) : Convert.ToDateTime(x["RequestDocumentDate"]),
+                            ExternalReceiveDocument = x.IsNull("ExternalReceiveDocument") ? "" : x["ExternalReceiveDocument"].ToString(),
+                            ReceiveDocumentDate = x.IsNull("ReceiveDocumentDate") ? new DateTime(DateTime.Now.Year, 1, 1) : Convert.ToDateTime(x["ReceiveDocumentDate"])
                         }).ToList();
 
                         if (dtPOMFApproval.AsEnumerable().Where(y => y["POMFID"].ToString().Equals(dt["POMFID"].ToString())).ToList().Count > 0)

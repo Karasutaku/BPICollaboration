@@ -16,8 +16,6 @@ namespace BPIWebApplication.Shared.PagesModel.POMF
         public string NPNo { get; set; } = string.Empty;
         [Required(ErrorMessage = "NP Type Data is required")]
         public string NPTypeID { get; set; } = string.Empty;
-        public string ExternalRequestDocument { get; set; } = string.Empty;
-        public string ExternalReceiveDocument { get; set; } = string.Empty;
         public string Requester { get; set; } = string.Empty;
         public string DocumentStatus { get; set; } = string.Empty;
     }
@@ -56,5 +54,10 @@ namespace BPIWebApplication.Shared.PagesModel.POMF
                 }
             }
         }
+        public string RequestToSite { get; set; } = string.Empty;
+        public string ExternalRequestDocument { get; set; } = string.Empty;
+        public DateTime RequestDocumentDate { get; set; } = DateTime.Now;
+        public string ExternalReceiveDocument { get; set; } = string.Empty;
+        public DateTime ReceiveDocumentDate { get; set; } = DateTime.Now;
     }
 }

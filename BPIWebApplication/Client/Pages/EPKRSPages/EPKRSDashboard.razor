@@ -417,7 +417,7 @@ else
                 <div class="row">
                     <div class="col">
                         <div class="border border-2 my-3 p-2">
-                            <h5 class="float-lg-end"><b>Ongoing EPKRS Document</b></h5>
+                            <h5 class="float-lg-end"><b>Reported EPKRS Documents</b></h5>
                             <ul class="nav nav-pills flex-column flex-sm-row" id="myTab" role="tablist">
                                 <li class="nav-item">
                                     <a class="nav-link active" id="itemcase-tab" data-toggle="tab" href="#itemcase" role="tab" aria-controls="itemcase" aria-selected="true">Item Case &lt; @itemCasePageActive of @itemCaseNumberofPages &gt;</a>
@@ -436,7 +436,7 @@ else
                                                 <select class="form-select" @bind="itemCaseFilterType">
                                                     <option hidden disabled value="">Filter By</option>
                                                     <option value="ID">EPKRS ID</option>
-                                                    <option value="LOC">Location</option>
+                                                    <option value="LOC">Lokasi</option>
                                                     <option value="STATUS">Status</option>
                                                 </select>
                                             </div>
@@ -483,16 +483,16 @@ else
                                                             </div>
                                                             <div class="col">
                                                                 <p class="card-text">
-                                                                    <b> Loading Document No : </b> @itemCase.itemCase.LoadingDocumentID, @itemCase.itemCase.LoadingDocumentDate.ToString("dd / MM / yyyy")
+                                                                    <b> No. Loading Document : </b> @itemCase.itemCase.LoadingDocumentID, @itemCase.itemCase.LoadingDocumentDate.ToString("dd / MM / yyyy")
                                                                     <br />
-                                                                    <b> Report Date : </b> @itemCase.itemCase.ReportDate.ToString("dd / MM / yyyy")
+                                                                    <b> Tanggal Pelaporan : </b> @itemCase.itemCase.ReportDate.ToString("dddd, dd MMMM yyyy")
                                                                     @*<br />
                                                                     <b> Variance : </b> @itemCase.itemCase.VarianceDate Day(s)*@
                                                                     <br />
-                                                                    <b> Document Status : </b> @itemCase.itemCase.DocumentStatus
+                                                                    <b> Status Dokumen : </b> @itemCase.itemCase.DocumentStatus
                                                                 </p>
-                                                                <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#itemCasePreviewModal" @onclick="(() => setItemCasePreviewData(itemCase))"><i class="oi oi-document"></i> Preview Document</button>
-                                                                <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal" @onclick="(async () => await setDocumentDiscussionPreviewData(itemCase.itemCase.DocumentID, itemCase.itemCase.SiteReporter))"><i class="oi oi-chat"></i> Discussion Panel
+                                                                <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#itemCasePreviewModal" @onclick="(() => setItemCasePreviewData(itemCase))"><i class="oi oi-document"></i> Lihat Dokumen</button>
+                                                                <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal" @onclick="(async () => await setDocumentDiscussionPreviewData(itemCase.itemCase.DocumentID, itemCase.itemCase.SiteReporter))"><i class="oi oi-chat"></i> Panel Diskusi
                                                                     @{
                                                                         int? unreadCountA = null;
 
@@ -545,7 +545,7 @@ else
                                     }
                                     else
                                     {
-                                        <p class="fw-bold text-center">. . . There is no Document . . .</p>
+                                        <p class="fw-bold text-center">. . . Sedang tidak ada Dokumen . . .</p>
                                     }
                                 </div>
 
@@ -557,7 +557,7 @@ else
                                                 <select class="form-select" @bind="incidentAccidentFilterType">
                                                     <option hidden disabled value="">Filter By</option>
                                                     <option value="ID">EPKRS ID</option>
-                                                    <option value="LOC">Location</option>
+                                                    <option value="LOC">Lokasi</option>
                                                     <option value="STATUS">Status</option>
                                                 </select>
                                             </div>
@@ -604,16 +604,16 @@ else
                                                             </div>
                                                             <div class="col">
                                                                 <p class="card-text">
-                                                                    <b> Case Description : </b> @incidentAccident.incidentAccident.CaseDescription
+                                                                    <b> Deskripsi Kejadian : </b> @incidentAccident.incidentAccident.CaseDescription
                                                                     <br />
-                                                                    <b> Report Date : </b> @incidentAccident.incidentAccident.ReportDate.ToString("dd / MM / yyyy")
+                                                                    <b> Tanggal Pelaporan : </b> @incidentAccident.incidentAccident.ReportDate.ToString("dddd, dd MMMMM yyyy")
                                                                     <br />
                                                                     <b> PIC : </b> @incidentAccident.incidentAccident.PIC
                                                                     <br />
-                                                                    <b> Document Status : </b> @incidentAccident.incidentAccident.DocumentStatus
+                                                                    <b> Status Dokumen : </b> @incidentAccident.incidentAccident.DocumentStatus
                                                                 </p>
-                                                                <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#incidentAccidentPreviewModal" @onclick="(() => setIncidentAccidentPreviewData(incidentAccident))"><i class="oi oi-document"></i> Preview Document</button>
-                                                                <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal" @onclick="(async () => await setDocumentDiscussionPreviewData(incidentAccident.incidentAccident.DocumentID, incidentAccident.incidentAccident.SiteReporter))"><i class="oi oi-chat"></i> Discussion Panel
+                                                                <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#incidentAccidentPreviewModal" @onclick="(() => setIncidentAccidentPreviewData(incidentAccident))"><i class="oi oi-document"></i> Lihat Dokumen</button>
+                                                                <button class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal" @onclick="(async () => await setDocumentDiscussionPreviewData(incidentAccident.incidentAccident.DocumentID, incidentAccident.incidentAccident.SiteReporter))"><i class="oi oi-chat"></i> Panel Diskusi
                                                                     @{
                                                                         int? unreadCountB = null;
 
@@ -666,7 +666,7 @@ else
                                     }
                                     else
                                     {
-                                        <p class="fw-bold text-center">. . . There is no Document . . .</p>
+                                        <p class="fw-bold text-center">. . . Sedang tidak ada Dokumen . . .</p>
                                     }
                                 </div>
                             </div>
@@ -714,8 +714,8 @@ else
                     <div class="row">
                         <div class="col align-middle text-center">
                             <h5 class="fw-bold my-auto"> @previewItemCase.DocumentID </h5>
-                            <p class="my-auto"><small> Report Date : @previewItemCase.ReportDate.ToString("dddd, dd MMMM yyyy") </small></p>
-                            <p class="my-auto"><b> Document Status </b> - <em> @previewItemCase.DocumentStatus </em></p>
+                            <p class="my-auto"><small> Tanggal Pelaporan : @previewItemCase.ReportDate.ToString("dddd, dd MMMM yyyy") </small></p>
+                            <p class="my-auto"><b> Status Dokumen </b> - <em> @previewItemCase.DocumentStatus </em></p>
                         </div>
                     </div>
                 </div>
@@ -725,7 +725,7 @@ else
                     <div class="col col-8">: @previewItemCase.DocumentID</div>
                 </div>
                 <div class="row">
-                    <div class="col col-4 fw-bold">Report Date</div>
+                    <div class="col col-4 fw-bold">Tanggal Pelaporan</div>
                     <div class="col col-8">: @previewItemCase.ReportDate.ToString("dd MMMM yyyy")</div>
                 </div>
                 @{
@@ -733,19 +733,19 @@ else
                     var ariskType = (ariskSubType != null ? EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(ariskSubType.RiskID)) : null);
                 }
                 <div class="row">
-                    <div class="col col-4 fw-bold">Risk Type</div>
-                    <div class="col col-8">: @(ariskType != null ? ariskType.RiskDescription : "")</div>
+                    <div class="col col-4 fw-bold">Tipe Risiko</div>
+                    <div class="col col-8 text-wrap">: @(ariskType != null ? ariskType.RiskDescription : "")</div>
                 </div>
                 <div class="row mb-4">
-                    <div class="col col-4 fw-bold">Risk Sub Type</div>
-                    <div class="col col-8">: @(ariskSubType != null ? ariskSubType.SubRiskDescription : "")</div>
+                    <div class="col col-4 fw-bold">Tipe Sub Risiko</div>
+                    <div class="col col-8 text-wrap">: @(ariskSubType != null ? ariskSubType.SubRiskDescription : "")</div>
                 </div>
                 <div class="row">
-                    <div class="col col-4 fw-bold">Site Reporter</div>
+                    <div class="col col-4 fw-bold">Site Pelapor</div>
                     <div class="col col-8">: @(ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewItemCase.SiteReporter)) == null ? previewItemCase.SiteReporter.Equals("HO") ? "HEAD OFFICE" : previewItemCase.SiteReporter : ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewItemCase.SiteReporter)).locationName)</div>
                 </div>
                 <div class="row">
-                    <div class="col col-4 fw-bold">Site Sender</div>
+                    <div class="col col-4 fw-bold">Site Pengirim</div>
                     <div class="col col-8">: @(ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewItemCase.SiteSender)) == null ? previewItemCase.SiteReporter.Equals("HO") ? "HEAD OFFICE" : previewItemCase.SiteReporter : ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewItemCase.SiteSender)).locationName)</div>
                 </div>
                 <div class="row">
@@ -753,11 +753,11 @@ else
                     <div class="col col-8">: @previewItemCase.LoadingDocumentID</div>
                 </div>
                 <div class="row">
-                    <div class="col col-4 fw-bold">Loading Document Date</div>
+                    <div class="col col-4 fw-bold">Tanggal Loading Document</div>
                     <div class="col col-8">: @previewItemCase.LoadingDocumentDate.ToString("dd MMMM yyyy")</div>
                 </div>
                 <div class="row">
-                    <div class="col col-4 fw-bold">Item Pickup Date</div>
+                    <div class="col col-4 fw-bold">Tanggal Penerimaan Barang</div>
                     <div class="col col-8">: @previewItemCase.ItemPickupDate.ToString("dd MMMM yyyy")</div>
                 </div>
                 @*<div class="row">
@@ -781,7 +781,7 @@ else
                 {
                     <div class="row">
                         <div class="col col-4 fw-bold">RISK Mitigation Plan</div>
-                        <div class="col col-8">: @previewItemCase.ExtendedMitigationPlan</div>
+                        <div class="col col-8 text-wrap">: @previewItemCase.ExtendedMitigationPlan</div>
                     </div>
                 }
 
@@ -797,14 +797,14 @@ else
                                 <thead>
                                     <tr>
                                         <th scope="col" class="text-center align-middle text-wrap" style="width: 16%; font-size: 15px;">TR ID</th>
-                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">TR Date</th>
-                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Item Code</th>
-                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 20%; font-size: 15px;">Item Desc.</th>
-                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Risk Type</th>
-                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Qty</th>
+                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Tgl. TR</th>
+                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Kode Barang</th>
+                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 20%; font-size: 15px;">Detail Barang</th>
+                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Tipe Risiko</th>
+                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Stok</th>
                                         <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">UOM</th>
-                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 14%; font-size: 15px;">Value</th>
-                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Stock</th>
+                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 14%; font-size: 15px;">Nilai</th>
+                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Qty</th>
                                         <th scope="col" class="text-center align-middle text-wrap" style="width: 5%;">Prvw.</th>
                                     </tr>
                                 </thead>
@@ -824,10 +824,10 @@ else
                                                 else
                                                     @item.ItemRiskCategoryID
                                             </td>
-                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemQuantity</td>
+                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemStock</td>
                                             <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.UOM</td>
                                             <td class="text-center align-middle text-wrap" style="font-size:14px;">Rp. @item.ItemValue.ToString("N0") ,-</td>
-                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemStock</td>
+                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemQuantity</td>
                                             <td class="text-center align-middle text-wrap" style="font-size:14px;">
                                                 <div class="btn-group dropdown">
                                                     <button class="btn btn-sm dropdown-toggle" type="button" data-toggle="dropdown" data-boundary="viewport" aria-haspopup="true" aria-expanded="false">
@@ -838,7 +838,7 @@ else
 
                                                             <div class="row my-1">
                                                                 <div class="col">
-                                                                    <b>Time Variance</b> : @item.VarianceDate.ToString("N0") Day(s)
+                                                                    <b>Time Variance</b> : @item.VarianceDate.ToString("N0") Hari
                                                                 </div>
                                                             </div>
 
@@ -867,6 +867,19 @@ else
                                         </tr>
                                     }
                                 </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td class="text-center align-middle text-wrap fw-bold" colspan="7">Total Value</td>
+                                        @{
+                                            var sum = decimal.Zero;
+                                            previewItemLine.ForEach(x =>
+                                            {
+                                                sum += (x.ItemQuantity * x.ItemValue);
+                                            });
+                                        }
+                                        <td class="text-center align-middle text-wrap fw-bold" colspan="3">Rp. @sum.ToString("N0") ,-</td>
+                                    </tr>
+                                </tfoot>
                             </table>
                             @*</div>*@
                         }
@@ -914,7 +927,7 @@ else
 
                 <div class="row my-3">
                     <div class="col">
-                        <p class="fw-bold text-center"><i class="oi oi-paperclip"></i> Attachment(s) </p>
+                        <p class="fw-bold text-center"><i class="oi oi-paperclip"></i> Lampiran </p>
 
                         @if (checkPreviewCaseAttachment())
                         {
@@ -930,7 +943,7 @@ else
                                                 <h6 class="card-title text-wrap text-truncate"><b> @file.FilePath.Split("!_!")[1] </b></h6>
                                             </div>
                                             <div class="card-footer">
-                                                <small class="text-muted"><i> #@file.LineNum - Click To View File</i></small>
+                                                <small class="text-muted"><i> #@file.LineNum - Klik untuk Lihat</i></small>
                                             </div>
                                         </div>
                                     </div>
@@ -940,7 +953,7 @@ else
                         else
                         {
                             <div class="alert alert-warning alert-dismissible fade show my-2" role="alert">
-                                <strong>Empty Attachment !</strong>
+                                <strong>Lampiran Kosong !</strong>
                             </div>
                         }
                     </div>
@@ -968,7 +981,7 @@ else
                 {
                     <button type="button" class="btn btn-danger mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Delete"))" disabled="@(previewItemCase.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-basket"></i> Delete</button>
                 }
-                <button type="button" class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal"><i class="oi oi-chat"></i> Discussion Panel 
+                <button type="button" class="btn btn-primary-cus mt-1" data-toggle="modal" data-target="#discussionModal"><i class="oi oi-chat"></i> Panel Diskusi 
                     @{
                         int ? unreadCountC = null;
                         @try {
@@ -1002,18 +1015,18 @@ else
                     <div class="row">
                         <div class="col align-middle text-center">
                             <h5 class="fw-bold my-auto"> @previewIncidentAccident.DocumentID </h5>
-                            <p class="my-auto"><small> Report Date : @previewIncidentAccident.ReportDate.ToString("dddd, dd MMMM yyyy") </small></p>
-                            <p class="my-auto"><b> Document Status </b> - <em> @previewIncidentAccident.DocumentStatus </em></p>
+                            <p class="my-auto"><small> Tanggal Pelaporan : @previewIncidentAccident.ReportDate.ToString("dddd, dd MMMM yyyy") </small></p>
+                            <p class="my-auto"><b> Status Dokumen </b> - <em> @previewIncidentAccident.DocumentStatus </em></p>
                         </div>
                     </div>
                 </div>
 
                 <div class="row mt-4">
-                    <div class="col col-4 fw-bold">Site Reporter</div>
-                    <div class="col col-8">: @previewIncidentAccident.SiteReporter</div>
+                    <div class="col col-4 fw-bold">Site Pelapor</div>
+                    <div class="col col-8">: @(ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewIncidentAccident.SiteReporter)) == null ? previewIncidentAccident.SiteReporter.Equals("HO") ? "HEAD OFFICE" : previewIncidentAccident.SiteReporter : ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewIncidentAccident.SiteReporter)).locationName)</div>
                 </div>
                 <div class="row">
-                    <div class="col col-4 fw-bold">Department Reporter</div>
+                    <div class="col col-4 fw-bold">Department Pelapor</div>
                     <div class="col col-8">: @((ManagementService.departments.SingleOrDefault(x => x.DepartmentID.Equals(previewIncidentAccident.DepartmentReporter)) == null) ? previewIncidentAccident.DepartmentReporter : ManagementService.departments.SingleOrDefault(x => x.DepartmentID.Equals(previewIncidentAccident.DepartmentReporter)).DepartmentName)  </div>
                 </div>
                 <div class="row">
@@ -1028,15 +1041,15 @@ else
                 @*split*@
 
                 <div class="row mt-4">
-                    <div class="col col-4 fw-bold">Case Description</div>
-                    <div class="col col-8">: @previewIncidentAccident.CaseDescription</div>
+                    <div class="col col-4 fw-bold">Deskripsi/Judul Kejadian</div>
+                    <div class="col col-8 text-wrap">: @previewIncidentAccident.CaseDescription</div>
                 </div>
                 <div class="row">
-                    <div class="col col-4 fw-bold">Occurence Date</div>
+                    <div class="col col-4 fw-bold">Tanggal Kejadian</div>
                     <div class="col col-8">: @previewIncidentAccident.OccurenceDate.ToString("dddd, dd MMMM yyyy")</div>
                 </div>
                 <div class="row">
-                    <div class="col col-4 fw-bold">Department Affected</div>
+                    <div class="col col-4 fw-bold">Departemen Terdampak</div>
                     <div class="col col-8">: @((ManagementService.departments.SingleOrDefault(x => x.DepartmentID.Equals(previewIncidentAccident.DepartmentAffected)) == null) ? previewIncidentAccident.DepartmentAffected : ManagementService.departments.SingleOrDefault(x => x.DepartmentID.Equals(previewIncidentAccident.DepartmentAffected)).DepartmentName) </div>
                 </div>
                 @{
@@ -1044,18 +1057,18 @@ else
                     var briskType = (briskSubType != null ? EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(briskSubType.RiskID)) : null);
                 }
                 <div class="row">
-                    <div class="col col-4 fw-bold">Risk Type</div>
-                    <div class="col col-8">: @(briskType != null ? briskType.RiskDescription : "")</div>
+                    <div class="col col-4 fw-bold">Tipe Risiko</div>
+                    <div class="col col-8 text-wrap">: @(briskType != null ? briskType.RiskDescription : "")</div>
                 </div>
                 <div class="row mb-4">
-                    <div class="col col-4 fw-bold">Risk Sub Type</div>
-                    <div class="col col-8">: @(briskSubType != null ? briskSubType.SubRiskDescription : "")</div>
+                    <div class="col col-4 fw-bold">Tipe Sub Risiko</div>
+                    <div class="col col-8 text-wrap">: @(briskSubType != null ? briskSubType.SubRiskDescription : "")</div>
                 </div>
 
                 @*split*@
 
                 <div class="row mt-4">
-                    <div class="col col-4 fw-bold">Cronology</div>
+                    <div class="col col-4 fw-bold">Kronologi</div>
                     <div class="col col-8 text-wrap">: @previewIncidentAccident.Cronology</div>
                 </div>
                 <div class="row">
@@ -1063,23 +1076,23 @@ else
                     <div class="col col-8 text-wrap">: @previewIncidentAccident.RootCause</div>
                 </div>
                 <div class="row">
-                    <div class="col col-4 fw-bold">Loss Description</div>
+                    <div class="col col-4 fw-bold">Deskripsi Kerugian</div>
                     <div class="col col-8 text-wrap">: @previewIncidentAccident.LossDescription</div>
                 </div>
                 <div class="row">
-                    <div class="col col-4 fw-bold">Loss Estimation</div>
+                    <div class="col col-4 fw-bold">Estimasi Kerugian</div>
                     <div class="col col-8">: Rp. @previewIncidentAccident.LossEstimation.ToString("N0") ,-</div>
                 </div>
                 <div class="row">
-                    <div class="col col-4 fw-bold">Return Amount</div>
+                    <div class="col col-4 fw-bold">Jumlah Pengembalian</div>
                     <div class="col col-8">: Rp. @previewIncidentAccident.ReturnAmount.ToString("N0") ,-</div>
                 </div>
                 <div class="row">
-                    <div class="col col-4 fw-bold">Risk Description</div>
+                    <div class="col col-4 fw-bold">Deskripsi Risiko</div>
                     <div class="col col-8 text-wrap">: @previewIncidentAccident.RiskDescription</div>
                 </div>
                 <div class="row">
-                    <div class="col col-4 fw-bold">Cause Description</div>
+                    <div class="col col-4 fw-bold">Dampak Kejadian</div>
                     <div class="col col-8 text-wrap">: @previewIncidentAccident.CauseDescription</div>
                 </div>
                 <div class="row mb-4">
@@ -1094,15 +1107,15 @@ else
                     <div class="col col-8">: @previewIncidentAccident.PIC</div>
                 </div>
                 <div class="row">
-                    <div class="col col-4 fw-bold">Target Date</div>
+                    <div class="col col-4 fw-bold">Tanggal Target</div>
                     <div class="col col-8">: @previewIncidentAccident.TargetDate.ToString("dddd, dd MMMM yyyy")</div>
                 </div>
                 <div class="row">
-                    <div class="col col-4 fw-bold">Mitigation Plan</div>
+                    <div class="col col-4 fw-bold">Deskripsi Rencana Mitigasi</div>
                     <div class="col col-8 text-wrap">: @previewIncidentAccident.MitigationPlan</div>
                 </div>
                 <div class="row">
-                    <div class="col col-4 fw-bold">Mitigation Date</div>
+                    <div class="col col-4 fw-bold">Tanggal Mitigasi</div>
                     <div class="col col-8">: @previewIncidentAccident.MitigationDate.ToString("dddd, dd MMMM yyyy")</div>
                 </div>
 
@@ -1113,7 +1126,7 @@ else
                         <div class="col col-8">: @previewIncidentAccident.ExtendedRootCause</div>
                     </div>
                     <div class="row">
-                        <div class="col col-4 fw-bold">RISK Mitigation Plan</div>
+                        <div class="col col-4 fw-bold">RISK Deskripsi Rencana Mitigasi</div>
                         <div class="col col-8">: @previewIncidentAccident.ExtendedMitigationPlan</div>
                     </div>
                 }
@@ -1183,15 +1196,15 @@ else
                                             
                                             <div class="row mb-2">
                                                 <div class="col">
-                                                    <label class="fw-bold">Name :</label>
+                                                    <label class="fw-bold">Nama :</label>
                                                     <input type="text" value="@involver.InvolverName" class="form-control-sm w-100 border-1" readonly />
                                                 </div>
                                                 <div class="col">
-                                                    <label class="fw-bold">Department :</label>
+                                                    <label class="fw-bold">Departemen :</label>
                                                     <input type="text" value="@(dept != null ? dept.DepartmentName : "NaN")" class="form-control-sm w-100 border-1" readonly />
                                                 </div>
                                                 <div class="col">
-                                                    <label class="fw-bold">Position :</label>
+                                                    <label class="fw-bold">Jabatan :</label>
                                                     <input type="text" value="@involver.InvolverPosition" class="form-control-sm w-100 border-1" readonly />
                                                 </div>
                                             </div>
@@ -1296,7 +1309,7 @@ else
                 {
                     <div class="card">
                         <div class="card-header">
-                            Let&quot;s Start a New Discussion
+                            Mulai Diskusi !
                         </div>
                         <div class="card-body">
                             <EditForm Model="@uploadDocumentDiscussion" OnSubmit="createDocumentDiscussion">
@@ -1314,7 +1327,7 @@ else
 
                                 <label for="discussionUploadFile" class="btn btn-primary-cus @(triggerReplyButton.Equals(false) ? null : "disabled")"><i class="oi oi-paperclip"></i> Attach</label>
                                 <InputFile id="discussionUploadFile" accept=".pdf" multiple hidden disabled="@(isLoading || triggerReplyButton ? "disabled" : null)" OnChange="@((InputFileChangeEventArgs args) => UploadHandleSelection(args, "New"))"></InputFile>
-                                <button type="submit" class="btn btn-primary-cus" disabled="@(isLoading || triggerReplyButton ? "disabled" : null)"><i class="oi oi-chat"></i> Comment</button>
+                                <button type="submit" class="btn btn-primary-cus" disabled="@(isLoading || triggerReplyButton ? "disabled" : null)"><i class="oi oi-chat"></i> Komentar</button>
                             </EditForm>
                         </div>
                     </div>
@@ -1329,12 +1342,12 @@ else
 
                         <div class="card mt-2">
                             <div class="card-header">
-                                <b> Topic #@discussion.rowGuid.Split("-")[0] </b>
+                                <b> Topik #@discussion.rowGuid.Split("-")[0] </b>
                             </div>
                             <div class="card-body">
                                 <blockquote class="blockquote mb-0">
                                     <p>@discussion.Comment</p>
-                                    <footer class="blockquote-footer">Commented by @discussion.UserName on @discussion.CommentDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")</footer>
+                                    <footer class="blockquote-footer">Komentar oleh @discussion.UserName pada @discussion.CommentDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")</footer>
                                 </blockquote>
 
                                 @if (LoginService.activeUser.userPrivileges.Contains("CR"))
@@ -1343,7 +1356,7 @@ else
                                     {
                                         <p class="mb-0 mt-3">
                                             <button class="btn btn-primary-cus" type="button" disabled="@(isLoading ? "disabled" : null)" @onclick="(() => triggerReplyButton = !triggerReplyButton)" data-toggle="collapse" data-target="#@discussion.formId" aria-expanded="false" aria-controls="@discussion.formId">
-                                                <i class="oi oi-chat"></i> Reply
+                                                <i class="oi oi-chat"></i> Balas
                                             </button>
                                         </p>
                                     }
@@ -1364,11 +1377,11 @@ else
                                                 }
 
                                                 <button class="btn btn-secondary" type="button" disabled="@(isLoading ? "disabled" : null)" @onclick="(() => triggerReplyButton = !triggerReplyButton)" data-toggle="collapse" data-target="#@discussion.formId" aria-expanded="false" aria-controls="@discussion.formId">
-                                                    <i class="oi oi-collapse-up"></i> Hide
+                                                    <i class="oi oi-collapse-up"></i> Tutup
                                                 </button>
-                                                <label for="discussionReplyUploadFile" class="btn btn-primary-cus @(triggerReplyButton.Equals(false) ? "disabled" : null)"><i class="oi oi-paperclip"></i> Reply Attach</label>
+                                                <label for="discussionReplyUploadFile" class="btn btn-primary-cus @(triggerReplyButton.Equals(false) ? "disabled" : null)"><i class="oi oi-paperclip"></i> Lampiran Balasan</label>
                                                 <InputFile id="discussionReplyUploadFile" accept=".pdf" multiple hidden disabled="@(isLoading || !triggerReplyButton ? "disabled" : null)" OnChange="@((InputFileChangeEventArgs args) => UploadHandleSelection(args, "Reply"))"></InputFile>
-                                                <button type="submit" class="btn btn-primary-cus" disabled="@(isLoading || !triggerReplyButton ? "disabled" : null)"><i class="oi oi-chat"></i> Reply Comment</button>
+                                                <button type="submit" class="btn btn-primary-cus" disabled="@(isLoading || !triggerReplyButton ? "disabled" : null)"><i class="oi oi-chat"></i> Balas Komentar</button>
                                             </EditForm>
                                         </div>
                                     </div>
@@ -1382,7 +1395,7 @@ else
                                             <div class="card-body">
                                                 <blockquote class="blockquote mb-0">
                                                     <p>@reply.Comment</p>
-                                                    <footer class="blockquote-footer">Replied by @reply.UserName on @reply.CommentDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")</footer>
+                                                    <footer class="blockquote-footer">Dibalas oleh @reply.UserName pada @reply.CommentDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")</footer>
                                                 </blockquote>
                                             </div>
                                         </div>                                        
@@ -1395,7 +1408,7 @@ else
                 else
                 {
                     <div class="alert alert-warning alert-dismissible fade show my-2" role="alert">
-                        <strong>Empty Discussion !</strong>
+                        <strong>Diskusi Kosong !</strong>
                     </div>
                 }
             </div>
@@ -1418,14 +1431,14 @@ else
             </div>
             <div class="modal-body">
                 <div class="row">
-                    <div class="col fw-bold text-wrap">Process PKRS Document as follow below, Are you sure ?</div>
+                    <div class="col fw-bold text-wrap">Proses dokumen PKRS seperti detail dibawah, sudah yakin ?</div>
                 </div>
                 <div class="row mt-4">
                     <div class="col fw-bold">Document ID</div>
                     <div class="col">: @previewDocumentApproval.DocumentID</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Action</div>
+                    <div class="col fw-bold">Aksi</div>
                     <div class="col">: @previewDocumentApproval.ApprovalAction</div>
                 </div>
                 <div class="row">
@@ -1433,7 +1446,7 @@ else
                     <div class="col">: @previewDocumentApproval.Approver</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Action Date</div>
+                    <div class="col fw-bold">Tanggal Aksi</div>
                     <div class="col">: @previewDocumentApproval.ApproveDate.ToString("dddd, dd MMMM yyyy")</div>
                 </div>
             </div>
@@ -1445,13 +1458,13 @@ else
                 @if (LoginService.activeUser.userPrivileges.Contains("AP"))
                 {
                     <button type="button" class="btn btn-success fw-bold"
-                            disabled="@(previewDocumentApproval.ApprovalAction.Equals("Approve") ? null : "disabled")"
+                            disabled="@(previewDocumentApproval.ApprovalAction.Equals("Approve") ? null : "disabled")" data-dismiss="modal" data-target="#approvalModal"
                             @onclick="@(() => createDocumentApprove("Approve"))"><i class="oi oi-thumb-up"></i> Approve !</button>
                 }
                 @if (LoginService.activeUser.userPrivileges.Contains("RL"))
                 {
                     <button type="button" class="btn btn-danger fw-bold"
-                            disabled="@(previewDocumentApproval.ApprovalAction.Equals("Close") ? null : "disabled")"
+                            disabled="@(previewDocumentApproval.ApprovalAction.Equals("Close") ? null : "disabled")" data-dismiss="modal" data-target="#approvalModal"
                             @onclick="@(() => createDocumentApprove("Close"))"><i class="oi oi-thumb-up"></i> Close !</button>
                 }
                 @if (LoginService.activeUser.userPrivileges.Contains("DL"))
@@ -1459,13 +1472,13 @@ else
                     if (itemCasedt != null)
                     {
                         <button type="button" class="btn btn-danger fw-bold"
-                            disabled="@(previewDocumentApproval.ApprovalAction.Equals("Delete") ? null : "disabled")"
+                            disabled="@(previewDocumentApproval.ApprovalAction.Equals("Delete") ? null : "disabled")" data-dismiss="modal" data-target="#approvalModal"
                             @onclick="@(() => deleteEPKRSDocument("ITCASE"))"><i class="oi oi-thumb-up"></i> Delete !</button>
                     }
                     if (incAccdt != null) 
                     {
                         <button type="button" class="btn btn-danger fw-bold"
-                            disabled="@(previewDocumentApproval.ApprovalAction.Equals("Delete") ? null : "disabled")"
+                                disabled="@(previewDocumentApproval.ApprovalAction.Equals("Delete") ? null : "disabled")" data-dismiss="modal" data-target="#approvalModal"
                             @onclick="@(() => deleteEPKRSDocument("INCAC"))"><i class="oi oi-thumb-up"></i> Delete !</button>
                     }
                 }
@@ -1487,14 +1500,14 @@ else
             </div>
             <div class="modal-body">
                 <div class="row">
-                    <div class="col fw-bold text-wrap">Process PKRS Document Status as On Progress, Are you sure ?</div>
+                    <div class="col fw-bold text-wrap">Proses dokumen PKRS seperti detail dibawah, sudah yakin ?</div>
                 </div>
                 <div class="row mt-4">
                     <div class="col fw-bold">Document ID</div>
                     <div class="col">: @previewDocumentApproval.DocumentID</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Approval Action</div>
+                    <div class="col fw-bold">Aksi</div>
                     <div class="col">: @previewDocumentApproval.ApprovalAction</div>
                 </div>
                 <div class="row">
@@ -1502,7 +1515,7 @@ else
                     <div class="col">: @previewDocumentApproval.Approver</div>
                 </div>
                 <div class="row">
-                    <div class="col fw-bold">Action Date</div>
+                    <div class="col fw-bold">Tanggal Aksi</div>
                     <div class="col">: @previewDocumentApproval.ApproveDate.ToString("dddd, dd MMMM yyyy")</div>
                 </div>
                 
@@ -1511,7 +1524,7 @@ else
                     <EditForm Model="@updateItemCase" class="my-3">
                         <div class="row">
                             <div class="col">
-                                <label for="ext_mitigation">RISK Mitigation Plan :</label>
+                                <label for="ext_mitigation">RISK Deskripsi Rencana Mitigasi :</label>
                                 <InputTextArea id="ext_mitigation" @bind-Value="updateItemCase.ExtendedMitigationPlan" class="form-control" disabled="@(updateItemCase.DocumentStatus.Equals("Closed") ? "disabled" : null)"></InputTextArea>
                             </div>
                         </div>
@@ -1529,7 +1542,7 @@ else
                         </div>
                         <div class="row">
                             <div class="col">
-                                <label for="ext_mitigation">RISK Mitigation Plan :</label>
+                                <label for="ext_mitigation">RISK Deskripsi Rencana Mitigasi :</label>
                                 <InputTextArea id="ext_mitigation" @bind-Value="updateIncidentAccident.ExtendedMitigationPlan" class="form-control" disabled="@(updateIncidentAccident.DocumentStatus.Equals("Closed") ? "disabled" : null)"></InputTextArea>
                             </div>
                         </div>
@@ -1562,7 +1575,7 @@ else
                                         </td>
                                         <td class="text-center align-middle text-wrap">
                                             <select id="dept_id" @bind="person.InvolverTypeID" class="form-select">
-                                                <option hidden value="BLANK">Select Type</option>   
+                                                <option hidden value="BLANK">Pilih Tipe</option>   
 
                                                 @foreach (var type in EPKRSService.involverType)
                                                 {
@@ -1594,14 +1607,14 @@ else
                     else
                     {
                         <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
-                            <strong>No Party Involved !</strong>
+                            <strong>Tidak ada yang Terlibat !</strong>
                         </div>
                     }
                 }
 
             </div>
             <div class="modal-footer cus-bg">
-                <button type="button" class="btn btn-success fw-bold"
+                <button type="button" class="btn btn-success fw-bold" data-dismiss="modal" data-target="#onprogressModal"
                         disabled="@(previewDocumentApproval.ApprovalAction.Equals("OnProgress") ? null : "disabled")"
                         @onclick="@(() => createDocumentApproveExtended("OnProgress"))">
                     <i class="oi oi-thumb-up"></i> On Progress !

@@ -8,13 +8,14 @@ namespace BPIDA.DataAccess
     public class CashierLogbookDA
     {
         private readonly IConfiguration _configuration;
-        private readonly string _conString;
+        private readonly string _conString, _moduleConnection;
         private readonly int _rowPerPage;
 
         public CashierLogbookDA(IConfiguration config)
         {
             _configuration = config;
-            _conString = _configuration.GetValue<string>("ConnectionStrings:Bpi");
+            _moduleConnection = _configuration.GetValue<string>("ModuleConnection:CashierLogbook");
+            _conString = _configuration.GetValue<string>($"ConnectionStrings:{_moduleConnection}");
             _rowPerPage = _configuration.GetValue<int>("Paging:CashierLogbook:RowPerPage");
         }
 

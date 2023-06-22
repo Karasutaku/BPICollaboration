@@ -72,12 +72,15 @@ namespace BPIWebApplication.Shared.MainModel.EPKRS
     public class LoadingManifestResp
     {
         private string loc = string.Empty;
-        private DateTime date;
+        private DateTime sentreqdate;
+        private DateTime createdate;
 
         public string lmNo { get; set; } = string.Empty;
-        public string siteNo {
+        public string siteNo
+        {
             get => loc;
-            set {
+            set
+            {
                 loc = new string(value.ToCharArray().Where(c => !Char.IsWhiteSpace(c)).ToArray());
             }
         }
@@ -86,12 +89,23 @@ namespace BPIWebApplication.Shared.MainModel.EPKRS
         public string itemDesc { get; set; } = string.Empty;
         public decimal itemValue { get; set; } = decimal.Zero;
         public string uom { get; set; } = string.Empty;
-        public string sentRequestDate { 
-            get => date.ToString("yyyy-MM-dd");
-            set { 
-                date = Convert.ToDateTime(new string(value.ToCharArray().Where(c => !Char.IsWhiteSpace(c)).ToArray()));
-            } 
+        public string sentRequestDate
+        {
+            get => sentreqdate.ToString("yyyy-MM-dd");
+            set
+            {
+                sentreqdate = Convert.ToDateTime(new string(value.ToCharArray().Where(c => !Char.IsWhiteSpace(c)).ToArray()));
+            }
         }
-    }
+        public string createdDate
+        {
+            get => createdate.ToString("yyyy-MM-dd");
+            set
+            {
+                createdate = Convert.ToDateTime(new string(value.ToCharArray().Where(c => !Char.IsWhiteSpace(c)).ToArray()));
+            }
 
+        }
+
+    }
 }

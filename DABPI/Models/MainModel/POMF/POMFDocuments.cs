@@ -9,10 +9,6 @@
         public string ReceiptNo { get; set; } = string.Empty;
         public string NPNo { get; set; } = string.Empty;
         public string NPTypeID { get; set; } = string.Empty;
-        public string ExternalRequestDocument { get; set; } = string.Empty;
-        public DateTime RequestDocumentDate { get; set;} = DateTime.Now;
-        public string ExternalReceiveDocument { get; set; } = string.Empty;
-        public DateTime ReceiveDocumentDate { get; set; } = DateTime.Now;
         public string Requester { get; set; } = string.Empty;
         public string DocumentStatus { get; set; } = string.Empty;
     }
@@ -27,6 +23,11 @@
         public int NPQuantity { get; set; } = 0;
         public string ItemUOM { get; set; } = string.Empty;
         public decimal ItemValue { get; set; } = decimal.Zero;
+        public string RequestToSite { get; set; } = string.Empty;
+        public string ExternalRequestDocument { get; set; } = string.Empty;
+        public DateTime? RequestDocumentDate { get; set; } = DateTime.Now;
+        public string ExternalReceiveDocument { get; set; } = string.Empty;
+        public DateTime? ReceiveDocumentDate { get; set; } = DateTime.Now;
     }
 
     public class POMFApproval

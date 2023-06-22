@@ -224,11 +224,11 @@ namespace BPIWebApplication.Client.Pages.POMFPages
                             UOM = dt.ItemUOM,
                             Price = decimal.Zero,
                             Discount = 0,
-                            VAT = "PPN11"
+                            VAT = "PPN11%"
                         });
                     }
 
-                    var streamdt = CommonLibrary.ListToCSV<POMFExportCSVModel>(exportData, ";");
+                    var streamdt = CommonLibrary.ListToCSV<POMFExportCSVModel>(exportData, ";", false);
                     using var streamRef = new DotNetStreamReference(stream: streamdt);
 
                     await _jsModule.InvokeVoidAsync("downloadFileFromStream", $"POMF Export {DateTime.Now.ToString("ddMMyyyy")}.csv", streamRef);
@@ -293,13 +293,13 @@ namespace BPIWebApplication.Client.Pages.POMFPages
                 }
                 else
                 {
-                    if (approveType.Equals("Release") && editPOMFDocumentHeader.ExternalRequestDocument.IsNullOrEmpty())
+                    if (approveType.Equals("Release") && previewPOMFDocument.dataItemLines.Any(x => x.ExternalRequestDocument.IsNullOrEmpty()))
                     {
                         await _jsModule.InvokeVoidAsync("showAlert", "Request Document Input Field is Empty !");
                         return;
                     }
 
-                    if (approveType.Equals("Receive") && editPOMFDocumentHeader.ExternalReceiveDocument.IsNullOrEmpty())
+                    if (approveType.Equals("Receive") && previewPOMFDocument.dataItemLines.Any(x => x.ExternalReceiveDocument.IsNullOrEmpty()))
                     {
                         await _jsModule.InvokeVoidAsync("showAlert", "Receive Document Input Field is Empty !");
                         return;
@@ -309,23 +309,19 @@ namespace BPIWebApplication.Client.Pages.POMFPages
 
                     QueryModel<POMFApprovalStreamExtended> uploadData = new();
                     uploadData.Data = new();
-                    uploadData.Data.pomfHeader = new();
+                    uploadData.Data.pomfItemLines = new();
                     uploadData.Data.approvalData = new();
 
-                    //previewPOMFApproval.ApproveDate = DateTime.Now;
+                    if (approveType.Equals("Release"))
+                        previewPOMFDocument.dataItemLines.ForEach(x => { x.ExternalReceiveDocument = string.Empty; x.ReceiveDocumentDate = new DateTime(2023, 1, 1); });
 
-                    uploadData.Data.pomfHeader = editPOMFDocumentHeader;
+                    //if (approveType.Equals("Receive"))
+                    //    previewPOMFDocument.dataItemLines.ForEach(x => { x.ReceiveDocumentDate = DateTime.Now; });
+
+                    uploadData.Data.LocationID = activeUser.location.Equals("") ? "HO" : activeUser.location;
+                    uploadData.Data.pomfItemLines = previewPOMFDocument.dataItemLines;
                     uploadData.Data.approvalData = previewPOMFApproval;
                     uploadData.Data.approvalData.ApproveDate = DateTime.Now;
-
-                    if (approveType.Equals("Release"))
-                    {
-                        uploadData.Data.pomfHeader.RequestDocumentDate = DateTime.Now;
-                        uploadData.Data.pomfHeader.ReceiveDocumentDate = DateTime.MinValue.AddYears(1800);
-                    }
-
-                    if (approveType.Equals("Receive"))
-                        uploadData.Data.pomfHeader.ReceiveDocumentDate = DateTime.Now;
 
                     uploadData.userEmail = activeUser.userName;
                     uploadData.userAction = "I";
@@ -337,14 +333,16 @@ namespace BPIWebApplication.Client.Pages.POMFPages
                     {
                         string param = approveType.Equals("Verify") ? "Verified" : approveType.Equals("Confirm") ? "Confirmed" : approveType.Equals("Release") ? "Released" : approveType.Equals("Receive") ? "Received" : "NAN";
 
-                        previewPOMFDocument.dataHeader = res.Data.Data.pomfHeader;
+                        previewPOMFDocument.dataItemLines = res.Data.Data.pomfItemLines;
                         previewPOMFDocument.dataApproval.Add(res.Data.Data.approvalData);
                         POMFService.pomfDocuments.SingleOrDefault(x => x.dataHeader.POMFID.Equals(previewPOMFApproval.POMFID)).dataHeader.DocumentStatus = param;
 
+                        Thread.Sleep(400);
                         await _jsModule.InvokeVoidAsync("showAlert", "Update Status Success !");
                     }
                     else
                     {
+                        Thread.Sleep(400);
                         await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
                     }
                 }

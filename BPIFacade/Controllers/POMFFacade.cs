@@ -7,12 +7,12 @@ namespace BPIFacade.Controllers
 {
     [Route("api/Facade/POMF")]
     [ApiController]
-    public class POMFController : ControllerBase
+    public class POMFFacade : ControllerBase
     {
         private readonly HttpClient _http;
         private readonly IConfiguration _configuration;
 
-        public POMFController(HttpClient http, IConfiguration config)
+        public POMFFacade(HttpClient http, IConfiguration config)
         {
             _http = http;
             _configuration = config;

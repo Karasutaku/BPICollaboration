@@ -57,8 +57,7 @@ else
 
                     <div class="row my-2">
                         <div class="col">
-
-                            <label for="riskId">Tipe Reporting :</label>
+                            <label for="riskId">Tipe Reporting : <i class="text-danger">&ast;</i></label>
                             @if (param == null)
                             {
                                 <select id="riskId" class="form-select" @onchange="reportingTypeonChange" disabled="@((isLoading || successUpload) ? "disabled" : null)">
@@ -67,6 +66,9 @@ else
                                         <option hidden value="BLANK">Pilih Tipe Reporting</option>
                                         @foreach (var reportType in EPKRSService.reportingTypes)
                                         {
+                                            @if (activeUser.location.Equals("") && reportType.ReportingID.Equals("ITEMC"))
+                                                continue;
+
                                             <option value="@reportType.ReportingID">@reportType.ReportingDescription</option>
                                         }
                                     }
@@ -106,7 +108,7 @@ else
                             {
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="risk_id">Tipe Risiko :</label>
+                                        <label for="risk_id">Tipe Risiko : <i class="text-danger">&ast;</i></label>
                                         <InputSelect id="risk_id" @bind-Value="RiskID" class="form-select" disabled="@(isLoading || successUpload)">
                                             @if (checkRiskType())
                                             {
@@ -124,9 +126,10 @@ else
                                                 <option disabled hidden value="BLANK">Data Empty</option>
                                             }
                                         </InputSelect>
+                                        <ValidationMessage For="(() => RiskID)" />
                                     </div>
                                     <div class="col">
-                                        <label for="subrisk_id">Sub Tipe Risiko :</label>
+                                        <label for="subrisk_id">Sub Tipe Risiko : <i class="text-danger">&ast;</i></label>
                                         <InputSelect id="subrisk_id" @bind-Value="itemCaseData.SubRiskID" class="form-select" disabled="@(isLoading || successUpload)">
                                             @if (checkSubRiskType())
                                             {
@@ -144,6 +147,7 @@ else
                                                 <option disabled hidden value="BLANK">Data Empty</option>
                                             }
                                         </InputSelect>
+                                        <ValidationMessage For="(() => itemCaseData.SubRiskID)" />
                                     </div>
                                 </div>
 
@@ -160,12 +164,15 @@ else
                                         <InputText id="site_reporter" @bind-Value="itemCaseData.SiteReporter" class="form-control" readonly></InputText>
                                     </div>
                                     <div class="col">
-                                        <label for="site_sender">Site Pengirim :</label>
+                                        <label for="site_sender">Site Pengirim : <i class="text-danger">&ast;</i></label>
                                         <InputSelect id="site_sender" @bind-Value="itemCaseData.SiteSender" class="form-select" disabled="@(isLoading || successUpload)">
                                             @if (checkLocation())
                                             {
                                                 @foreach (var location in ManagementService.locations)
                                                 {
+                                                    @*if (!location.locationName.Contains("DC"))
+                                                        continue;*@
+
                                                     <option value="@location.locationId">@location.locationId - @location.locationName</option>
                                                 }
                                             }
@@ -174,68 +181,38 @@ else
                                                 <option disabled value="BLANK">Location Empty</option>
                                             }
                                         </InputSelect>
+                                        <ValidationMessage For="(() => itemCaseData.SiteSender)" />
                                     </div>
                                 </div>
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="report_date">Tanggal Pelaporan :</label>
+                                        <label for="report_date">Tanggal Pelaporan : </label>
                                         <InputDate id="report_date" @bind-Value="itemCaseData.ReportDate" class="form-control" readonly></InputDate>
                                     </div>
                                     <div class="col">
-                                        <label for="pickup_date">Tanggal Penerimaan Barang :</label>
+                                        <label for="pickup_date">Tanggal Penerimaan Barang : <i class="text-danger">&ast;</i></label>
                                         <InputDate id="pickup_date" @bind-Value="itemCaseData.ItemPickupDate" class="form-control" disabled="@(isLoading || successUpload)"></InputDate>
+                                        <ValidationMessage For="(() => itemCaseData.ItemPickupDate)" />
                                     </div>
                                 </div>
-
-                                @*<div class="row my-2">
-                                    <div class="col">
-                                        <label for="late">Apakah Penerimaan Barang Terlambat?</label>
-                                        <select id="late" class="form-select" @bind="isLate" disabled="@(isLoading || successUpload)">
-                                            <option hidden disabled value="BLANK">Select Condition</option>
-                                            <option value="YES">Yes</option>
-                                            <option value="NO">No</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="row my-2">
-                                    <div class="col">
-                                        <label for="cctv_covered">Apakah Penerimaan Barang Tercover CCTV?</label>
-                                        <select id="cctv_covered" class="form-select" @bind="isCCTVCovered" disabled="@(isLoading || successUpload)">
-                                            <option hidden disabled value="BLANK">Select Condition</option>
-                                            <option value="YES">Yes</option>
-                                            <option value="NO">No</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="row my-2">
-                                    <div class="col">
-                                        <label class="text-wrap" for="reported">Apakah Berita Acara Investigasi serta bukti CCTV sudah disampaikan ke LP Pengirim Barang?</label>
-                                        <select id="reported" class="form-select" @bind="isReportedtoSender" disabled="@(isLoading || successUpload)">
-                                            <option hidden disabled value="BLANK">Select Condition</option>
-                                            <option value="YES">Yes</option>
-                                            <option value="NO">No</option>
-                                        </select>
-                                    </div>
-                                </div>*@
-
                             }
 
                             @if (formPage == 2)
                             {
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="ld_id">Loading Document ID :</label>
+                                        <label for="ld_id">Loading Document ID : <i class="text-danger">&ast;</i></label>
                                         <div id="ld_id" class="input-group">
                                             <InputText @bind-Value="itemCaseData.LoadingDocumentID" class="form-control" disabled="@(isLoading || successUpload)"></InputText>
                                             <button type="button" class="btn btn-sm btn-primary-cus" data-toggle="modal" data-target="#selectitembyLMModal" @onclick="selectItembyLoadingDocumentID" disabled="@(isLoading || successUpload)">...</button>
+                                            <ValidationMessage For="(() => itemCaseData.LoadingDocumentID)" />
                                         </div>
                                     </div>
                                     <div class="col">
-                                        <label for="ld_date">Loading Document Date :</label>
-                                        <InputDate id="ld_date" @bind-Value="itemCaseData.LoadingDocumentDate" class="form-control" disabled="@(isLoading || successUpload)"></InputDate>
+                                        <label for="ld_date">Tanggal Loading Document : <i class="text-danger">&ast;</i></label>
+                                        <InputDate id="ld_date" @bind-Value="itemCaseData.LoadingDocumentDate" class="form-control" disabled></InputDate>
+                                        <ValidationMessage For="(() => itemCaseData.LoadingDocumentDate)" />
                                     </div>
                                 </div>
 
@@ -246,13 +223,13 @@ else
                                             <thead>
                                                 <tr class="table-primary">
                                                     <th class="text-center align-middle text-wrap" style="width: 13%;">TR ID</th>
-                                                    <th class="text-center align-middle text-wrap" style="width: 11%;">Item Code</th>
-                                                    <th class="text-center align-middle text-wrap" style="width: 30%;">Description</th>
-                                                    <th class="text-center align-middle text-wrap" style="width: 8%;">Qty</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 11%;">Kode Barang</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 30%;">Detail Barang</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 8%;">Qty <i class="text-danger">&ast;</i></th>
                                                     <th class="text-center align-middle text-wrap" style="width: 6%;">UOM</th>
-                                                    <th class="text-center align-middle text-wrap" style="width: 17%;">Item Value</th>
-                                                    <th class="text-center align-middle text-wrap" style="width: 8%;">Qty Stock</th>
-                                                    <th class="text-center align-middle text-wrap" style="width: 5%;">Item Status</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 17%;">Nilai Satuan</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 8%;">Qty Stock <i class="text-danger">&ast;</i></th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 5%;">Item Status <i class="text-danger">&ast;</i></th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -276,7 +253,7 @@ else
 
                                                                         <div class="row my-1">
                                                                             <div class="col">
-                                                                                <label for="epkrs_itemcat">Tipe Barang Bermasalah :</label>
+                                                                                <label for="epkrs_itemcat">Tipe Barang Bermasalah : <i class="text-danger">&ast;</i></label>
                                                                                 <select id="epkrs_itemcat" class="form-select" @bind="@line.ItemRiskCategoryID" disabled="@(isLoading || successUpload)">
                                                                                     <option value="BLANK" hidden>Select Sub Cat.</option>
                                                                                     @if (checkItemRiskCategory())
@@ -296,7 +273,7 @@ else
 
                                                                         <div class="row my-1">
                                                                             <div class="col">
-                                                                                <label for="late">Apakah Penerimaan Barang Terlambat ?</label>
+                                                                                <label for="late">Apakah Penerimaan Barang Terlambat ? <i class="text-danger">&ast;</i></label>
                                                                                 <select id="late" class="form-select" @bind="line.isLate" disabled="@(isLoading || successUpload)">
                                                                                     <option hidden disabled value="BLANK">Select Condition</option>
                                                                                     <option value="TRUE">Ya</option>
@@ -307,7 +284,7 @@ else
 
                                                                         <div class="row my-1">
                                                                             <div class="col">
-                                                                                <label for="cctv_covered">Apakah Penerimaan Barang Tercover CCTV ?</label>
+                                                                                <label for="cctv_covered">Apakah Penerimaan Barang Tercover CCTV ? <i class="text-danger">&ast;</i></label>
                                                                                 <select id="cctv_covered" class="form-select" @bind="line.isCCTVCoverable" disabled="@(isLoading || successUpload)">
                                                                                     <option hidden disabled value="BLANK">Select Condition</option>
                                                                                     <option value="TRUE">Ya</option>
@@ -318,7 +295,7 @@ else
 
                                                                         <div class="row my-1">
                                                                             <div class="col">
-                                                                                <label class="text-wrap" for="reported">Apakah Berita Acara Investigasi serta bukti CCTV sudah disampaikan ke LP Pengirim Barang ?</label>
+                                                                                <label class="text-wrap" for="reported">Apakah Berita Acara Investigasi serta bukti CCTV sudah disampaikan ke LP Pengirim Barang ? <i class="text-danger">&ast;</i></label>
                                                                                 <select id="reported" class="form-select" @bind="line.isReportedtoSender" disabled="@(isLoading || successUpload)">
                                                                                     <option hidden disabled value="BLANK">Select Condition</option>
                                                                                     <option value="TRUE">Ya</option>
@@ -373,7 +350,7 @@ else
                                                 <tr>
                                                     <th class="text-center align-middle text-wrap" style="width: 5%;">Action</th>
                                                     <th class="text-center align-middle text-wrap" style="width: 40%;">File Name</th>
-                                                    <th class="text-center align-middle text-wrap" style="width: 25%; background-color:aquamarine;">Select File</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 25%; background-color:aquamarine;">Select File <i class="text-danger">&ast;</i></th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -438,7 +415,7 @@ else
                             {
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="risk_id">Tipe Risiko :</label>
+                                        <label for="risk_id">Tipe Risiko : <i class="text-danger">&ast;</i></label>
                                         <InputSelect id="risk_id" @bind-Value="RiskID" class="form-select" disabled="@((isLoading || successUpload) ? "disabled" : null)">
                                             @if (checkRiskType())
                                             {
@@ -456,9 +433,10 @@ else
                                                 <option disabled hidden value="BLANK">Data Empty</option>
                                             }
                                         </InputSelect>
+                                        <ValidationMessage For="(() => RiskID)" />
                                     </div>
                                     <div class="col">
-                                        <label for="subrisk_id">Sub Tipe Risiko :</label>
+                                        <label for="subrisk_id">Sub Tipe Risiko : <i class="text-danger">&ast;</i></label>
                                         <InputSelect id="subrisk_id" @bind-Value="incidentaccidentData.SubRiskID" class="form-select" disabled="@((isLoading || successUpload) ? "disabled" : null)">
                                             @if (checkSubRiskType())
                                             {
@@ -476,6 +454,7 @@ else
                                                 <option disabled hidden value="BLANK">Data Empty</option>
                                             }
                                         </InputSelect>
+                                        <ValidationMessage For="(() => incidentaccidentData.SubRiskID)" />
                                     </div>
                                 </div>
 
@@ -492,7 +471,7 @@ else
                                         <InputDate id="report_date" @bind-Value="incidentaccidentData.ReportDate" class="form-control" readonly></InputDate>
                                     </div>
                                     <div class="col">
-                                        <label for="occur_date">Tanggal Kejadian :</label>
+                                        <label for="occur_date">Tanggal Kejadian : <i class="text-danger">&ast;</i></label>
                                         <InputDate id="occur_date" @bind-Value="incidentaccidentData.OccurenceDate" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputDate>
                                         <ValidationMessage For="(() => incidentaccidentData.OccurenceDate)" />
                                     </div>
@@ -504,7 +483,7 @@ else
                                         <InputText id="loc_report" @bind-Value="incidentaccidentData.SiteReporter" class="form-control" readonly></InputText>
                                     </div>
                                     <div class="col">
-                                        <label for="dept_id">Department Pelapor :</label>
+                                        <label for="dept_id">Department Pelapor : <i class="text-danger">&ast;</i></label>
                                         <InputSelect id="dept_id" @bind-Value="incidentaccidentData.DepartmentReporter" class="form-select" disabled="@((isLoading || successUpload) ? "disabled" : null)">
                                             <option hidden value="0">Select Department</option>
 
@@ -519,26 +498,26 @@ else
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="riskrpname">Nama Risk RP :</label>
+                                        <label for="riskrpname">Nama Risk RP : <i class="text-danger">&ast;</i></label>
                                         <InputText id="riskrpname" @bind-Value="incidentaccidentData.RiskRPName" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
                                         <ValidationMessage For="(() => incidentaccidentData.RiskRPName)" />
                                     </div>
                                     <div class="col">
-                                        <label for="riskrpemail">Email Risk RP :</label>
-                                        <InputText id="riskrpemail" @bind-Value="incidentaccidentData.RiskRPEmail" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
+                                        <label for="riskrpemail">Email Risk RP : <i class="text-danger">&ast;</i></label>
+                                        <InputText id="riskrpemail" @bind-Value="incidentaccidentData.RiskRPEmail" placeholder="email_mitra@mitra10.com" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
                                         <ValidationMessage For="(() => incidentaccidentData.RiskRPEmail)" />
                                     </div>
                                 </div>
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="dormname">Nama DORM :</label>
+                                        <label for="dormname">Nama DORM : <i class="text-danger">&ast;</i></label>
                                         <InputText id="riskrpname" @bind-Value="incidentaccidentData.DORMName" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
                                         <ValidationMessage For="(() => incidentaccidentData.DORMName)" />
                                     </div>
                                     <div class="col">
-                                        <label for="dormemail">Email DORM :</label>
-                                        <InputText id="riskrpemail" @bind-Value="incidentaccidentData.DORMEmail" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
+                                        <label for="dormemail">Email DORM : <i class="text-danger">&ast;</i></label>
+                                        <InputText id="riskrpemail" @bind-Value="incidentaccidentData.DORMEmail" placeholder="email_mitra@mitra10.com" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
                                         <ValidationMessage For="(() => incidentaccidentData.DORMEmail)" />
                                     </div>
                                 </div>
@@ -548,7 +527,7 @@ else
                             {
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="case_desc">Deskripsi/Judul Kejadian :</label>
+                                        <label for="case_desc">Deskripsi/Judul Kejadian : <i class="text-danger">&ast;</i></label>
                                         <InputText id="case_desc" @bind-Value="incidentaccidentData.CaseDescription" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
                                         <ValidationMessage For="(() => incidentaccidentData.CaseDescription)" />
                                     </div>
@@ -556,7 +535,7 @@ else
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="affected_dept">Department Terdampak :</label>
+                                        <label for="affected_dept">Department Terdampak : <i class="text-danger">&ast;</i></label>
                                         <InputSelect id="affected_dept" @bind-Value="incidentaccidentData.DepartmentAffected" class="form-select" disabled="@((isLoading || successUpload) ? "disabled" : null)">
                                             <option hidden value="0">Select Department</option>
 
@@ -571,7 +550,7 @@ else
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="cronology">Cronology :</label>
+                                        <label for="cronology">Kronologi : <i class="text-danger">&ast;</i></label>
                                         <InputTextArea id="cronology" @bind-Value="incidentaccidentData.Cronology" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputTextArea>
                                         <ValidationMessage For="(() => incidentaccidentData.Cronology)" />
                                     </div>
@@ -579,7 +558,7 @@ else
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="rootcause">Root Cause :</label>
+                                        <label for="rootcause">Root Cause : <i class="text-danger">&ast;</i></label>
                                         <InputTextArea id="rootcause" @bind-Value="incidentaccidentData.RootCause" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputTextArea>
                                         <ValidationMessage For="(() => incidentaccidentData.RootCause)" />
                                     </div>
@@ -590,7 +569,7 @@ else
                             {
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="lossdesc">Deskripsi Kerugian :</label>
+                                        <label for="lossdesc">Deskripsi Kerugian : <i class="text-danger">&ast;</i></label>
                                         <InputTextArea id="lossdesc" @bind-Value="incidentaccidentData.LossDescription" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputTextArea>
                                         <ValidationMessage For="(() => incidentaccidentData.LossDescription)" />
                                     </div>
@@ -598,7 +577,7 @@ else
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="loss_amount">Estimasi Kerugian (Rp) :</label>
+                                        <label for="loss_amount">Estimasi Kerugian (Rp) : <i class="text-danger">&ast;</i></label>
                                         <InputNumber id="loss_amount" @bind-Value="incidentaccidentData.LossEstimation" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)" @oninput="@((ChangeEventArgs e) => { try { if (e.Value.ToString().Length > 0) { previewLossEstimationAmount = "Rp. " + Convert.ToDecimal(e.Value).ToString("N0") + ",-"; } else { previewLossEstimationAmount = ""; } } catch (Exception exc) { } })"></InputNumber>
                                     </div>
                                     <div class="col">
@@ -609,7 +588,7 @@ else
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="return_amount">Jumlah Pengembalian (Rp) :</label>
+                                        <label for="return_amount">Jumlah Pengembalian (Rp) : <i class="text-danger">&ast;</i></label>
                                         <InputNumber id="return_amount" @bind-Value="incidentaccidentData.ReturnAmount" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)" @oninput="@((ChangeEventArgs e) => { try { if (e.Value.ToString().Length > 0) { previewReturnAmount = "Rp. " + Convert.ToDecimal(e.Value).ToString("N0") + ",-"; } else { previewReturnAmount = ""; } } catch (Exception exc) { } })"></InputNumber>
                                     </div>
                                     <div class="col">
@@ -620,7 +599,7 @@ else
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="riskdesc">Deskripsi Risiko :</label>
+                                        <label for="riskdesc">Deskripsi Risiko : <i class="text-danger">&ast;</i></label>
                                         <InputTextArea id="riskdesc" @bind-Value="incidentaccidentData.RiskDescription" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputTextArea>
                                         <ValidationMessage For="(() => incidentaccidentData.RiskDescription)" />
                                     </div>
@@ -628,7 +607,7 @@ else
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="causedesc">Dampak Kejadian :</label>
+                                        <label for="causedesc">Dampak Kejadian : <i class="text-danger">&ast;</i></label>
                                         <InputTextArea id="causedesc" @bind-Value="incidentaccidentData.CauseDescription" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputTextArea>
                                         <ValidationMessage For="(() => incidentaccidentData.CauseDescription)" />
                                     </div>
@@ -639,15 +618,15 @@ else
                             {
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="mitigation_pic">Email PIC :</label>
-                                        <InputText id="mitigation_pic" @bind-Value="incidentaccidentData.PIC" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
+                                        <label for="mitigation_pic">Email PIC : <i class="text-danger">&ast;</i></label>
+                                        <InputText id="mitigation_pic" @bind-Value="incidentaccidentData.PIC" placeholder="email_mitra@mitra10.com" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
                                         <ValidationMessage For="(() => incidentaccidentData.PIC)" />
                                     </div>
                                 </div>
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="action_plan">Action Plan :</label>
+                                        <label for="action_plan">Action Plan : <i class="text-danger">&ast;</i></label>
                                         <InputTextArea id="action_plan" @bind-Value="incidentaccidentData.ActionPlan" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputTextArea>
                                         <ValidationMessage For="(() => incidentaccidentData.ActionPlan)" />
                                     </div>
@@ -655,12 +634,12 @@ else
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="target_date">Tanggal Target :</label>
+                                        <label for="target_date">Tanggal Target : <i class="text-danger">&ast;</i></label>
                                         <InputDate id="target_date" @bind-Value="incidentaccidentData.TargetDate" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputDate>
                                         <ValidationMessage For="(() => incidentaccidentData.TargetDate)" />
                                     </div>
                                     <div class="col">
-                                        <label for="mitigate_date">Tanggal Mitigasi :</label>
+                                        <label for="mitigate_date">Tanggal Mitigasi : <i class="text-danger">&ast;</i></label>
                                         <InputDate id="mitigate_date" @bind-Value="incidentaccidentData.MitigationDate" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputDate>
                                         <ValidationMessage For="(() => incidentaccidentData.MitigationDate)" />
                                     </div>
@@ -668,7 +647,7 @@ else
 
                                 <div class="row my-2">
                                     <div class="col">
-                                        <label for="mitigate_plan">Deskripsi Rencana Mitigasi :</label>
+                                        <label for="mitigate_plan">Deskripsi Rencana Mitigasi : <i class="text-danger">&ast;</i></label>
                                         <InputTextArea id="mitigate_plan" @bind-Value="incidentaccidentData.MitigationPlan" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputTextArea>
                                         <ValidationMessage For="(() => incidentaccidentData.MitigationPlan)" />
                                     </div>
@@ -697,7 +676,7 @@ else
                                                 @foreach (var file in fileUploads)
                                                 {
                                                     <tr>
-                                                        <td class="text-center align-middle text-wrap"><button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="(() => fileUploads.Remove(file))"><i class="oi oi-delete" disabled="@((isLoading || successUpload) ? "disabled" : null)"></i></button></td>
+                                                        <td class="text-center align-middle text-wrap"><button type="button" class="btn btn-sm btn-danger h-100 w-100" disabled="@((isLoading || successUpload) ? "disabled" : null)" @onclick="(() => fileUploads.Remove(file))"><i class="oi oi-delete" disabled="@((isLoading || successUpload) ? "disabled" : null)"></i></button></td>
                                                         <td class="text-center align-middle text-wrap">@file.fileName</td>
                                                         <td class="text-center align-middle text-wrap"><InputFile class="form-control form-control-file" accept=".pdf" disabled="@((isLoading || successUpload) ? "disabled" : null)" OnChange="@((InputFileChangeEventArgs args) => UploadHandleSelection(args, file))"></InputFile></td>
                                                     </tr>
@@ -732,10 +711,10 @@ else
                                     <div class="col">
                                         @if (param == null)
                                         {
-                                            <button type="reset" title="Reset" class="btn btn-sm btn-dark" disabled="@((isLoading || successUpload) ? "disabled" : null)">
+                                            @*<button type="reset" title="Reset" class="btn btn-sm btn-dark" disabled="@((isLoading || successUpload) ? "disabled" : null)">
                                                 Reset
-                                            </button>
-                                            <button type="button" title="Submit" class="btn btn-sm btn-primary-cus fw-bold" disabled="@((isLoading || successUpload) ? "disabled" : null)" @onclick="submitIncidentAccident">
+                                            </button>*@
+                                            <button type="submit" title="Submit" class="btn btn-sm btn-primary-cus fw-bold" disabled="@((isLoading || successUpload) ? "disabled" : null)" @onclick="submitIncidentAccident">
                                                 Create Report
                                             </button>
                                         }

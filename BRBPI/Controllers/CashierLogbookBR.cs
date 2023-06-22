@@ -1,24 +1,25 @@
-﻿using BPIFacade.Models.DbModel;
-using BPIFacade.Models.MainModel;
-using BPIFacade.Models.MainModel.CashierLogbook;
-using BPIFacade.Models.MainModel.Company;
+﻿using BPIBR.Models.DbModel;
+using BPIBR.Models.MainModel;
+using BPIBR.Models.MainModel.CashierLogbook;
+using BPIBR.Models.MainModel.Company;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BPIFacade.Controllers
+namespace BPIBR.Controllers
 {
-    [Route("api/Facade/CashierLogbook")]
+    [Route("api/BR/CashierLogbook")]
     [ApiController]
-    public class CashierLogbookController : ControllerBase
+    public class CashierLogbookBR : ControllerBase
     {
         private readonly HttpClient _http;
         private readonly IConfiguration _configuration;
 
-        public CashierLogbookController(HttpClient http, IConfiguration config)
+        public CashierLogbookBR(HttpClient http, IConfiguration config)
         {
             _http = http;
             _configuration = config;
-            _http.BaseAddress = new Uri(_configuration.GetValue<string>("BaseUri:BpiBR"));
+            _http.BaseAddress = new Uri(_configuration.GetValue<string>("BaseUri:BpiDA"));
         }
+
 
         [HttpPost("createLogData")]
         public async Task<IActionResult> createLogData(QueryModel<CashierLogData> data)
@@ -28,7 +29,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<CashierLogData>>($"api/BR/CashierLogbook/createLogData", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<CashierLogData>>($"api/DA/CashierLogbook/createLogData", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -48,7 +49,7 @@ namespace BPIFacade.Controllers
 
                     res.isSuccess = result.IsSuccessStatusCode;
                     res.ErrorCode = "01";
-                    res.ErrorMessage = "Fail settle from createLogData BR";
+                    res.ErrorMessage = "Fail settle from createLogData DA";
 
                     actionResult = Ok(res);
                 }
@@ -74,7 +75,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<CashierLogData>>($"api/BR/CashierLogbook/editLogData", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<CashierLogData>>($"api/DA/CashierLogbook/editLogData", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -120,7 +121,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<string>>($"api/BR/CashierLogbook/editBrankasDocumentStatus", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>($"api/DA/CashierLogbook/editBrankasDocumentStatus", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -140,7 +141,7 @@ namespace BPIFacade.Controllers
 
                     res.isSuccess = result.IsSuccessStatusCode;
                     res.ErrorCode = "01";
-                    res.ErrorMessage = "Fail settle from editBrankasDocumentStatus BR";
+                    res.ErrorMessage = "Fail settle from editBrankasDocumentStatus DA";
 
                     actionResult = Ok(res);
                 }
@@ -166,7 +167,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<CashierLogData>>>($"api/BR/CashierLogbook/getLogData/{locPage}");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<CashierLogData>>>($"api/DA/CashierLogbook/getLogData/{locPage}");
 
                 if (result.isSuccess)
                 {
@@ -210,7 +211,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<CashierLogAction>>>($"api/BR/CashierLogbook/getBrankasActionLogData/{locPage}");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<CashierLogAction>>>($"api/DA/CashierLogbook/getBrankasActionLogData/{locPage}");
 
                 if (result.isSuccess)
                 {
@@ -254,7 +255,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<Shift>>>($"api/BR/CashierLogbook/getShiftbyModule/{moduleName}");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<Shift>>>($"api/DA/CashierLogbook/getShiftbyModule/{moduleName}");
 
                 if (result.isSuccess)
                 {
@@ -298,7 +299,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<CashierLogbookCategories>>($"api/BR/CashierLogbook/getCashierLogbookCategories");
+                var result = await _http.GetFromJsonAsync<ResultModel<CashierLogbookCategories>>($"api/DA/CashierLogbook/getCashierLogbookCategories");
 
                 if (result.isSuccess)
                 {
@@ -342,7 +343,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/BR/CashierLogbook/getModulePageSize/{Table}");
+                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/DA/CashierLogbook/getModulePageSize/{Table}");
 
                 if (result.isSuccess)
                 {
@@ -386,7 +387,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/BR/CashierLogbook/getNumberofLogExisting/{param}");
+                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/DA/CashierLogbook/getNumberofLogExisting/{param}");
 
                 if (result.isSuccess)
                 {
@@ -430,7 +431,7 @@ namespace BPIFacade.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<CashierLogApproval>>($"api/BR/CashierLogbook/editBrankasApproveLogOnConfirm", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<CashierLogApproval>>($"api/DA/CashierLogbook/editBrankasApproveLogOnConfirm", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -450,7 +451,7 @@ namespace BPIFacade.Controllers
 
                     res.isSuccess = result.IsSuccessStatusCode;
                     res.ErrorCode = "01";
-                    res.ErrorMessage = $"Fail settle from editBrankasApproveLogOnConfirm BR";
+                    res.ErrorMessage = $"Fail settle from editBrankasApproveLogOnConfirm DA";
 
                     actionResult = Ok(res);
                 }

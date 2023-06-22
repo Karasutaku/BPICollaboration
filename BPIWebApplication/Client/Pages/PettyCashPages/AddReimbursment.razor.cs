@@ -167,6 +167,9 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
             {
                 isLoading = true;
 
+                if (!(reimbursement.lines.Count > 0))
+                    return;
+
                 if (!reimbursement.lines.Any(x => x.AccountNo.IsNullOrEmpty()))
                 {
                     if (LoginService.activeUser.userPrivileges.Contains("CR"))

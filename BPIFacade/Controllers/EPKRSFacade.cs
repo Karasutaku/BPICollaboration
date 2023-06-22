@@ -1,56 +1,40 @@
-﻿using BPIBR.Models.DbModel;
-using BPIBR.Models.MainModel;
-using BPIBR.Models.MainModel.EPKRS;
-using BPILibrary;
+﻿using BPIFacade.Models.DbModel;
+using BPIFacade.Models.MainModel;
+using BPIFacade.Models.MainModel.EPKRS;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BPIBR.Controllers
+namespace BPIWebApplication.Server.Controllers
 {
-    [Route("api/BR/EPKRS")]
+    [Route("api/Facade/EPKRS")]
     [ApiController]
-    public class EPKRSController : ControllerBase
+    public class EPKRSFacade : ControllerBase
     {
         private readonly HttpClient _http;
         private readonly IConfiguration _configuration;
-        private readonly string _uploadPath;
 
-        public EPKRSController(HttpClient http, IConfiguration config)
+        public EPKRSFacade(HttpClient http, IConfiguration config)
         {
             _http = http;
             _configuration = config;
-            _http.BaseAddress = new Uri(_configuration.GetValue<string>("BaseUri:BpiDA"));
-            _uploadPath = _configuration.GetValue<string>("File:EPKRS:UploadPath");
+            _http.BaseAddress = new Uri(_configuration.GetValue<string>("BaseUri:BpiBR"));
         }
 
         [HttpPost("createEPKRSItemCaseDocument")]
         public async Task<IActionResult> createEPKRSItemCaseDocumentData(ItemCaseStream data)
         {
             ResultModel<ItemCaseStream> res = new ResultModel<ItemCaseStream>();
-            res.Data = new();
-            res.Data.mainData = new();
             IActionResult actionResult = null;
 
             try
             {
 
-                var result = await _http.PostAsJsonAsync<QueryModel<EPKRSUploadItemCase>>($"api/DA/EPKRS/createEPKRSItemCaseDocument", data.mainData);
+                var result = await _http.PostAsJsonAsync<ItemCaseStream>($"api/BR/EPKRS/createEPKRSItemCaseDocument", data);
 
                 if (result.IsSuccessStatusCode)
                 {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<EPKRSUploadItemCase>>>();
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<ItemCaseStream>>();
 
-                    if (respBody.isSuccess)
-                    {
-                        data.files.ForEach(x =>
-                        {
-                            string path = Path.Combine(_uploadPath, DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), respBody.Data.Data.itemCase.DocumentID, x.fileName);
-
-                            CommonLibrary.saveFiletoDirectory(path, x.content);
-                        });
-                    }
-
-                    res.Data.mainData = respBody.Data;
-                    res.Data.files = null;
+                    res.Data = respBody.Data;
 
                     res.isSuccess = respBody.isSuccess;
                     res.ErrorCode = respBody.ErrorCode;
@@ -60,11 +44,11 @@ namespace BPIBR.Controllers
                 }
                 else
                 {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<EPKRSUploadItemCase>>>();
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<ItemCaseStream>>();
 
-                    res.Data = null;
+                    res.Data = respBody.Data;
 
-                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.isSuccess = respBody.isSuccess;
                     res.ErrorCode = respBody.ErrorCode;
                     res.ErrorMessage = respBody.ErrorMessage;
 
@@ -88,30 +72,18 @@ namespace BPIBR.Controllers
         public async Task<IActionResult> createEPKRSIncidentAccidentDocumentData(IncidentAccidentStream data)
         {
             ResultModel<IncidentAccidentStream> res = new ResultModel<IncidentAccidentStream>();
-            res.Data = new();
-            res.Data.mainData = new();
             IActionResult actionResult = null;
 
             try
             {
 
-                var result = await _http.PostAsJsonAsync<QueryModel<EPKRSUploadIncidentAccident>>($"api/DA/EPKRS/createEPKRSIncidentAccidentDocument", data.mainData);
+                var result = await _http.PostAsJsonAsync<IncidentAccidentStream>($"api/BR/EPKRS/createEPKRSIncidentAccidentDocument", data);
 
                 if (result.IsSuccessStatusCode)
                 {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<EPKRSUploadIncidentAccident>>>();
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<IncidentAccidentStream>>();
 
-                    if (respBody.isSuccess)
-                    {
-                        data.files.ForEach(x =>
-                        {
-                            string path = Path.Combine(_uploadPath, DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), respBody.Data.Data.incidentAccident.DocumentID, x.fileName);
-
-                            CommonLibrary.saveFiletoDirectory(path, x.content);
-                        });
-                    }
-
-                    res.Data.mainData = respBody.Data;
+                    res.Data = respBody.Data;
 
                     res.isSuccess = respBody.isSuccess;
                     res.ErrorCode = respBody.ErrorCode;
@@ -121,11 +93,11 @@ namespace BPIBR.Controllers
                 }
                 else
                 {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<EPKRSUploadIncidentAccident>>>();
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<IncidentAccidentStream>>();
 
-                    res.Data = null;
+                    res.Data = respBody.Data;
 
-                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.isSuccess = respBody.isSuccess;
                     res.ErrorCode = respBody.ErrorCode;
                     res.ErrorMessage = respBody.ErrorMessage;
 
@@ -149,57 +121,31 @@ namespace BPIBR.Controllers
         public async Task<IActionResult> createEPKRSDocumentDiscussionData(DocumentDiscussionStream data)
         {
             ResultModel<DocumentDiscussionStream> res = new ResultModel<DocumentDiscussionStream>();
-            res.Data = new();
-            res.Data.mainData = new();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<EPKRSUploadDiscussion>>($"api/DA/EPKRS/createEPKRSDocumentDiscussion", data.mainData);
+                var result = await _http.PostAsJsonAsync<DocumentDiscussionStream>($"api/BR/EPKRS/createEPKRSDocumentDiscussion", data);
 
                 if (result.IsSuccessStatusCode)
                 {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<EPKRSUploadDiscussion>>>();
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<DocumentDiscussionStream>>();
 
-                    if (respBody.isSuccess)
-                    {
-                        if (data.files.Count > 0)
-                        {
-                            data.files.ForEach(x =>
-                            {
-                                string path = Path.Combine(_uploadPath, DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), respBody.Data.Data.discussion.DocumentID, x.fileName);
+                    res.Data = respBody.Data;
 
-                                CommonLibrary.saveFiletoDirectory(path, x.content);
-                            });
-                        }
+                    res.isSuccess = respBody.isSuccess;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
 
-                        res.Data.mainData = respBody.Data;
-
-                        res.isSuccess = respBody.isSuccess;
-                        res.ErrorCode = respBody.ErrorCode;
-                        res.ErrorMessage = respBody.ErrorMessage;
-
-                        actionResult = Ok(res);
-                    }
-                    else
-                    {
-                        res.Data.mainData = respBody.Data;
-                        res.isSuccess = respBody.isSuccess;
-                        res.ErrorCode = respBody.ErrorCode;
-                        res.ErrorMessage = respBody.ErrorMessage;
-
-                        actionResult = Ok(res);
-                    }
+                    actionResult = Ok(res);
                 }
                 else
                 {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<EPKRSUploadDiscussion>>>();
-
                     res.Data = null;
 
                     res.isSuccess = result.IsSuccessStatusCode;
-                    res.ErrorCode = respBody.ErrorCode;
-                    res.ErrorMessage = respBody.ErrorMessage;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Failure from createEPKRSDocumentDiscussion BR";
 
                     actionResult = Ok(res);
                 }
@@ -225,7 +171,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<DocumentDiscussionReadStream>>("api/DA/EPKRS/createEPKRSDocumentDiscussionReadHistory", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<DocumentDiscussionReadStream>>("api/BR/EPKRS/createEPKRSDocumentDiscussionReadHistory", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -283,7 +229,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<DocumentApproval>>($"api/DA/EPKRS/createEPKRSDocumentApproval", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<DocumentApproval>>($"api/BR/EPKRS/createEPKRSDocumentApproval", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -331,7 +277,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<RISKApprovalExtended>>($"api/DA/EPKRS/createEPKRSDocumentApprovalExtended", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<RISKApprovalExtended>>($"api/BR/EPKRS/createEPKRSDocumentApprovalExtended", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -379,7 +325,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<EPKRSUploadItemCase>>($"api/DA/EPKRS/editEPKRSItemCaseData", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<EPKRSUploadItemCase>>($"api/BR/EPKRS/editEPKRSItemCaseData", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -427,7 +373,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<IncidentAccident>>($"api/DA/EPKRS/editEPKRSIncidentAccidentData", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<IncidentAccident>>($"api/BR/EPKRS/editEPKRSIncidentAccidentData", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -475,7 +421,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<string>>($"api/DA/EPKRS/deleteEPKRSItemCaseDocumentData", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>($"api/BR/EPKRS/deleteEPKRSItemCaseDocumentData", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -523,7 +469,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<string>>($"api/DA/EPKRS/deleteEPKRSIncidentAccidentDocumentData", data);
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>($"api/BR/EPKRS/deleteEPKRSIncidentAccidentDocumentData", data);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -571,7 +517,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<ReportingType>>>("api/DA/EPKRS/getEPRKSReportingType");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<ReportingType>>>("api/BR/EPKRS/getEPRKSReportingType");
 
                 if (result.isSuccess)
                 {
@@ -615,7 +561,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<RiskType>>>("api/DA/EPKRS/getEPKRSRiskType");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<RiskType>>>("api/BR/EPKRS/getEPKRSRiskType");
 
                 if (result.isSuccess)
                 {
@@ -659,7 +605,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<RiskSubType>>>("api/DA/EPKRS/getEPKRSRiskSubType");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<RiskSubType>>>("api/BR/EPKRS/getEPKRSRiskSubType");
 
                 if (result.isSuccess)
                 {
@@ -703,7 +649,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<ItemRiskCategory>>>("api/DA/EPKRS/getEPKRSItemRiskCategory");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<ItemRiskCategory>>>("api/BR/EPKRS/getEPKRSItemRiskCategory");
 
                 if (result.isSuccess)
                 {
@@ -747,7 +693,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<IncidentAccidentInvolverType>>>("api/DA/EPKRS/getEPKRSIncidentAccidentInvolverType");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<IncidentAccidentInvolverType>>>("api/BR/EPKRS/getEPKRSIncidentAccidentInvolverType");
 
                 if (result.isSuccess)
                 {
@@ -791,7 +737,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSUploadItemCase>>>($"api/DA/EPKRS/getEPKRSItemCase/{param}");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSUploadItemCase>>>($"api/BR/EPKRS/getEPKRSItemCase/{param}");
 
                 if (result.isSuccess)
                 {
@@ -835,7 +781,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSUploadIncidentAccident>>>($"api/DA/EPKRS/getEPKRSIncidentAccident/{param}");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSUploadIncidentAccident>>>($"api/BR/EPKRS/getEPKRSIncidentAccident/{param}");
 
                 if (result.isSuccess)
                 {
@@ -879,7 +825,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<DocumentDiscussion>>>($"api/DA/EPKRS/getEPKRSDocumentDiscussion/{param}");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<DocumentDiscussion>>>($"api/BR/EPKRS/getEPKRSDocumentDiscussion/{param}");
 
                 if (result.isSuccess)
                 {
@@ -923,7 +869,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<List<DocumentListParams>>("api/DA/EPKRS/getEPKRSInitializationDocumentDiscussions", param);
+                var result = await _http.PostAsJsonAsync<List<DocumentListParams>>("api/BR/EPKRS/getEPKRSInitializationDocumentDiscussions", param);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -981,7 +927,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<List<DocumentListParams>>("api/DA/EPKRS/getEPKRSDocumentDiscussionReadHistory", param);
+                var result = await _http.PostAsJsonAsync<List<DocumentListParams>>("api/BR/EPKRS/getEPKRSDocumentDiscussionReadHistory", param);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -1032,30 +978,18 @@ namespace BPIBR.Controllers
         }
 
         [HttpGet("getEPKRSFileStream/{param}")]
-        public async Task<IActionResult> getEPKRSFileStream(string param)
+        public async Task<IActionResult> getAttachFileStream(string param)
         {
-            ResultModel<List<BPIBR.Models.MainModel.Stream.FileStream>> res = new ResultModel<List<BPIBR.Models.MainModel.Stream.FileStream>>();
+            ResultModel<List<BPIFacade.Models.MainModel.Stream.FileStream>> res = new ResultModel<List<BPIFacade.Models.MainModel.Stream.FileStream>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<CaseAttachment>>>($"api/DA/EPKRS/getEPKRSCaseAttachment/{param}");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<BPIFacade.Models.MainModel.Stream.FileStream>>>($"api/BR/EPKRS/getEPKRSFileStream/{param}");
 
                 if (result.isSuccess)
                 {
-                    res.Data = new();
-
-                    result.Data.ForEach(x =>
-                    {
-                        res.Data.Add(new BPIBR.Models.MainModel.Stream.FileStream
-                        {
-                            type = "Attachment",
-                            fileName = x.FilePath,
-                            fileType = x.FileExtension,
-                            fileSize = 0,
-                            content = CommonLibrary.getFileStream(_uploadPath, "", x.FilePath, x.UploadDate, CommonLibrary.Base64Decode(param))
-                        });
-                    });
+                    res.Data = result.Data;
 
                     res.isSuccess = result.isSuccess;
                     res.ErrorCode = result.ErrorCode;
@@ -1095,7 +1029,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSDocumentStatistics>>>($"api/DA/EPKRS/getEPKRSGeneralStatistics/{param}");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSDocumentStatistics>>>($"api/BR/EPKRS/getEPKRSGeneralStatistics/{param}");
 
                 if (result.isSuccess)
                 {
@@ -1139,7 +1073,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/DA/EPKRS/getEPKRSGeneralIncidentAccidentStatistics", param);
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/BR/EPKRS/getEPKRSGeneralIncidentAccidentStatistics", param);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -1198,7 +1132,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSItemCaseCategoryStatistics>>>($"api/DA/EPKRS/getEPKRSItemCaseCategoryStatistics/{param}");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSItemCaseCategoryStatistics>>>($"api/BR/EPKRS/getEPKRSItemCaseCategoryStatistics/{param}");
 
                 if (result.isSuccess)
                 {
@@ -1242,7 +1176,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSTopLocationReportStatistics>>>($"api/DA/EPKRS/getEPKRSTopLocationReportStatistics/{param}");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSTopLocationReportStatistics>>>($"api/BR/EPKRS/getEPKRSTopLocationReportStatistics/{param}");
 
                 if (result.isSuccess)
                 {
@@ -1286,7 +1220,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSItemCaseItemCategoryStatistics>>>($"api/DA/EPKRS/getEPKRSItemCategoriesStatistics/{param}");
+                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSItemCaseItemCategoryStatistics>>>($"api/BR/EPKRS/getEPKRSItemCategoriesStatistics/{param}");
 
                 if (result.isSuccess)
                 {
@@ -1330,7 +1264,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/DA/EPKRS/getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail", param);
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/BR/EPKRS/getEPKRSIncidentAccidentRegionalStatisticsbyDORMEmail", param);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -1389,7 +1323,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/DA/EPKRS/getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition", param);
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/BR/EPKRS/getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition", param);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -1448,7 +1382,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/DA/EPKRS/getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept", param);
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/BR/EPKRS/getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept", param);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -1507,7 +1441,7 @@ namespace BPIBR.Controllers
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/DA/EPKRS/getEPKRSModuleNumberOfPage/{param}");
+                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/BR/EPKRS/getEPKRSModuleNumberOfPage/{param}");
 
                 if (result.isSuccess)
                 {

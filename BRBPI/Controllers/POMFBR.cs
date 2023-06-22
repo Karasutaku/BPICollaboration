@@ -7,13 +7,13 @@ namespace BPIBR.Controllers
 {
     [Route("api/BR/POMF")]
     [ApiController]
-    public class POMFController : ControllerBase
+    public class POMFBR : ControllerBase
     {
         private readonly HttpClient _http;
         private readonly IConfiguration _configuration;
         //private readonly string _uploadPath;
 
-        public POMFController(HttpClient http, IConfiguration config)
+        public POMFBR(HttpClient http, IConfiguration config)
         {
             _http = http;
             _configuration = config;

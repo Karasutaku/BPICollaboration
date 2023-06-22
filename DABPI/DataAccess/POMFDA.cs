@@ -1,5 +1,6 @@
 ﻿using BPIDA.Models.DbModel;
 using BPIDA.Models.MainModel.POMF;
+using BPILibrary;
 using Microsoft.Data.SqlClient;
 using System.Data;
 
@@ -50,8 +51,6 @@ namespace BPIDA.DataAccess
                     command.Parameters.AddWithValue("@ReceiptNo", data.Data.ReceiptNo);
                     command.Parameters.AddWithValue("@NPNo", data.Data.NPNo);
                     command.Parameters.AddWithValue("@NPTypeID", data.Data.NPTypeID);
-                    command.Parameters.AddWithValue("@ExternalRequestDocument", data.Data.ExternalRequestDocument);
-                    command.Parameters.AddWithValue("@ExternalReceiveDocument", data.Data.ExternalReceiveDocument);
                     command.Parameters.AddWithValue("@Requester", data.Data.Requester);
                     command.Parameters.AddWithValue("@DocumentStatus", data.Data.DocumentStatus);
                     command.Parameters.AddWithValue("@AuditUser", data.userEmail);
@@ -166,7 +165,7 @@ namespace BPIDA.DataAccess
             return flag;
         }
 
-        internal bool editPOMFApprovalExtendedData(QueryModel<POMFApprovalStreamExtended> data)
+        internal bool editPOMFApprovalExtendedData(string loc, DataTable itemLines, POMFApproval approval, string audituser, string auditaction, DateTime auditdate)
         {
             bool flag = false;
 
@@ -183,18 +182,15 @@ namespace BPIDA.DataAccess
                     command.CommandTimeout = 1000;
 
                     command.Parameters.Clear();
-                    command.Parameters.AddWithValue("@LocationID", data.Data.pomfHeader.LocationID);
-                    command.Parameters.AddWithValue("@POMFID", data.Data.pomfHeader.POMFID);
-                    command.Parameters.AddWithValue("@ExternalRequestDocument", data.Data.pomfHeader.ExternalRequestDocument);
-                    command.Parameters.AddWithValue("@RequestDocumentDate", data.Data.pomfHeader.RequestDocumentDate);
-                    command.Parameters.AddWithValue("@ExternalReceiveDocument", data.Data.pomfHeader.ExternalReceiveDocument);
-                    command.Parameters.AddWithValue("@ReceiveDocumentDate", data.Data.pomfHeader.ReceiveDocumentDate);
-                    command.Parameters.AddWithValue("@ApprovalAction", data.Data.approvalData.ApprovalAction);
-                    command.Parameters.AddWithValue("@Approver", data.Data.approvalData.Approver);
-                    command.Parameters.AddWithValue("@ApproveDate", data.Data.approvalData.ApproveDate);
-                    command.Parameters.AddWithValue("@AuditUser", data.userEmail);
-                    command.Parameters.AddWithValue("@AuditAction", data.userAction);
-                    command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
+                    command.Parameters.AddWithValue("@LocationID", loc);
+                    command.Parameters.AddWithValue("@POMFID", approval.POMFID);
+                    command.Parameters.AddWithValue("@ItemLines", itemLines);
+                    command.Parameters.AddWithValue("@ApprovalAction", approval.ApprovalAction);
+                    command.Parameters.AddWithValue("@Approver", approval.Approver);
+                    command.Parameters.AddWithValue("@ApproveDate", approval.ApproveDate);
+                    command.Parameters.AddWithValue("@AuditUser", audituser);
+                    command.Parameters.AddWithValue("@AuditAction", auditaction);
+                    command.Parameters.AddWithValue("@AuditActionDate", auditdate);
 
                     int ret = command.ExecuteNonQuery();
 

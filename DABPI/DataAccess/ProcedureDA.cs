@@ -10,13 +10,14 @@ namespace BPIDA.DataAccess
     public class ProcedureDA
     {
         private readonly IConfiguration _configuration;
-        private readonly string _conString;
+        private readonly string _conString, _moduleConnection;
         private readonly int _rowPerPage;
 
         public ProcedureDA(IConfiguration configuration)
         {
             _configuration = configuration;
-            _conString = _configuration.GetValue<string>("ConnectionStrings:Bpi");
+            _moduleConnection = _configuration.GetValue<string>("ModuleConnection:Procedure");
+            _conString = _configuration.GetValue<string>($"ConnectionStrings:{_moduleConnection}");
             _rowPerPage = _configuration.GetValue<int>("Paging:Procedure:RowPerPage");
         }
 

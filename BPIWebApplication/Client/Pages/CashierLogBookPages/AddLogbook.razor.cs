@@ -337,7 +337,7 @@ namespace BPIWebApplication.Client.Pages.CashierLogBookPages
             {
                 if (!validateInput())
                 {
-                    await _jsModule.InvokeVoidAsync("showAlert", "Blank Input Field, Please Fill the Blank Field !");
+                    await _jsModule.InvokeVoidAsync("showAlert", "Form Validation : Input Field tidak sesuai, silahkan cek kembali data yang di-input !");
                     isLoading = false;
                     isSuccessUpload = false;
                 }
@@ -650,6 +650,9 @@ namespace BPIWebApplication.Client.Pages.CashierLogBookPages
             {
                 return false;
             }
+
+            if (logbook.header.Any(x => x.lines.GroupBy(y => y.AmountSubCategoryID).Select(z => z.Count()).Any(c => c >= 2)))
+                return false;
 
             return true;
         }
