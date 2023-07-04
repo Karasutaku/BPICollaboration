@@ -1,5 +1,7 @@
 ﻿using BPILibrary;
+using BPIWebApplication.Client.Services.EPKRSServices;
 using BPIWebApplication.Client.Services.FundReturnServices;
+using BPIWebApplication.Shared.MainModel;
 using BPIWebApplication.Shared.MainModel.FundReturn;
 using BPIWebApplication.Shared.MainModel.Login;
 using BPIWebApplication.Shared.PagesModel.FundReturn;
@@ -14,6 +16,8 @@ namespace BPIWebApplication.Client.Pages.FundReturnPages
         private ActiveUser activeUser = new();
         private UserPrivileges privilegeDataParam = new();
         private List<string> userPriv = new();
+
+        private Location paramGetCompanyLocation = new();
 
         private FundReturnDocument previewRefundDocument = new();
 
@@ -100,18 +104,55 @@ namespace BPIWebApplication.Client.Pages.FundReturnPages
             await FundReturnService.getFundReturnBank();
             await FundReturnService.getFundReturnCategory();
 
-            fundReturnPageActive = 1;
+            paramGetCompanyLocation.Condition = $"a.CompanyId={Convert.ToInt32(activeUser.company)}";
+            paramGetCompanyLocation.PageIndex = 1;
+            paramGetCompanyLocation.PageSize = 100;
+            paramGetCompanyLocation.FieldOrder = "a.CompanyId";
+            paramGetCompanyLocation.MethodOrder = "ASC";
 
+            await ManagementService.GetCompanyLocations(paramGetCompanyLocation);
+
+            fundReturnPageActive = 1;
 
             string paramGetFundReturn = activeUser.location + "!_!!_!1";
             await FundReturnService.getFundReturnDocuments(CommonLibrary.Base64Encode(paramGetFundReturn));
 
+            string fundReturnParampz = $"FundReturnHeader!_!{activeUser.location}!_!";
+            var fundReturnpz = await FundReturnService.getFundReturnModuleNumberOfPage(CommonLibrary.Base64Encode(fundReturnParampz));
+            fundReturnNumberofPage = fundReturnpz.Data;
+
             _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/FundReturnPages/FundReturnDashboard.razor.js");
         }
 
-        private void setRefundDocument(FundReturnDocument data)
+        private Stream GetFileStream(byte[] data)
+        {
+            var fileBinData = data;
+            var fileStream = new MemoryStream(fileBinData);
+
+            return fileStream;
+        }
+
+        private async Task HandleViewDocument(Byte[] content, string filename)
+        {
+            var filestream = GetFileStream(content);
+
+            using var streamRef = new DotNetStreamReference(stream: filestream);
+
+            await _jsModule.InvokeVoidAsync("previewFileFromStream", filename, streamRef);
+        }
+
+        private async Task setRefundDocument(FundReturnDocument data)
         {
             previewRefundDocument = data;
+            FundReturnService.fileStreams.Clear();
+
+            #pragma warning disable CS4014
+            Task.Run(async () =>
+            {
+                await FundReturnService.getFundReturnFileStream(CommonLibrary.Base64Encode(data.dataHeader.LocationID + "!_!" + data.dataHeader.DocumentID));
+                StateHasChanged();
+            });
+            #pragma warning restore CS4014
 
             StateHasChanged();
         }
@@ -180,6 +221,25 @@ namespace BPIWebApplication.Client.Pages.FundReturnPages
             try
             {
                 if (previewRefundDocument.dataApproval.Any())
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        private bool checkPreviewRefundAttachment()
+        {
+            try
+            {
+                if (previewRefundDocument.dataAttachmentLines.Any())
                 {
                     return true;
                 }

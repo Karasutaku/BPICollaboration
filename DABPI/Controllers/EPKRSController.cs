@@ -5,6 +5,8 @@ using BPIDA.Models.MainModel.EPKRS;
 using BPILibrary;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using System.Diagnostics;
+using System.Reflection.Metadata;
 
 namespace BPIDA.Controllers
 {
@@ -1884,6 +1886,164 @@ namespace BPIDA.Controllers
                     }
 
                     res.Data = involverStats;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpPost("getEPKRSIncidentAccidentReport")]
+        public async Task<IActionResult> getEPKRSIncidentAccidentReport(QueryModel<string> param)
+        {
+            ResultModel<List<EPKRSIncidentAccidentExport>> res = new ResultModel<List<EPKRSIncidentAccidentExport>>();
+            EPKRSDA da = new(_configuration);
+            List<EPKRSIncidentAccidentExport> incidentAccidents = new List<EPKRSIncidentAccidentExport>();
+            DataTable dtIncidentAccident = new DataTable("EPKRSIncidentAccidentExport");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(param.Data).Split("!_!");
+
+                dtIncidentAccident = da.getEPKRSIncidentAccidentReport(temp[0], temp[1]);
+
+                if (dtIncidentAccident.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtIncidentAccident.Rows)
+                    {
+                        EPKRSIncidentAccidentExport temp1 = new();
+
+                        temp1.DocumentID = dt["DocumentID"].ToString();
+                        temp1.ReportDate = Convert.ToDateTime(dt["ReportDate"]);
+                        temp1.OccurenceDate = Convert.ToDateTime(dt["OccurenceDate"]);
+                        temp1.SiteReporter = dt["SiteReporter"].ToString();
+                        temp1.DepartmentReporter = dt["DepartmentReporter"].ToString();
+                        temp1.DepartmentAffected = dt["DepartmentAffected"].ToString();
+                        temp1.PIC = dt["PIC"].ToString();
+                        temp1.DORMEmail = dt["DORMEmail"].ToString();
+                        temp1.DORMName = dt["DORMName"].ToString();
+                        temp1.RiskRPEmail = dt["RiskRPEmail"].ToString();
+                        temp1.RiskRPName = dt["RiskRPName"].ToString();
+                        temp1.RiskDescription = dt["RiskDescription"].ToString();
+                        temp1.SubRiskDescription = dt["SubRiskDescription"].ToString();
+                        temp1.DocumentStatus = dt["DocumentStatus"].ToString();
+                        temp1.CaseDescription = dt["CaseDescription"].ToString();
+                        temp1.Cronology = dt["Cronology"].ToString();
+                        temp1.RootCause = dt["RootCause"].ToString();
+                        temp1.ExtendedRootCause = dt["ExtendedRootCause"].ToString();
+                        temp1.CauseDescription = dt["CauseDescription"].ToString();
+                        temp1.LossEstimation = Convert.ToDecimal(dt["LossEstimation"]);
+                        temp1.LossDescription = dt["LossDescription"].ToString();
+                        temp1.ReturnAmount = Convert.ToDecimal(dt["ReturnAmount"]);
+                        temp1.MitigationPlan = dt["MitigationPlan"].ToString();
+                        temp1.ExtendedMitigationPlan = dt["ExtendedMitigationPlan"].ToString();
+                        temp1.MitigationDate = Convert.ToDateTime(dt["MitigationDate"]);
+                        temp1.ActionPlan = dt["ActionPlan"].ToString();
+                        temp1.TargetDate = Convert.ToDateTime(dt["TargetDate"]);
+
+                        incidentAccidents.Add(temp1);
+                    }
+
+                    res.Data = incidentAccidents;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpPost("getEPKRSItemCaseReport")]
+        public async Task<IActionResult> getEPKRSItemCaseReport(QueryModel<string> param)
+        {
+            ResultModel<List<EPKRSItemCaseExport>> res = new ResultModel<List<EPKRSItemCaseExport>>();
+            EPKRSDA da = new(_configuration);
+            List<EPKRSItemCaseExport> itemCases = new List<EPKRSItemCaseExport>();
+            DataTable dtItemCase = new DataTable("EPKRSItemCaseExport");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(param.Data).Split("!_!");
+
+                dtItemCase = da.getEPKRSItemCaseReport(temp[0], temp[1]);
+
+                if (dtItemCase.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtItemCase.Rows)
+                    {
+                        EPKRSItemCaseExport temp1 = new();
+
+                        temp1.DocumentID = dt["DocumentID"].ToString();
+                        temp1.ReportDate = Convert.ToDateTime(dt["ReportDate"]);
+                        temp1.SiteReporter = dt["SiteReporter"].ToString();
+                        temp1.SiteSender = dt["SiteSender"].ToString();
+                        temp1.RiskCategoryDescription = dt["RiskCategoryDescription"].ToString();
+                        temp1.ItemCode = dt["ItemCode"].ToString();
+                        temp1.ItemDescription = dt["ItemDescription"].ToString();
+                        temp1.ItemStock = Convert.ToInt32(dt["ItemStock"]);
+                        temp1.ItemQuantity = Convert.ToInt32(dt["ItemQuantity"]);
+                        temp1.ItemValue = Convert.ToDecimal(dt["ItemValue"]);
+                        temp1.TotalValue = Convert.ToDecimal(dt["TotalValue"]);
+                        temp1.CategoryDescription = dt["CategoryDescription"].ToString();
+                        temp1.ItemPickupDate = Convert.ToDateTime(dt["ItemPickupDate"]);
+                        temp1.LoadingDocumentID = dt["LoadingDocumentID"].ToString();
+                        temp1.LoadingDocumentDate = Convert.ToDateTime(dt["LoadingDocumentDate"]);
+                        temp1.TRID = dt["TRID"].ToString();
+                        temp1.TRDate = Convert.ToDateTime(dt["TRDate"]);
+                        temp1.isLate = Convert.ToBoolean(dt["isLate"]);
+                        temp1.isCCTVCoverable = Convert.ToBoolean(dt["isCCTVCoverable"]);
+                        temp1.isReportedtoSender = Convert.ToBoolean(dt["isReportedtoSender"]);
+                        temp1.VarianceDate = Convert.ToInt32(dt["VarianceDate"]);
+
+                        itemCases.Add(temp1);
+                    }
+
+                    res.Data = itemCases;
                     res.isSuccess = true;
                     res.ErrorCode = "00";
                     res.ErrorMessage = "";

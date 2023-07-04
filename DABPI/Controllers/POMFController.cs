@@ -382,6 +382,65 @@ namespace BPIDA.Controllers
             return actionResult;
         }
 
+        [HttpGet("getPOMFItemLineMaxQuantity/{param}")]
+        public async Task<IActionResult> getPOMFItemLineMaxQuantity(string param)
+        {
+            ResultModel<List<POMFItemLinesMaxQuantity>> res = new ResultModel<List<POMFItemLinesMaxQuantity>>();
+            POMFDA da = new(_configuration);
+            List<POMFItemLinesMaxQuantity> maxQty = new List<POMFItemLinesMaxQuantity>();
+            DataTable dtMaxQty = new DataTable("MaxQty");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+                string loc = temp[0].Equals("") ? "HO" : temp[0];
+
+                dtMaxQty = da.getPOMFItemLineMaxQuantity(loc, temp[1]);
+
+                if (dtMaxQty.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtMaxQty.Rows)
+                    {
+                        POMFItemLinesMaxQuantity temp1 = new();
+
+                        temp1.POMFID = dt["POMFID"].ToString();
+                        temp1.ItemCode = dt["ItemCode"].ToString();
+                        temp1.MaxQuantity = Convert.ToInt32(dt["MaxQuantity"]);
+
+                        maxQty.Add(temp1);
+                    }
+
+                    res.Data = maxQty;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = new();
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
         [HttpGet("getPOMFNPType")]
         public async Task<IActionResult> getPOMFNPType()
         {

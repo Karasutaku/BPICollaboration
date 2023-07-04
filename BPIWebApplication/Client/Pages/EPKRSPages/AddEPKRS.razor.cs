@@ -240,9 +240,9 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                             SiteReporter = data.incidentAccident.SiteReporter,
                             DepartmentReporter = data.incidentAccident.DepartmentReporter,
                             RiskRPName = data.incidentAccident.RiskRPName,
-                            RiskRPEmail = data.incidentAccident.RiskRPEmail,
+                            RiskRPEmail = data.incidentAccident.RiskRPEmail.Replace("@mitra10.com", string.Empty),
                             DORMName = data.incidentAccident.DORMName,
-                            DORMEmail = data.incidentAccident.DORMEmail,
+                            DORMEmail = data.incidentAccident.DORMEmail.Replace("@mitra10.com", string.Empty),
                             CaseDescription = data.incidentAccident.CaseDescription,
                             DepartmentAffected = data.incidentAccident.DepartmentAffected,
                             Cronology = data.incidentAccident.Cronology,
@@ -540,9 +540,9 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 uploadData.mainData.Data.incidentAccident.SiteReporter = incidentaccidentData.SiteReporter;
                 uploadData.mainData.Data.incidentAccident.DepartmentReporter = incidentaccidentData.DepartmentReporter;
                 uploadData.mainData.Data.incidentAccident.RiskRPName = incidentaccidentData.RiskRPName;
-                uploadData.mainData.Data.incidentAccident.RiskRPEmail = incidentaccidentData.RiskRPEmail.ToLower();
+                uploadData.mainData.Data.incidentAccident.RiskRPEmail = incidentaccidentData.RiskRPEmail.ToLower() + "@mitra10.com";
                 uploadData.mainData.Data.incidentAccident.DORMName = incidentaccidentData.DORMName;
-                uploadData.mainData.Data.incidentAccident.DORMEmail = incidentaccidentData.DORMEmail.ToLower();
+                uploadData.mainData.Data.incidentAccident.DORMEmail = incidentaccidentData.DORMEmail.ToLower() + "@mitra10.com";
                 uploadData.mainData.Data.incidentAccident.CaseDescription = incidentaccidentData.CaseDescription;
                 uploadData.mainData.Data.incidentAccident.DepartmentAffected = incidentaccidentData.DepartmentAffected;
                 uploadData.mainData.Data.incidentAccident.Cronology = incidentaccidentData.Cronology;
@@ -552,7 +552,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 uploadData.mainData.Data.incidentAccident.ReturnAmount = incidentaccidentData.ReturnAmount;
                 uploadData.mainData.Data.incidentAccident.RiskDescription = incidentaccidentData.RiskDescription;
                 uploadData.mainData.Data.incidentAccident.CauseDescription = incidentaccidentData.CauseDescription;
-                uploadData.mainData.Data.incidentAccident.PIC = incidentaccidentData.PIC.ToLower();
+                uploadData.mainData.Data.incidentAccident.PIC = incidentaccidentData.PIC.ToLower() + "@mitra10.com";
                 uploadData.mainData.Data.incidentAccident.ActionPlan = incidentaccidentData.ActionPlan;
                 uploadData.mainData.Data.incidentAccident.TargetDate = incidentaccidentData.TargetDate;
                 uploadData.mainData.Data.incidentAccident.MitigationPlan = incidentaccidentData.MitigationPlan;

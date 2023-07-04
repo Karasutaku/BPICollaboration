@@ -22,18 +22,18 @@ namespace BPIFacade.Controllers
         }
 
         [HttpPost("createFundReturnDocument")]
-        public async Task<IActionResult> createFundReturnDocument(QueryModel<FundReturnDocument> data)
+        public async Task<IActionResult> createFundReturnDocument(FundReturnUploadStream data)
         {
-            ResultModel<QueryModel<FundReturnDocument>> res = new ResultModel<QueryModel<FundReturnDocument>>();
+            ResultModel<FundReturnUploadStream> res = new ResultModel<FundReturnUploadStream>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<FundReturnDocument>>("api/BR/FundReturn/createFundReturnDocument", data);
+                var result = await _http.PostAsJsonAsync<FundReturnUploadStream>("api/BR/FundReturn/createFundReturnDocument", data);
 
                 if (result.IsSuccessStatusCode)
                 {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<FundReturnDocument>>>();
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<FundReturnUploadStream>>();
 
                     res.Data = respBody.Data;
                     res.isSuccess = respBody.isSuccess;
@@ -44,7 +44,7 @@ namespace BPIFacade.Controllers
                 }
                 else
                 {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<FundReturnDocument>>>();
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<FundReturnUploadStream>>();
 
                     res.Data = null;
 
@@ -256,6 +256,50 @@ namespace BPIFacade.Controllers
             try
             {
                 var result = await _http.GetFromJsonAsync<ResultModel<List<FundReturnCategory>>>("api/BR/FundReturn/getFundReturnCategory");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getFundReturnFileStream/{param}")]
+        public async Task<IActionResult> getFundReturnFileStream(string param)
+        {
+            ResultModel<List<BPIFacade.Models.MainModel.Stream.FileStream>> res = new ResultModel<List<BPIFacade.Models.MainModel.Stream.FileStream>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<BPIFacade.Models.MainModel.Stream.FileStream>>>($"api/BR/FundReturn/getFundReturnFileStream/{param}");
 
                 if (result.isSuccess)
                 {

@@ -1462,7 +1462,7 @@ else
                                     <div class="row my-1">
                                         <div class="col">
                                             <label class="fw-bold" for="reimburs_status">Line Approval Note :</label>
-                                            <InputText id="reimburs_note" @bind-Value="reimburse.ReimburseNote" class="form-control-sm w-100 border-1" disabled="@(reimburse.ReimburseStatus.Contains("Confirmed") ? null : "disabled")"></InputText>
+                                            <InputTextArea id="reimburs_note" @bind-Value="reimburse.ReimburseNote" class="form-control-sm w-100 border-1" disabled="@(reimburse.ReimburseStatus.Contains("Confirmed") ? null : "disabled")"></InputTextArea>
                                         </div>
                                     </div>
 

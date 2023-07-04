@@ -77,9 +77,23 @@ namespace BPIDA.Controllers
                     });
                 });
 
-                var dtLines = CommonLibrary.ListToDataTable<FundReturnItemLine>(tempItemLine, data.userEmail, data.userAction, data.userActionDate, "FRItemLines");
+                List<FundReturnAttachment> tempAttachLine = new();
+                data.Data.dataAttachmentLines.ForEach(x =>
+                {
+                    tempAttachLine.Add(new FundReturnAttachment
+                    {
+                        DocumentID = id,
+                        LineNum = x.LineNum,
+                        UploadDate = x.UploadDate,
+                        FileExtension = x.FileExtension,
+                        FilePath = x.FilePath
+                    });
+                });
 
-                if (da.createFundReturnDocumentData(dtMain, dtLines))
+                var dtLines = CommonLibrary.ListToDataTable<FundReturnItemLine>(tempItemLine, data.userEmail, data.userAction, data.userActionDate, "FRItemLines");
+                var dtAttach = CommonLibrary.ListToDataTable<FundReturnAttachment>(tempAttachLine, data.userEmail, data.userAction, data.userActionDate, "FRAttachLines");
+
+                if (da.createFundReturnDocumentData(dtMain, dtLines, dtAttach))
                 {
                     res.Data = data;
                     res.isSuccess = true;
@@ -151,7 +165,22 @@ namespace BPIDA.Controllers
                 dtMain.userAction = data.userAction;
                 dtMain.userActionDate = data.userActionDate;
 
-                if (da.createFundReturnHeaderData(dtMain))
+                List<FundReturnAttachment> tempAttachLine = new();
+                data.Data.dataAttachmentLines.ForEach(x =>
+                {
+                    tempAttachLine.Add(new FundReturnAttachment
+                    {
+                        DocumentID = id,
+                        LineNum = x.LineNum,
+                        UploadDate = x.UploadDate,
+                        FileExtension = x.FileExtension,
+                        FilePath = x.FilePath
+                    });
+                });
+
+                var dtAttach = CommonLibrary.ListToDataTable<FundReturnAttachment>(tempAttachLine, data.userEmail, data.userAction, data.userActionDate, "FRAttachLines");
+
+                if (da.createFundReturnHeaderData(dtMain, dtAttach))
                 {
                     res.Data = data;
                     res.isSuccess = true;
@@ -284,6 +313,7 @@ namespace BPIDA.Controllers
             DataTable dtFundReturnDocument = new DataTable("FundReturnDocument");
             DataTable dtFundReturnItemLine = new DataTable("FundReturnItemLine");
             DataTable dtFundReturnApproval = new DataTable("FundReturnApproval");
+            DataTable dtFundReturnAttachment = new DataTable("FundReturnAttachment");
             DataTable dtParam = new DataTable("Parameter");
             IActionResult actionResult = null;
 
@@ -334,6 +364,8 @@ namespace BPIDA.Controllers
 
                 //if (dtPOMFApproval.Rows.Count <= 0)
                 //    throw new Exception("Fail Fetch POMFApproval Data");
+
+                dtFundReturnAttachment = da.getFundReturnAttachmentData(loc, dtParam);
 
                 if (dtFundReturnDocument.Rows.Count > 0)
                 {
@@ -386,6 +418,15 @@ namespace BPIDA.Controllers
                             }).ToList();
                         }
 
+                        temp1.dataAttachmentLines = dtFundReturnAttachment.AsEnumerable().Where(y => y["DocumentID"].ToString().Equals(dt["DocumentID"].ToString())).Select(x => new FundReturnAttachment
+                        {
+                            DocumentID = x["DocumentID"].ToString(),
+                            LineNum = Convert.ToInt32(x["LineNum"]),
+                            UploadDate = Convert.ToDateTime(x["UploadDate"]),
+                            FileExtension = x["FileExtention"].ToString(),
+                            FilePath = x["FilePath"].ToString(),
+                        }).ToList();
+
                         fundReturnDocuments.Add(temp1);
                     }
 
@@ -400,6 +441,73 @@ namespace BPIDA.Controllers
                 {
                     res.Data = null;
                     res.isSuccess = false;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getFundReturnAttachment/{param}")]
+        public async Task<IActionResult> getFundReturnAttachment(string param)
+        {
+            ResultModel<List<FundReturnAttachment>> res = new ResultModel<List<FundReturnAttachment>>();
+            FundReturnDA da = new(_configuration);
+            List<FundReturnAttachment> attachments = new List<FundReturnAttachment>();
+            DataTable dtAttachment = new DataTable("FundReturnAttachment");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+
+                DataTable tableParam = new("Param");
+                tableParam.Columns.Add(new DataColumn("DocumentID", typeof(string)));
+
+                DataRow tableRowParam = tableParam.NewRow();
+                tableRowParam["DocumentID"] = temp[1];
+                tableParam.Rows.Add(tableRowParam);
+
+                dtAttachment = da.getFundReturnAttachmentData(temp[0], tableParam);
+
+                if (dtAttachment.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtAttachment.Rows)
+                    {
+                        FundReturnAttachment temp1 = new FundReturnAttachment();
+
+                        temp1.DocumentID = dt["DocumentID"].ToString();
+                        temp1.LineNum = Convert.ToInt32(dt["LineNum"]);
+                        temp1.UploadDate = Convert.ToDateTime(dt["UploadDate"]);
+                        temp1.FileExtension = dt["FileExtention"].ToString();
+                        temp1.FilePath = dt["FilePath"].ToString();
+
+                        attachments.Add(temp1);
+                    }
+
+                    res.Data = attachments;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
                     res.ErrorCode = "01";
                     res.ErrorMessage = "Fetch Empty";
 

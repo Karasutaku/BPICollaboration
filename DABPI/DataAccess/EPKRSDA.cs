@@ -1374,6 +1374,82 @@ namespace BPIDA.DataAccess
             return dt;
         }
 
+        internal DataTable getEPKRSIncidentAccidentReport(string conditions, string ext)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSIncidentAccidentReport]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@Conditions", conditions);
+                    command.Parameters.AddWithValue("@ConditionsExt", ext);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getEPKRSItemCaseReport(string conditions, string ext)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getEPKRSItemCaseReport]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@Conditions", conditions);
+                    command.Parameters.AddWithValue("@ConditionsExt", ext);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
         internal int getEPKRSModuleNumberOfPageData(string TbName, string loc, string conditions)
         {
             int conInt = 0;

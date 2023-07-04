@@ -343,6 +343,9 @@ else
                                                                         {
                                                                             @foreach (var subCat in CashierLogbookService.subCategories)
                                                                             {
+                                                                                if (!line.AmountType.Equals(subCat.AmountType))
+                                                                                    continue;
+
                                                                                 <option value="@subCat.AmountSubCategoryID">@subCat.AmountSubCategoryName</option>
                                                                             }
                                                                         }

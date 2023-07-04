@@ -370,15 +370,21 @@ else
                                             <th class="text-center align-middle text-wrap" style="width: 12%; font-size: 15px;">Request Qty</th>
                                             <th class="text-center align-middle text-wrap" style="width: 12%; font-size: 15px;">NP Qty</th>
                                             <th class="text-center align-middle text-wrap" style="width: 13%; font-size: 15px;">UOM</th>
-                                            @if (!new[] { "3", "4" }.Contains(previewPOMFDocument.dataHeader.NPTypeID))
-                                            {
-                                                <th class="text-center align-middle text-wrap" style="width: 8%; font-size: 15px;">Prvw.</th>
+                                            @{
+                                                var npAuto = POMFService.npTypes.SingleOrDefault(x => x.NPTypeID.Equals(previewPOMFDocument.dataHeader.NPTypeID));
                                             }
-                                            else
+                                            @if (npAuto != null)
                                             {
-                                                @if (previewPOMFDocument.dataHeader.DocumentStatus.Equals("Released") || previewPOMFDocument.dataHeader.DocumentStatus.Equals("Received"))
+                                                @if (!npAuto.isAutomaticApproval)
                                                 {
                                                     <th class="text-center align-middle text-wrap" style="width: 8%; font-size: 15px;">Prvw.</th>
+                                                }
+                                                else
+                                                {
+                                                    @if (previewPOMFDocument.dataHeader.DocumentStatus.Equals("Released") || previewPOMFDocument.dataHeader.DocumentStatus.Equals("Received"))
+                                                    {
+                                                        <th class="text-center align-middle text-wrap" style="width: 8%; font-size: 15px;">Prvw.</th>
+                                                    }
                                                 }
                                             }
                                         </tr>
@@ -392,51 +398,9 @@ else
                                                 <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.RequestQuantity.ToString("N0")</td>
                                                 <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.NPQuantity.ToString("N0")</td>
                                                 <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemUOM</td>
-                                                @if (!new[] { "3", "4" }.Contains(previewPOMFDocument.dataHeader.NPTypeID))
+                                                @if (npAuto != null)
                                                 {
-                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">
-                                                        <div class="btn-group dropdown">
-                                                            <button class="btn btn-sm dropdown-toggle" type="button" data-toggle="dropdown" data-boundary="viewport" aria-haspopup="true" aria-expanded="false">
-                                                                <i class="oi oi-eye"></i>
-                                                            </button>
-                                                            <div class="dropdown-menu dropdown-menu-right" id="dropdownSelector" onclick="event.stopPropagation();">
-                                                                <div class="px-4 py-2">
-
-                                                                    <div class="row my-1">
-                                                                        <div class="col">
-                                                                            @{
-                                                                                var locdesc = ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(item.RequestToSite));
-                                                                            }
-                                                                            <b>Request to Site</b> : @(locdesc != null ? locdesc.locationName : item.RequestToSite)
-                                                                        </div>
-                                                                    </div>
-
-                                                                    @if (!item.ExternalRequestDocument.Equals(""))
-                                                                    {
-                                                                        <div class="row my-1">
-                                                                            <div class="col">
-                                                                                <b>Request Document</b> : @item.ExternalRequestDocument, @item.RequestDocumentDate.Value.ToString("dd MMMM yyyy")
-                                                                            </div>
-                                                                        </div>
-                                                                    }
-
-                                                                    @if (!item.ExternalReceiveDocument.Equals(""))
-                                                                    {
-                                                                        <div class="row my-1">
-                                                                            <div class="col">
-                                                                                <b>Receive Document</b> : @item.ExternalReceiveDocument, @item.ReceiveDocumentDate.Value.ToString("dd MMMM yyyy")
-                                                                            </div>
-                                                                        </div>
-                                                                    }
-
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                }
-                                                else
-                                                {
-                                                    @if (previewPOMFDocument.dataHeader.DocumentStatus.Equals("Released") || previewPOMFDocument.dataHeader.DocumentStatus.Equals("Received"))
+                                                    @if (!npAuto.isAutomaticApproval)
                                                     {
                                                         <td class="text-center align-middle text-wrap" style="font-size:14px;">
                                                             <div class="btn-group dropdown">
@@ -445,6 +409,15 @@ else
                                                                 </button>
                                                                 <div class="dropdown-menu dropdown-menu-right" id="dropdownSelector" onclick="event.stopPropagation();">
                                                                     <div class="px-4 py-2">
+
+                                                                        <div class="row my-1">
+                                                                            <div class="col">
+                                                                                @{
+                                                                                    var locdesc = ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(item.RequestToSite));
+                                                                                }
+                                                                                <b>Request to Site</b> : @(locdesc != null ? locdesc.locationName : item.RequestToSite)
+                                                                            </div>
+                                                                        </div>
 
                                                                         @if (!item.ExternalRequestDocument.Equals(""))
                                                                         {
@@ -469,8 +442,43 @@ else
                                                             </div>
                                                         </td>
                                                     }
+                                                    else
+                                                    {
+                                                        @if (previewPOMFDocument.dataHeader.DocumentStatus.Equals("Released") || previewPOMFDocument.dataHeader.DocumentStatus.Equals("Received"))
+                                                        {
+                                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                                                <div class="btn-group dropdown">
+                                                                    <button class="btn btn-sm dropdown-toggle" type="button" data-toggle="dropdown" data-boundary="viewport" aria-haspopup="true" aria-expanded="false">
+                                                                        <i class="oi oi-eye"></i>
+                                                                    </button>
+                                                                    <div class="dropdown-menu dropdown-menu-right" id="dropdownSelector" onclick="event.stopPropagation();">
+                                                                        <div class="px-4 py-2">
+
+                                                                            @if (!item.ExternalRequestDocument.Equals(""))
+                                                                            {
+                                                                                <div class="row my-1">
+                                                                                    <div class="col">
+                                                                                        <b>Request Document</b> : @item.ExternalRequestDocument, @item.RequestDocumentDate.Value.ToString("dd MMMM yyyy")
+                                                                                    </div>
+                                                                                </div>
+                                                                            }
+
+                                                                            @if (!item.ExternalReceiveDocument.Equals(""))
+                                                                            {
+                                                                                <div class="row my-1">
+                                                                                    <div class="col">
+                                                                                        <b>Receive Document</b> : @item.ExternalReceiveDocument, @item.ReceiveDocumentDate.Value.ToString("dd MMMM yyyy")
+                                                                                    </div>
+                                                                                </div>
+                                                                            }
+
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                        }
+                                                    }
                                                 }
-                                                
                                             </tr>
                                         }
                                     </tbody>
@@ -598,38 +606,6 @@ else
                     <div class="col">: @previewPOMFConfirmDocument.dataHeader.DocumentStatus</div>
                 </div>
 
-                @*@if (previewPOMFConfirmDocument.dataHeader.DocumentStatus.Equals("Released"))
-                {
-                    <div class="row mt-2">
-                        <div class="col fw-bold">Document Request</div>
-                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.ExternalRequestDocument</div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col fw-bold">Document Request Date</div>
-                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.RequestDocumentDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")</div>
-                    </div>
-                }*@
-
-                @*@if (previewPOMFConfirmDocument.dataHeader.DocumentStatus.Equals("Received"))
-                {
-                    <div class="row mt-2">
-                        <div class="col fw-bold">Document Request</div>
-                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.ExternalRequestDocument</div>
-                    </div>
-                    <div class="row">
-                        <div class="col fw-bold">Document Request Date</div>
-                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.RequestDocumentDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")</div>
-                    </div>
-                    <div class="row mt-2">
-                        <div class="col fw-bold">Document Received</div>
-                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.ExternalReceiveDocument</div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col fw-bold">Document Received Date</div>
-                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.ReceiveDocumentDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")</div>
-                    </div>
-                }*@
-
                 @if (checkPreviewPOMFConfirmedApprovalLine())
                 {
                     <div id="accordion" style="width: 100%;">
@@ -675,12 +651,28 @@ else
                                 <table class="table table-sm table-hover" style="width: 100%">
                                     <thead>
                                         <tr>
-                                            <th class="text-center align-middle text-wrap" style="width: 19%; font-size: 15px;">Item Code</th>
-                                            <th class="text-center align-middle text-wrap" style="width: 32%; font-size: 15px;">Item Description</th>
-                                            <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Request Qty</th>
-                                            <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">NP Qty</th>
-                                            <th class="text-center align-middle text-wrap" style="width: 11%; font-size: 15px;">UOM</th>
-                                            <th class="text-center align-middle text-wrap" style="width: 18%; font-size: 15px;">Item Value (Rp.)</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 20%; font-size: 15px;">Item Code</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 34%; font-size: 15px;">Item Description</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 12%; font-size: 15px;">Request Qty</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 12%; font-size: 15px;">NP Qty</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 13%; font-size: 15px;">UOM</th>
+                                            @{
+                                                var npAutocf = POMFService.npTypes.SingleOrDefault(x => x.NPTypeID.Equals(previewPOMFConfirmDocument.dataHeader.NPTypeID));
+                                            }
+                                            @if (npAutocf != null)
+                                            {
+                                                @if (!npAutocf.isAutomaticApproval)
+                                                {
+                                                    <th class="text-center align-middle text-wrap" style="width: 8%; font-size: 15px;">Prvw.</th>
+                                                }
+                                                else
+                                                {
+                                                    @if (previewPOMFConfirmDocument.dataHeader.DocumentStatus.Equals("Released") || previewPOMFConfirmDocument.dataHeader.DocumentStatus.Equals("Received"))
+                                                    {
+                                                        <th class="text-center align-middle text-wrap" style="width: 8%; font-size: 15px;">Prvw.</th>
+                                                    }
+                                                }
+                                            }
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -689,10 +681,90 @@ else
                                             <tr>
                                                 <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemCode</td>
                                                 <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemDescription</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.RequestQuantity</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.NPQuantity</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.RequestQuantity.ToString("N0")</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.NPQuantity.ToString("N0")</td>
                                                 <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemUOM</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemValue.ToString("N0")</td>
+                                                @if (npAutocf != null)
+                                                {
+                                                    @if (!npAutocf.isAutomaticApproval)
+                                                    {
+                                                        <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                                            <div class="btn-group dropdown">
+                                                                <button class="btn btn-sm dropdown-toggle" type="button" data-toggle="dropdown" data-boundary="viewport" aria-haspopup="true" aria-expanded="false">
+                                                                    <i class="oi oi-eye"></i>
+                                                                </button>
+                                                                <div class="dropdown-menu dropdown-menu-right" id="dropdownSelector" onclick="event.stopPropagation();">
+                                                                    <div class="px-4 py-2">
+
+                                                                        <div class="row my-1">
+                                                                            <div class="col">
+                                                                                @{
+                                                                                    var locdesc = ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(item.RequestToSite));
+                                                                                }
+                                                                                <b>Request to Site</b> : @(locdesc != null ? locdesc.locationName : item.RequestToSite)
+                                                                            </div>
+                                                                        </div>
+
+                                                                        @if (!item.ExternalRequestDocument.Equals(""))
+                                                                        {
+                                                                            <div class="row my-1">
+                                                                                <div class="col">
+                                                                                    <b>Request Document</b> : @item.ExternalRequestDocument, @item.RequestDocumentDate.Value.ToString("dd MMMM yyyy")
+                                                                                </div>
+                                                                            </div>
+                                                                        }
+
+                                                                        @if (!item.ExternalReceiveDocument.Equals(""))
+                                                                        {
+                                                                            <div class="row my-1">
+                                                                                <div class="col">
+                                                                                    <b>Receive Document</b> : @item.ExternalReceiveDocument, @item.ReceiveDocumentDate.Value.ToString("dd MMMM yyyy")
+                                                                                </div>
+                                                                            </div>
+                                                                        }
+
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        @if (previewPOMFConfirmDocument.dataHeader.DocumentStatus.Equals("Released") || previewPOMFConfirmDocument.dataHeader.DocumentStatus.Equals("Received"))
+                                                        {
+                                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                                                <div class="btn-group dropdown">
+                                                                    <button class="btn btn-sm dropdown-toggle" type="button" data-toggle="dropdown" data-boundary="viewport" aria-haspopup="true" aria-expanded="false">
+                                                                        <i class="oi oi-eye"></i>
+                                                                    </button>
+                                                                    <div class="dropdown-menu dropdown-menu-right" id="dropdownSelector" onclick="event.stopPropagation();">
+                                                                        <div class="px-4 py-2">
+
+                                                                            @if (!item.ExternalRequestDocument.Equals(""))
+                                                                            {
+                                                                                <div class="row my-1">
+                                                                                    <div class="col">
+                                                                                        <b>Request Document</b> : @item.ExternalRequestDocument, @item.RequestDocumentDate.Value.ToString("dd MMMM yyyy")
+                                                                                    </div>
+                                                                                </div>
+                                                                            }
+
+                                                                            @if (!item.ExternalReceiveDocument.Equals(""))
+                                                                            {
+                                                                                <div class="row my-1">
+                                                                                    <div class="col">
+                                                                                        <b>Receive Document</b> : @item.ExternalReceiveDocument, @item.ReceiveDocumentDate.Value.ToString("dd MMMM yyyy")
+                                                                                    </div>
+                                                                                </div>
+                                                                            }
+
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                        }
+                                                    }
+                                                }
                                             </tr>
                                         }
                                     </tbody>
@@ -838,163 +910,3 @@ else
         </div>
     </div>
 </div>
-
-@*Document Confirm Preview Modal*@
-<div class="modal fade" id="previewPOMFConfirmedModal" tabindex="-2" role="dialog" aria-labelledby="previewPOMFConfirmedModalLabel" aria-hidden="true" style="background: rgba(0,0,0, 0.2);">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <div class="modal-header cus-bg">
-                <h5 class="modal-title fw-bold" id="previewPOMFConfirmedModalLabel"><i class="oi oi-file"></i> Preview POMF Document</h5>
-                <button type="button" class="close" data-dismiss="modal" data-target="#previewPOMFConfirmedModal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col fw-bold">POMF ID</div>
-                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.POMFID</div>
-                </div>
-                <div class="row">
-                    <div class="col fw-bold">POMF Date</div>
-                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.POMFDate.ToString("dddd, dd MMMM yyyy")</div>
-                </div>
-                <div class="row">
-                    <div class="col fw-bold">Location</div>
-                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.LocationID</div>
-                </div>
-                <div class="row">
-                    <div class="col fw-bold">Customer Name</div>
-                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.CustomerName</div>
-                </div>
-                <div class="row">
-                    <div class="col fw-bold">Receipt No</div>
-                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.ReceiptNo</div>
-                </div>
-                <div class="row">
-                    <div class="col fw-bold">NP No</div>
-                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.NPNo</div>
-                </div>
-                <div class="row">
-                    <div class="col fw-bold">NP Type</div>
-                    <div class="col">: @((POMFService.npTypes.SingleOrDefault(x => x.NPTypeID.Equals(previewPOMFConfirmDocument.dataHeader.NPTypeID)) == null) ? "NaN" : POMFService.npTypes.SingleOrDefault(x => x.NPTypeID.Equals(previewPOMFConfirmDocument.dataHeader.NPTypeID)).NPTypeDescription)</div>
-                </div>
-                <div class="row mb-2">
-                    <div class="col fw-bold">Document Status</div>
-                    <div class="col">: @previewPOMFConfirmDocument.dataHeader.DocumentStatus</div>
-                </div>
-
-                @*@if (previewPOMFConfirmDocument.dataHeader.DocumentStatus.Equals("Released"))
-                {
-                    <div class="row mt-2">
-                        <div class="col fw-bold">Document Request</div>
-                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.ExternalRequestDocument</div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col fw-bold">Document Request Date</div>
-                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.RequestDocumentDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")</div>
-                    </div>
-                }
-
-                @if (previewPOMFConfirmDocument.dataHeader.DocumentStatus.Equals("Received"))
-                {
-                    <div class="row mt-2">
-                        <div class="col fw-bold">Document Request</div>
-                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.ExternalRequestDocument</div>
-                    </div>
-                    <div class="row">
-                        <div class="col fw-bold">Document Request Date</div>
-                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.RequestDocumentDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")</div>
-                    </div>
-                    <div class="row mt-2">
-                        <div class="col fw-bold">Document Received</div>
-                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.ExternalReceiveDocument</div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col fw-bold">Document Received Date</div>
-                        <div class="col">: @previewPOMFConfirmDocument.dataHeader.ReceiveDocumentDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")</div>
-                    </div>
-                }*@
-
-                @if (checkPreviewPOMFConfirmedApprovalLine())
-                {
-                    <div id="accordion" style="width: 100%;">
-
-                        <div class="card" style="width: 100%;">
-                            <div class="card-header" id="pomfAccordionHeader">
-                                <div class="border border-1">
-                                    <button id="pomftitle" class="btn w-100" data-toggle="collapse" data-target="#pomfApprovalLists" aria-expanded="true" aria-controls="pomfApprovalLists">
-                                        <b>POMF Approval List(s)</b>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div id="pomfApprovalLists" class="collapse bg-special" aria-labelledby="pomftitle" data-parent="#accordion">
-                                <div class="card-body">
-                                    @foreach (var apv in previewPOMFConfirmDocument.dataApproval)
-                                    {
-                                        <div class="row">
-                                            <div class="col">
-                                                <label class="fw-bold" for="@(apv.ApprovalAction)_user">@apv.ApprovalAction User :</label>
-                                                <input type="text" id="@(@apv.ApprovalAction)_user" value="@apv.Approver" class="form-control-sm w-100 border-1" readonly />
-                                            </div>
-                                            <div class="col">
-                                                <label class="fw-bold" for="@(@apv.ApprovalAction)_date">@apv.ApprovalAction Date :</label>
-                                                <input type="text" id="@(@apv.ApprovalAction)_date" value="@apv.ApproveDate.ToString("dddd, dd MMMM yyyy HH:mm:ss")" class="form-control-sm w-100 border-1" readonly />
-                                            </div>
-                                        </div>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                }
-
-                <div class="row mt-4">
-                    <div class="col">
-                        <p class="fw-bold text-center align-middle"><i class="oi oi-basket"></i> Item List(s) </p>
-
-                        @if (checkPreviewPOMFConfirmedItemLine())
-                        {
-                            <div class="table-responsive my-0">
-                                <table class="table table-sm table-hover" style="width: 100%">
-                                    <thead>
-                                        <tr>
-                                            <th class="text-center align-middle text-wrap" style="width: 19%; font-size: 15px;">Item Code</th>
-                                            <th class="text-center align-middle text-wrap" style="width: 32%; font-size: 15px;">Item Description</th>
-                                            <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Request Qty</th>
-                                            <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">NP Qty</th>
-                                            <th class="text-center align-middle text-wrap" style="width: 11%; font-size: 15px;">UOM</th>
-                                            <th class="text-center align-middle text-wrap" style="width: 18%; font-size: 15px;">Item Value (Rp.)</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var item in previewPOMFConfirmDocument.dataItemLines)
-                                        {
-                                            <tr>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemCode</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemDescription</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.RequestQuantity</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.NPQuantity</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemUOM</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemValue.ToString("N0")</td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        }
-                        else
-                        {
-                            <p class="fw-bold text-center align-middle">. . . There is no Document . . .</p>
-                        }
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer cus-bg">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#previewPOMFConfirmedModal"><i class="oi oi-x"></i> Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-

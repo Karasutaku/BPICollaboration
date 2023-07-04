@@ -18,7 +18,7 @@ namespace BPIDA.DataAccess
             _conString = _configuration.GetValue<string>($"ConnectionStrings:{_moduleConnection}");
         }
 
-        internal bool createFundReturnDocumentData(QueryModel<FundReturnHeader> data, DataTable dataItemLines)
+        internal bool createFundReturnDocumentData(QueryModel<FundReturnHeader> data, DataTable dataItemLines, DataTable dataAttachLines)
         {
             bool flag = false;
 
@@ -65,6 +65,7 @@ namespace BPIDA.DataAccess
                     command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
 
                     command.Parameters.AddWithValue("@ItemLines", dataItemLines);
+                    command.Parameters.AddWithValue("@AttachLines", dataAttachLines);
 
                     int ret = command.ExecuteNonQuery();
 
@@ -85,7 +86,7 @@ namespace BPIDA.DataAccess
             return flag;
         }
 
-        internal bool createFundReturnHeaderData(QueryModel<FundReturnHeader> data)
+        internal bool createFundReturnHeaderData(QueryModel<FundReturnHeader> data, DataTable dataAttachLines)
         {
             bool flag = false;
 
@@ -130,6 +131,8 @@ namespace BPIDA.DataAccess
                     command.Parameters.AddWithValue("@AuditUser", data.userEmail);
                     command.Parameters.AddWithValue("@AuditAction", data.userAction);
                     command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);
+
+                    command.Parameters.AddWithValue("@AttachLines", dataAttachLines);
 
                     int ret = command.ExecuteNonQuery();
 
@@ -329,6 +332,44 @@ namespace BPIDA.DataAccess
                     command.Connection = con;
                     command.CommandType = CommandType.StoredProcedure;
                     command.CommandText = "[getFundReturnApprovals]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@LocationID", location);
+                    command.Parameters.AddWithValue("@FundReturnIds", param);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
+        internal DataTable getFundReturnAttachmentData(string location, DataTable param)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getFundReturnAttachment]";
                     command.CommandTimeout = 1000;
 
                     command.Parameters.Clear();

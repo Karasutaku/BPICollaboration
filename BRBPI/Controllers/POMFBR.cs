@@ -297,6 +297,50 @@ namespace BPIBR.Controllers
             return actionResult;
         }
 
+        [HttpGet("getPOMFItemLineMaxQuantity/{param}")]
+        public async Task<IActionResult> getPOMFItemLineMaxQuantity(string param)
+        {
+            ResultModel<List<POMFItemLinesMaxQuantity>> res = new ResultModel<List<POMFItemLinesMaxQuantity>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<POMFItemLinesMaxQuantity>>>($"api/DA/POMF/getPOMFItemLineMaxQuantity/{param}");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
         [HttpGet("getPOMFNPType")]
         public async Task<IActionResult> getPOMFNPType()
         {

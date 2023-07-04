@@ -42,6 +42,15 @@
         public DateTime ApproveDate { get; set; } = DateTime.Now;
     }
 
+    public class FundReturnAttachment
+    {
+        public string DocumentID { get; set; } = string.Empty;
+        public int LineNum { get; set; } = 0;
+        public DateTime UploadDate { get; set; } = DateTime.Now;
+        public string FileExtension { get; set; } = string.Empty;
+        public string FilePath { get; set; } = string.Empty;
+    }
+
     public class FundReturnCategory
     {
         public string FundReturnCategoryID { get; set; } = string.Empty;

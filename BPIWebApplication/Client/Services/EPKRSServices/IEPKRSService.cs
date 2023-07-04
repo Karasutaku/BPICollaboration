@@ -52,6 +52,11 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
         Task<ResultModel<List<EPKRSIncidentAccidentInvolverStatisticsbyPosition>>> getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPosition(QueryModel<string> param);
         Task<ResultModel<List<EPKRSIncidentAccidentInvolverStatisticsbyDept>>> getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDept(QueryModel<string> param);
 
+        // Reporting
+
+        Task<ResultModel<BPIWebApplication.Shared.MainModel.Stream.FileStream>> getEPKRSIncidentAccidentReport(QueryModel<string> param);
+        Task<ResultModel<BPIWebApplication.Shared.MainModel.Stream.FileStream>> getEPKRSItemCaseReport(QueryModel<string> param);
+
         // TMS
         Task<ResultModel<List<LoadingManifestResp>>> getEPKRSItemDetailsbyLMNo(LMNotoTMS param, string token);
 

@@ -1,9 +1,12 @@
-﻿namespace BPIDA.Models.MainModel.FundReturn
+﻿using BPIDA.Models.MainModel.Stream;
+
+namespace BPIDA.Models.MainModel.FundReturn
 {
     public class FundReturnDocument
     {
         public FundReturnHeader dataHeader { get; set; } = new();
         public List<FundReturnItemLine> dataItemLines { get; set; } = new();
+        public List<FundReturnAttachment> dataAttachmentLines { get; set; } = new();
         public List<FundReturnApproval> dataApproval { get; set; } = new();
     }
 

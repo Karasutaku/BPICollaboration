@@ -82,6 +82,11 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
         private string dinamicMonitoringPanelDateFilter = string.Empty;
         private string dinamicMonitoringPanelDateFilterExt = string.Empty;
 
+        private DateTime startDateExport = new(2023, 1, 1);
+        private DateTime endDateExport = DateTime.Now;
+        private bool isExported = false;
+        private bool isExportLoading = false;
+
         private Dictionary<int, bool> monthSelector = new Dictionary<int, bool>
         {
             { 1, false },
@@ -2721,6 +2726,88 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             {
                 await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} from {ex.Source} {ex.InnerException} !");
             }
+        }
+
+        private async Task ExportItemCase()
+        {
+            try
+            {
+                isExportLoading = true;
+
+                string temp = $"WHERE a.ReportDate BETWEEN \'{startDateExport.ToString("yyyy/MM/dd")} 00:00:00\' AND \'{endDateExport.ToString("yyyy/MM/dd")} 23:59:59\'!_!";
+
+                QueryModel<string> param = new();
+                param.Data = CommonLibrary.Base64Encode(temp);
+                param.userEmail = activeUser.userName;
+                param.userAction = "X";
+                param.userActionDate = DateTime.Now;
+
+                var res = await EPKRSService.getEPKRSItemCaseReport(param);
+
+                if (res.isSuccess)
+                {
+                    await HandleDownloadDocument(res.Data.content, res.Data.fileName);
+                    await _jsModule.InvokeVoidAsync("showAlert", "Export Success !");
+
+                    resetExportDate();
+                }
+                else
+                {
+                    await _jsModule.InvokeVoidAsync("showAlert", $"Err: {res.ErrorCode} - {res.ErrorMessage} !");
+                }
+
+                isExportLoading = false;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} from {ex.Source} {ex.InnerException} !");
+            }
+        }
+
+        private async Task ExportIncidentAccident()
+        {
+            try
+            {
+                isExportLoading = true;
+
+                string temp = $"WHERE a.ReportDate BETWEEN \'{startDateExport.ToString("yyyy/MM/dd")} 00:00:00\' AND \'{endDateExport.ToString("yyyy/MM/dd")} 23:59:59\'!_!";
+
+                QueryModel<string> param = new();
+                param.Data = CommonLibrary.Base64Encode(temp);
+                param.userEmail = activeUser.userName;
+                param.userAction = "X";
+                param.userActionDate = DateTime.Now;
+
+                var res = await EPKRSService.getEPKRSIncidentAccidentReport(param);
+
+                if (res.isSuccess)
+                {
+                    await HandleDownloadDocument(res.Data.content, res.Data.fileName);
+                    await _jsModule.InvokeVoidAsync("showAlert", "Export Success !");
+
+                    resetExportDate();
+                }
+                else
+                {
+                    await _jsModule.InvokeVoidAsync("showAlert", $"Err: {res.ErrorCode} - {res.ErrorMessage} !");
+                }
+
+                isExportLoading = false;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} from {ex.Source} {ex.InnerException} !");
+            }
+        }
+
+        private void resetExportDate()
+        {
+            startDateExport = new(2023, 1, 1);
+            endDateExport = DateTime.Now;
+
+            isExported = false;
         }
 
         private bool checkReportingType()

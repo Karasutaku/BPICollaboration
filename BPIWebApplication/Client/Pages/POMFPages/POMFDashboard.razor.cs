@@ -24,6 +24,11 @@ namespace BPIWebApplication.Client.Pages.POMFPages
 
         private List<POMFDocument> selectedPOMFDocument = new();
 
+        private string[] acceptedDocReqPrefix = new string[] { };
+        private string[] acceptedDocRecPrefix = new string[] { };
+        private int minDocLength = 0;
+        private int maxDocLength = 0;
+
         private int pomfNumberofPage = 0;
         private int pomfPageActive = 0;
         private int pomfConfirmedNumberofPage = 0;
@@ -126,6 +131,10 @@ namespace BPIWebApplication.Client.Pages.POMFPages
             pomfConfirmedPageActive = 1;
 
             await POMFService.getPOMFNPType();
+            acceptedDocReqPrefix = await POMFService.getPOMFAcceptedDocPrefix(CommonLibrary.Base64Encode("Request"));
+            acceptedDocRecPrefix = await POMFService.getPOMFAcceptedDocPrefix(CommonLibrary.Base64Encode("Receive"));
+            minDocLength = await POMFService.getPOMFAcceptedDocLength(CommonLibrary.Base64Encode("Min"));
+            maxDocLength = await POMFService.getPOMFAcceptedDocLength(CommonLibrary.Base64Encode("Max"));
 
             _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/POMFPages/POMFDashboard.razor.js");
         }
@@ -293,15 +302,45 @@ namespace BPIWebApplication.Client.Pages.POMFPages
                 }
                 else
                 {
+                    if (minDocLength == 0 || maxDocLength == 0)
+                    {
+                        await _jsModule.InvokeVoidAsync("showAlert", "Document Length Parameter Data is Not Valid !");
+                        return;
+                    }
+
                     if (approveType.Equals("Release") && previewPOMFDocument.dataItemLines.Any(x => x.ExternalRequestDocument.IsNullOrEmpty()))
                     {
                         await _jsModule.InvokeVoidAsync("showAlert", "Request Document Input Field is Empty !");
                         return;
                     }
 
+                    if (approveType.Equals("Release") && previewPOMFDocument.dataItemLines.Any(x => x.ExternalRequestDocument.Length < minDocLength || x.ExternalRequestDocument.Length > maxDocLength))
+                    {
+                        await _jsModule.InvokeVoidAsync("showAlert", "Request Document Input is not Valid ! Length Document at least 13 Character and less than 20 Character !");
+                        return;
+                    }
+
+                    if (approveType.Equals("Release") && !previewPOMFDocument.dataItemLines.All(x => acceptedDocReqPrefix.Any(v => x.ExternalRequestDocument.StartsWith(v))))
+                    {
+                        await _jsModule.InvokeVoidAsync("showAlert", "Request Document Input is not Valid ! Document ID Prefix is Not Valid !");
+                        return;
+                    }
+
                     if (approveType.Equals("Receive") && previewPOMFDocument.dataItemLines.Any(x => x.ExternalReceiveDocument.IsNullOrEmpty()))
                     {
                         await _jsModule.InvokeVoidAsync("showAlert", "Receive Document Input Field is Empty !");
+                        return;
+                    }
+
+                    if (approveType.Equals("Receive") && previewPOMFDocument.dataItemLines.Any(x => x.ExternalReceiveDocument.Length < minDocLength || x.ExternalReceiveDocument.Length > maxDocLength))
+                    {
+                        await _jsModule.InvokeVoidAsync("showAlert", "Receive Document Input is not Valid ! Length Document at least 13 Character and less than 20 Character !");
+                        return;
+                    }
+
+                    if (approveType.Equals("Receive") && !previewPOMFDocument.dataItemLines.All(x => acceptedDocRecPrefix.Any(v => x.ExternalReceiveDocument.StartsWith(v))))
+                    {
+                        await _jsModule.InvokeVoidAsync("showAlert", "Request Document Input is not Valid ! Document ID Prefix is Not Valid !");
                         return;
                     }
 
@@ -313,7 +352,7 @@ namespace BPIWebApplication.Client.Pages.POMFPages
                     uploadData.Data.approvalData = new();
 
                     if (approveType.Equals("Release"))
-                        previewPOMFDocument.dataItemLines.ForEach(x => { x.ExternalReceiveDocument = string.Empty; x.ReceiveDocumentDate = new DateTime(2023, 1, 1); });
+                        previewPOMFDocument.dataItemLines.ForEach(x => { x.ExternalReceiveDocument = string.Empty; x.ReceiveDocumentDate = new DateTime(DateTime.Now.Year, 1, 1); });
 
                     //if (approveType.Equals("Receive"))
                     //    previewPOMFDocument.dataItemLines.ForEach(x => { x.ReceiveDocumentDate = DateTime.Now; });

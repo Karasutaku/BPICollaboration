@@ -74,22 +74,7 @@ namespace BPIWebApplication.Shared.PagesModel.FundReturn
         public string ItemDescription { get; set; } = string.Empty;
         public int ItemQuantity { get; set; } = 0;
         public string UOM { get; set; } = string.Empty;
-        public string ItemAmount {
-            get => itemAmt.ToString("N0");
-            set
-            {
-                if (value.Length <= 0)
-                {
-                    itemAmt = Math.Round(decimal.Zero);
-                }
-                else
-                {
-                    string res = new string((from c in value where char.IsLetterOrDigit(c) select c).ToArray());
-                    if (Decimal.TryParse(res, (NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingSign), CultureInfo.CreateSpecificCulture("en-US"), out var number))
-                        itemAmt = Math.Round(number);
-                }
-            }
-        }
+        public decimal ItemAmount { get; set; } = decimal.Zero;
         public int ItemDiscount { get; set; } = 0;
     }
 }

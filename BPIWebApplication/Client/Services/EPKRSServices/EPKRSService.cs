@@ -1225,6 +1225,102 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
             return resData;
         }
 
+        public async Task<ResultModel<BPIWebApplication.Shared.MainModel.Stream.FileStream>> getEPKRSIncidentAccidentReport(QueryModel<string> param)
+        {
+            ResultModel<BPIWebApplication.Shared.MainModel.Stream.FileStream> resData = new();
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/endUser/EPKRS/getEPKRSIncidentAccidentReport", param);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<BPIWebApplication.Shared.MainModel.Stream.FileStream>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                    else
+                    {
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<BPIWebApplication.Shared.MainModel.Stream.FileStream>>();
+
+                    resData.Data = respBody.Data;
+                    resData.isSuccess = respBody.isSuccess;
+                    resData.ErrorCode = respBody.ErrorCode;
+                    resData.ErrorMessage = respBody.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
+        public async Task<ResultModel<BPIWebApplication.Shared.MainModel.Stream.FileStream>> getEPKRSItemCaseReport(QueryModel<string> param)
+        {
+            ResultModel<BPIWebApplication.Shared.MainModel.Stream.FileStream> resData = new();
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/endUser/EPKRS/getEPKRSItemCaseReport", param);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<BPIWebApplication.Shared.MainModel.Stream.FileStream>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                    else
+                    {
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<BPIWebApplication.Shared.MainModel.Stream.FileStream>>();
+
+                    resData.Data = respBody.Data;
+                    resData.isSuccess = respBody.isSuccess;
+                    resData.ErrorCode = respBody.ErrorCode;
+                    resData.ErrorMessage = respBody.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
         public async Task<ResultModel<List<LoadingManifestResp>>> getEPKRSItemDetailsbyLMNo(LMNotoTMS param, string token)
         {
             ResultModel<List<LoadingManifestResp>> resData = new();
@@ -1256,10 +1352,12 @@ namespace BPIWebApplication.Client.Services.EPKRSServices
                 }
                 else
                 {
-                    resData.Data = null;
-                    resData.isSuccess = false;
-                    resData.ErrorCode = "01";
-                    resData.ErrorMessage = "Failure from getDetailsItembyLMNo endUser";
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<LoadingManifestResp>>>();
+
+                    resData.Data = respBody.Data;
+                    resData.isSuccess = respBody.isSuccess;
+                    resData.ErrorCode = respBody.ErrorCode;
+                    resData.ErrorMessage = respBody.ErrorMessage;
                 }
             }
             catch (Exception ex)

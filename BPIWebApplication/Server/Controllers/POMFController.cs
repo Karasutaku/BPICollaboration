@@ -1,4 +1,5 @@
-﻿using BPIWebApplication.Shared.DbModel;
+﻿using BPILibrary;
+using BPIWebApplication.Shared.DbModel;
 using BPIWebApplication.Shared.MainModel;
 using BPIWebApplication.Shared.MainModel.POMF;
 using Microsoft.AspNetCore.Mvc;
@@ -11,14 +12,18 @@ namespace BPIWebApplication.Server.Controllers
     {
         private readonly HttpClient _http;
         private readonly IConfiguration _configuration;
-        //private readonly string _uploadPath;
+        private readonly string[] _acceptedReqDocPrefix, _acceptedRecDocPrefix;
+        private readonly int _minDocLength, _maxDocLength;
 
         public POMFController(HttpClient http, IConfiguration config)
         {
             _http = http;
             _configuration = config;
             _http.BaseAddress = new Uri(_configuration.GetValue<string>("ConnectionStrings:BpiFacade"));
-            //_uploadPath = _configuration.GetValue<string>("File:EPKRS:UploadPath");
+            _acceptedReqDocPrefix = config.GetValue<string>("File:POMF:AcceptedReqDocPrefix").Split("|");
+            _acceptedRecDocPrefix = config.GetValue<string>("File:POMF:AcceptedRecDocPrefix").Split("|");
+            _minDocLength = config.GetValue<int>("File:POMF:AcceptedMinDocLength");
+            _maxDocLength = config.GetValue<int>("File:POMF:AcceptedMaxDocLength");
         }
 
         [HttpPost("createPOMFDocument")]
@@ -297,6 +302,50 @@ namespace BPIWebApplication.Server.Controllers
             return actionResult;
         }
 
+        [HttpGet("getPOMFItemLineMaxQuantity/{param}")]
+        public async Task<IActionResult> getPOMFItemLineMaxQuantity(string param)
+        {
+            ResultModel<List<POMFItemLinesMaxQuantity>> res = new ResultModel<List<POMFItemLinesMaxQuantity>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<POMFItemLinesMaxQuantity>>>($"api/Facade/POMF/getPOMFItemLineMaxQuantity/{param}");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
         [HttpGet("getPOMFNPType")]
         public async Task<IActionResult> getPOMFNPType()
         {
@@ -371,6 +420,90 @@ namespace BPIWebApplication.Server.Controllers
 
                     actionResult = Ok(res);
                 }
+            }
+            catch (Exception ex)
+            {
+                res.Data = 0;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getPOMFAcceptedDocPrefix/{param}")]
+        public async Task<IActionResult> getPOMFAcceptedDocPrefix(string param)
+        {
+            ResultModel<string[]> res = new ResultModel<string[]>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                string temp = CommonLibrary.Base64Decode(param);
+
+                if (!(_acceptedRecDocPrefix.Count() > 0))
+                    throw new Exception("No Document Prefix found !");
+
+                if (temp.Equals("Request"))
+                {
+                    res.Data = _acceptedReqDocPrefix;
+                }
+                else if (temp.Equals("Receive"))
+                {
+                    res.Data = _acceptedRecDocPrefix;
+                }
+
+                res.isSuccess = true;
+                res.ErrorCode = "00";
+                res.ErrorMessage = "";
+
+                actionResult = Ok(res);
+
+            }
+            catch (Exception ex)
+            {
+                res.Data = new string[] { };
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getPOMFAcceptedDocLength/{param}")]
+        public async Task<IActionResult> getPOMFAcceptedDocLength(string param)
+        {
+            ResultModel<int> res = new ResultModel<int>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                string temp = CommonLibrary.Base64Decode(param);
+
+                if (!(_acceptedRecDocPrefix.Count() > 0))
+                    throw new Exception("No Document Prefix found !");
+
+                if (temp.Equals("Min"))
+                {
+                    res.Data = _minDocLength;
+                }
+                else if (temp.Equals("Max"))
+                {
+                    res.Data = _maxDocLength;
+                }
+
+                res.isSuccess = true;
+                res.ErrorCode = "00";
+                res.ErrorMessage = "";
+
+                actionResult = Ok(res);
+
             }
             catch (Exception ex)
             {

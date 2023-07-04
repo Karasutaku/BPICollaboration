@@ -19,4 +19,11 @@
         public List<POMFItemLine> pomfItemLines { get; set; } = new();
         public POMFApproval approvalData { get; set; } = new();
     }
+
+    public class POMFItemLinesMaxQuantity
+    {
+        public string POMFID { get; set; } = string.Empty;
+        public string ItemCode { get; set; } = string.Empty;
+        public int MaxQuantity { get; set; } = 0;
+    }
 }

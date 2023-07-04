@@ -286,6 +286,40 @@ namespace BPIWebApplication.Client.Services.POMFServices
             return resData;
         }
 
+        public async Task<ResultModel<List<POMFItemLinesMaxQuantity>>> getPOMFItemLineMaxQuantity(string param)
+        {
+            ResultModel<List<POMFItemLinesMaxQuantity>> resData = new ResultModel<List<POMFItemLinesMaxQuantity>>();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<POMFItemLinesMaxQuantity>>>($"api/endUser/POMF/getPOMFItemLineMaxQuantity/{param}");
+
+                if (result.isSuccess)
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
         public async Task<ResultModel<List<NPwithReceiptNoResp>>> getDetailsItemByReceiptNoAndNPNo(NPwithReceiptNotoTMS param, string token)
         {
             ResultModel<List<NPwithReceiptNoResp>> resData = new();
@@ -369,6 +403,76 @@ namespace BPIWebApplication.Client.Services.POMFServices
             }
 
             return resData;
+        }
+
+        public async Task<string[]> getPOMFAcceptedDocPrefix(string param)
+        {
+            ResultModel<string[]> resData = new ResultModel<string[]>();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<string[]>>($"api/endUser/POMF/getPOMFAcceptedDocPrefix/{param}");
+
+                if (result.isSuccess)
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = new string[] { };
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData.Data;
+        }
+
+        public async Task<int> getPOMFAcceptedDocLength(string param)
+        {
+            ResultModel<int> resData = new ResultModel<int>();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/endUser/POMF/getPOMFAcceptedDocLength/{param}");
+
+                if (result.isSuccess)
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = 0;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData.Data;
         }
 
         //

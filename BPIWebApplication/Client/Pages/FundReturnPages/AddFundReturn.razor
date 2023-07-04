@@ -31,20 +31,18 @@ else
             
             @if (alertTrigger)
             {
-                <div id="warningAlert" class="alert alert-warning show" role="alert">
-                    <h5 class="alert-heading fw-bold">@alertMessage</h5>
-                    @alertBody
-                    <button type="button" class="btn btn-close" aria-label="Close">
+                <div id="warningAlert" class="alert alert-warning alert-dismissible @(alertTrigger ? "show" : null) fade mt-3" role="alert">
+                    <span class="fw-bold">@alertMessage</span> @alertBody
+                    <button type="button" class="btn btn-close" aria-label="Close" @onclick="@(() => alertTrigger = false)">
                     </button>
                 </div>
             }
 
             @if (successAlert)
             {
-                <div id="successAlert" class="alert alert-success show" role="alert">
-                    <h5 class="alert-heading fw-bold">@alertMessage</h5>
-                    @alertBody
-                    <button type="button" class="btn btn-close" aria-label="Close">
+                <div id="successAlert" class="alert alert-success alert-dismissible @(successAlert ? "show" : null) fade mt-3" role="alert">
+                    <span class="fw-bold">@alertMessage</span> @alertBody
+                    <button type="button" class="btn btn-close" aria-label="Close" @onclick="@(() => successAlert = false)">
                     </button>
                 </div>
             }
@@ -93,71 +91,61 @@ else
                                     <label for="loc">Location :</label>
                                     <InputText id="loc" @bind-Value="fundReturnHeader.LocationID" class="form-control" readonly></InputText>
                                 </div>
-                                @*<div class="col">
-                                    <label for="com_type">Commercial Type :</label>
-                                    <InputSelect id="com_type" @bind-Value="fundReturnHeader.CommercialType" class="form-select">
-                                        <option hidden value="BLANK">Select Commercial Type</option>
-                                        <option value="ONLINE">Online</option>
-                                        <option value="OFFLINE">Offline</option>
-                                    </InputSelect>
-                                </div>*@
                             </div>
 
                             <div class="row my-2">
                                 <div class="col">
                                     <label for="cust_name">Customer Name :</label>
-                                    <InputText id="cust_name" @bind-Value="fundReturnHeader.CustomerName" class="form-control"></InputText>
+                                    <InputText id="cust_name" @bind-Value="fundReturnHeader.CustomerName" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
                                 </div>
                                 <div class="col">
                                     <label for="cust_contc">Contact No :</label>
-                                    <InputText id="cust_contc" @bind-Value="fundReturnHeader.CustomerContactNo" class="form-control"></InputText>
+                                    <InputText id="cust_contc" @bind-Value="fundReturnHeader.CustomerContactNo" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
                                 </div>
                             </div>
-@*
-                            <div class="row my-2">
-                                <div class="col">
-                                    <label for="cust_type">Customer Type :</label>
-                                    <InputSelect id="cust_type" @bind-Value="fundReturnHeader.CustomerType" class="form-select">
-                                        <option hidden value="BLANK">Select Customer Type</option>
-                                        <option value="MEMBER">Member</option>
-                                        <option value="NONMEMBER">Non-Member</option>
-                                    </InputSelect>
-                                </div>
-                                <div class="col">
-                                    @if (fundReturnHeader.CustomerType.Equals("MEMBER"))
-                                    {
-                                        <label for="memb_id">Customer Member ID :</label>
-                                        <InputText id="memb_id" @bind-Value="fundReturnHeader.CustomerMemberID" class="form-control"></InputText>
-                                    }
-                                </div>
-                            </div>*@
 
                             <div class="row my-2">
                                 <div class="col">
                                     <label for="rcp_doc">Refund Amount :</label>
-                                    <InputText id="rcp_doc" @bind-Value="fundReturnHeader.RefundAmount" class="form-control" readonly></InputText>
+                                    <div class="input-group mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Rp.</span>
+                                        </div>
+                                        <InputText id="rcp_doc" @bind-Value="fundReturnHeader.RefundAmount" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
+                                        <div class="input-group-append">
+                                            <span class="input-group-text">,-</span>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="col">
                                     <label for="rcp_doc">Transaction Amount :</label>
-                                    <InputText id="rcp_doc" @bind-Value="fundReturnHeader.TransactionAmount" class="form-control" @oninput="((ChangeEventArgs e) => fundReturnHeader.RefundAmount = e.Value.ToString())"></InputText>
+                                    <div class="input-group mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Rp.</span>
+                                        </div>
+                                        <InputText id="rcp_doc" @bind-Value="fundReturnHeader.TransactionAmount" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
+                                        <div class="input-group-append">
+                                            <span class="input-group-text">,-</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="row my-2">
                                 <div class="col">
                                     <label for="bank_holder">Bank Holder Name :</label>
-                                    <InputText id="bank_holder" @bind-Value="fundReturnHeader.BankHolderName" class="form-control"></InputText>
+                                    <InputText id="bank_holder" @bind-Value="fundReturnHeader.BankHolderName" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
                                 </div>
                             </div>
 
                             <div class="row my-2">
                                 <div class="col">
                                     <label for="bank_account">Bank Account :</label>
-                                    <InputText id="bank_account" @bind-Value="fundReturnHeader.BankAccount" class="form-control"></InputText>
+                                    <InputText id="bank_account" @bind-Value="fundReturnHeader.BankAccount" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
                                 </div>
                                 <div class="col">
                                     <label for="banks">Bank :</label>
-                                    <InputSelect id="banks" @bind-Value="fundReturnHeader.BankID" class="form-select">
+                                    <InputSelect id="banks" @bind-Value="fundReturnHeader.BankID" class="form-select" disabled="@(isLoading || successUpload)">
                                         @if (checkBank())
                                         {
                                             @foreach (var bank in FundReturnService.banks)
@@ -176,9 +164,36 @@ else
                             <div class="row my-2">
                                 <div class="col">
                                     <label for="reason">Reason / Cronology :</label>
-                                    <InputTextArea id="reason" @bind-Value="fundReturnHeader.Reason" class="form-control"></InputTextArea>
+                                    <InputTextArea id="reason" @bind-Value="fundReturnHeader.Reason" class="form-control" readonly="@(isLoading || successUpload)"></InputTextArea>
                                 </div>
                             </div>
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="discussionUploadFile" class="btn btn-primary-cus"><i class="oi oi-paperclip"></i> Attach</label>
+                                    <InputFile id="discussionUploadFile" accept=".pdf" multiple hidden OnChange="UploadHandleSelection" disabled="@(isLoading || successUpload)"></InputFile>
+                                </div>
+                            </div>
+
+                            @if (checkFileUpload())
+                            {
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <ul class="list-group mb-3">
+                                            @foreach (var attachedFile in fileUpload)
+                                            {
+                                                <li class="list-group-item">@attachedFile.fileName.Split("!_!")[1]</li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning" role="alert">
+                                    <b>No Attachment !</b>
+                                </div>
+                            }
                         }
                         else if (fundReturnCategorySelected.Equals("RQST"))
                         {
@@ -200,7 +215,7 @@ else
                                 </div>
                                 <div class="col">
                                     <label for="com_type">Commercial Type :</label>
-                                    <InputSelect id="com_type" @bind-Value="fundReturnHeader.CommercialType" class="form-select">
+                                    <InputSelect id="com_type" @bind-Value="fundReturnHeader.CommercialType" class="form-select" disabled="@(isLoading || successUpload)">
                                         <option hidden value="BLANK">Select Commercial Type</option>
                                         <option value="ONLINE">Online</option>
                                         <option value="OFFLINE">Offline</option>
@@ -221,7 +236,7 @@ else
                                         <label for="rcp_doc">
                                             @(fundReturnHeader.CommercialType.Equals("ONLINE") ? "PSORT :" : "Refund Receipt :")
                                         </label>
-                                        <InputText id="rcp_doc" @bind-Value="fundReturnHeader.ReceiptDocument" class="form-control"></InputText>
+                                        <InputText id="rcp_doc" @bind-Value="fundReturnHeader.ReceiptDocument" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
                                     </div>
                                 </div>
 
@@ -230,7 +245,7 @@ else
                                     <div class="row my-2">
                                         <div class="col">
                                             <label for="rcp_doc">External Document :</label>
-                                            <InputText id="rcp_doc" @bind-Value="fundReturnHeader.ExternalDocument" class="form-control"></InputText>
+                                            <InputText id="rcp_doc" @bind-Value="fundReturnHeader.ExternalDocument" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
                                         </div>
                                     </div>
                                 }
@@ -239,29 +254,45 @@ else
                             <div class="row my-2">
                                 <div class="col">
                                     <label for="rcp_doc">Refund Amount :</label>
-                                    <InputText id="rcp_doc" @bind-Value="fundReturnHeader.RefundAmount" class="form-control"></InputText>
+                                    <div class="input-group mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Rp.</span>
+                                        </div>
+                                        <InputText id="rcp_doc" @bind-Value="fundReturnHeader.RefundAmount" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
+                                        <div class="input-group-append">
+                                            <span class="input-group-text">,-</span>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="col">
                                     <label for="rcp_doc">Transaction Amount :</label>
-                                    <InputText id="rcp_doc" @bind-Value="fundReturnHeader.TransactionAmount" class="form-control"></InputText>
+                                    <div class="input-group mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Rp.</span>
+                                        </div>
+                                        <InputText id="rcp_doc" @bind-Value="fundReturnHeader.TransactionAmount" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
+                                        <div class="input-group-append">
+                                            <span class="input-group-text">,-</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="row my-2">
                                 <div class="col">
                                     <label for="cust_name">Customer Name :</label>
-                                    <InputText id="cust_name" @bind-Value="fundReturnHeader.CustomerName" class="form-control"></InputText>
+                                    <InputText id="cust_name" @bind-Value="fundReturnHeader.CustomerName" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
                                 </div>
                                 <div class="col">
                                     <label for="cust_contc">Contact No :</label>
-                                    <InputText id="cust_contc" @bind-Value="fundReturnHeader.CustomerContactNo" class="form-control"></InputText>
+                                    <InputText id="cust_contc" @bind-Value="fundReturnHeader.CustomerContactNo" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
                                 </div>
                             </div>
 
                             <div class="row my-2">
                                 <div class="col">
                                     <label for="cust_type">Customer Type :</label>
-                                    <InputSelect id="cust_type" @bind-Value="fundReturnHeader.CustomerType" class="form-select">
+                                    <InputSelect id="cust_type" @bind-Value="fundReturnHeader.CustomerType" class="form-select" disabled="@(isLoading || successUpload)">
                                         <option hidden value="BLANK">Select Customer Type</option>
                                         <option value="MEMBER">Member</option>
                                         <option value="NONMEMBER">Non-Member</option>
@@ -271,7 +302,7 @@ else
                                     @if (fundReturnHeader.CustomerType.Equals("MEMBER"))
                                     {
                                         <label for="memb_id">Customer Member ID :</label>
-                                        <InputText id="memb_id" @bind-Value="fundReturnHeader.CustomerMemberID" class="form-control"></InputText>
+                                        <InputText id="memb_id" @bind-Value="fundReturnHeader.CustomerMemberID" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
                                     }
                                 </div>
                             </div>
@@ -279,18 +310,18 @@ else
                             <div class="row my-2">
                                 <div class="col">
                                     <label for="bank_holder">Bank Holder Name :</label>
-                                    <InputText id="bank_holder" @bind-Value="fundReturnHeader.BankHolderName" class="form-control"></InputText>
+                                    <InputText id="bank_holder" @bind-Value="fundReturnHeader.BankHolderName" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
                                 </div>
                             </div>
 
                             <div class="row my-2">
                                 <div class="col">
                                     <label for="bank_account">Bank Account :</label>
-                                    <InputText id="bank_account" @bind-Value="fundReturnHeader.BankAccount" class="form-control"></InputText>
+                                    <InputText id="bank_account" @bind-Value="fundReturnHeader.BankAccount" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
                                 </div>
                                 <div class="col">
                                     <label for="banks">Bank :</label>
-                                    <InputSelect id="banks" @bind-Value="fundReturnHeader.BankID" class="form-select">
+                                    <InputSelect id="banks" @bind-Value="fundReturnHeader.BankID" class="form-select" disabled="@(isLoading || successUpload)">
                                         @if (checkBank())
                                         {
                                             @foreach (var bank in FundReturnService.banks)
@@ -309,9 +340,36 @@ else
                             <div class="row my-2">
                                 <div class="col">
                                     <label for="reason">Reason / Cronology :</label>
-                                    <InputTextArea id="reason" @bind-Value="fundReturnHeader.Reason" class="form-control"></InputTextArea>
+                                    <InputTextArea id="reason" @bind-Value="fundReturnHeader.Reason" class="form-control" readonly="@(isLoading || successUpload)"></InputTextArea>
                                 </div>
                             </div>
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <label for="discussionUploadFile" class="btn btn-primary-cus"><i class="oi oi-paperclip"></i> Attach</label>
+                                    <InputFile id="discussionUploadFile" accept=".pdf" multiple hidden OnChange="UploadHandleSelection" disabled="@(isLoading || successUpload)"></InputFile>
+                                </div>
+                            </div>
+
+                            @if (checkFileUpload())
+                            {
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <ul class="list-group mb-3">
+                                            @foreach (var attachedFile in fileUpload)
+                                            {
+                                                <li class="list-group-item">@attachedFile.fileName.Split("!_!")[1]</li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning" role="alert">
+                                    <b>No Attachment !</b>
+                                </div>
+                            }
                         }
                         else if (fundReturnCategorySelected.Equals("XNTF"))
                         {
@@ -333,7 +391,7 @@ else
                                 </div>
                                 <div class="col">
                                     <label for="com_type">Commercial Type :</label>
-                                    <InputSelect id="com_type" @bind-Value="fundReturnHeader.CommercialType" class="form-select">
+                                    <InputSelect id="com_type" @bind-Value="fundReturnHeader.CommercialType" class="form-select" disabled="@(isLoading || successUpload)">
                                         <option hidden value="BLANK">Select Commercial Type</option>
                                         <option value="ONLINE">Online</option>
                                         <option value="OFFLINE">Offline</option>
@@ -354,7 +412,17 @@ else
                                         <label for="rcp_doc">
                                             @(fundReturnHeader.CommercialType.Equals("ONLINE") ? "SO :" : "Receipt :")
                                         </label>
-                                        <InputText id="rcp_doc" @bind-Value="fundReturnHeader.ReceiptDocument" class="form-control"></InputText>
+                                        @if (fundReturnHeader.CommercialType.Equals("ONLINE"))
+                                        {
+                                            <InputText id="rcp_doc" @bind-Value="fundReturnHeader.ReceiptDocument" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
+                                        }
+                                        else
+                                        {
+                                            <div id="rcp_doc" class="input-group">
+                                                <InputText id="rcp_doc" @bind-Value="fundReturnHeader.ReceiptDocument" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
+                                                <button type="button" class="btn btn-sm btn-primary-cus" data-toggle="modal" data-target="#selectitembyReceiptModal" @onclick="selectItembyReceiptNo" disabled="@(isLoading || successUpload)">...</button>
+                                            </div>
+                                        }
                                     </div>
                                 </div>
 
@@ -363,7 +431,7 @@ else
                                     <div class="row my-2">
                                         <div class="col">
                                             <label for="rcp_doc">External Document :</label>
-                                            <InputText id="rcp_doc" @bind-Value="fundReturnHeader.ExternalDocument" class="form-control"></InputText>
+                                            <InputText id="rcp_doc" @bind-Value="fundReturnHeader.ExternalDocument" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
                                         </div>
                                     </div>
                                 }
@@ -372,29 +440,56 @@ else
                             <div class="row my-2">
                                 <div class="col">
                                     <label for="rcp_doc">Refund Amount :</label>
-                                    <InputText id="rcp_doc" @bind-Value="fundReturnHeader.RefundAmount" class="form-control"></InputText>
+                                    <div class="input-group mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Rp.</span>
+                                        </div>
+                                        @{
+                                            var sums = decimal.Zero;
+                                            if (fundReturnLine.Count > 0)
+                                            {
+                                                fundReturnLine.ForEach(x =>
+                                                {
+                                                    sums += (x.ItemQuantity * x.ItemAmount);
+                                                });
+                                            }
+                                            var prevSum = sums.ToString("N0");
+                                        }
+                                        <InputText id="rcp_doc" @bind-Value="prevSum" class="form-control" readonly></InputText>
+                                        <div class="input-group-append">
+                                            <span class="input-group-text">,-</span>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="col">
                                     <label for="rcp_doc">Transaction Amount :</label>
-                                    <InputText id="rcp_doc" @bind-Value="fundReturnHeader.TransactionAmount" class="form-control"></InputText>
+                                    <div class="input-group mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Rp.</span>
+                                        </div>
+                                        <InputText id="rcp_doc" @bind-Value="fundReturnHeader.TransactionAmount" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
+                                        <div class="input-group-append">
+                                            <span class="input-group-text">,-</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="row my-2">
                                 <div class="col">
                                     <label for="cust_name">Customer Name :</label>
-                                    <InputText id="cust_name" @bind-Value="fundReturnHeader.CustomerName" class="form-control"></InputText>
+                                    <InputText id="cust_name" @bind-Value="fundReturnHeader.CustomerName" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
                                 </div>
                                 <div class="col">
                                     <label for="cust_contc">Contact No :</label>
-                                    <InputText id="cust_contc" @bind-Value="fundReturnHeader.CustomerContactNo" class="form-control"></InputText>
+                                    <InputText id="cust_contc" @bind-Value="fundReturnHeader.CustomerContactNo" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
                                 </div>
                             </div>
 
                             <div class="row my-2">
                                 <div class="col">
                                     <label for="cust_type">Customer Type :</label>
-                                    <InputSelect id="cust_type" @bind-Value="fundReturnHeader.CustomerType" class="form-select">
+                                    <InputSelect id="cust_type" @bind-Value="fundReturnHeader.CustomerType" class="form-select" disabled="@(isLoading || successUpload)">
                                         <option hidden value="BLANK">Select Customer Type</option>
                                         <option value="MEMBER">Member</option>
                                         <option value="NONMEMBER">Non-Member</option>
@@ -404,7 +499,7 @@ else
                                     @if (fundReturnHeader.CustomerType.Equals("MEMBER"))
                                     {
                                         <label for="memb_id">Customer Member ID :</label>
-                                        <InputText id="memb_id" @bind-Value="fundReturnHeader.CustomerMemberID" class="form-control"></InputText>
+                                        <InputText id="memb_id" @bind-Value="fundReturnHeader.CustomerMemberID" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
                                     }
                                 </div>
                             </div>
@@ -412,18 +507,18 @@ else
                             <div class="row my-2">
                                 <div class="col">
                                     <label for="bank_holder">Bank Holder Name :</label>
-                                    <InputText id="bank_holder" @bind-Value="fundReturnHeader.BankHolderName" class="form-control"></InputText>
+                                    <InputText id="bank_holder" @bind-Value="fundReturnHeader.BankHolderName" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
                                 </div>
                             </div>
 
                             <div class="row my-2">
                                 <div class="col">
                                     <label for="bank_account">Bank Account :</label>
-                                    <InputText id="bank_account" @bind-Value="fundReturnHeader.BankAccount" class="form-control"></InputText>
+                                    <InputText id="bank_account" @bind-Value="fundReturnHeader.BankAccount" class="form-control" readonly="@(isLoading || successUpload)"></InputText>
                                 </div>
                                 <div class="col">
                                     <label for="banks">Bank :</label>
-                                    <InputSelect id="banks" @bind-Value="fundReturnHeader.BankID" class="form-select">
+                                    <InputSelect id="banks" @bind-Value="fundReturnHeader.BankID" class="form-select" disabled="@(isLoading || successUpload)">
                                         @if (checkBank())
                                         {
                                             @foreach (var bank in FundReturnService.banks)
@@ -442,15 +537,36 @@ else
                             <div class="row my-2">
                                 <div class="col">
                                     <label for="reason">Reason / Cronology :</label>
-                                    <InputTextArea id="reason" @bind-Value="fundReturnHeader.Reason" class="form-control"></InputTextArea>
+                                    <InputTextArea id="reason" @bind-Value="fundReturnHeader.Reason" class="form-control" readonly="@(isLoading || successUpload)"></InputTextArea>
                                 </div>
                             </div>
 
-                            <div class="row my-4">
+                            <div class="row my-2">
                                 <div class="col">
-                                    <button type="button" class="btn btn-sm btn-warning" @onclick="(() => fundReturnLine.Add(new()))"><b>Add</b></button>
+                                    <label for="discussionUploadFile" class="btn btn-primary-cus"><i class="oi oi-paperclip"></i> Attach</label>
+                                    <InputFile id="discussionUploadFile" accept=".pdf" multiple hidden OnChange="UploadHandleSelection" disabled="@(isLoading || successUpload)"></InputFile>
                                 </div>
                             </div>
+
+                            @if (checkFileUpload())
+                            {
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <ul class="list-group mb-3">
+                                            @foreach (var attachedFile in fileUpload)
+                                            {
+                                                <li class="list-group-item">@attachedFile.fileName.Split("!_!")[1]</li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning" role="alert">
+                                    <b>No Attachment !</b>
+                                </div>
+                            }
 
                             @if (checkFundReturnLine())
                             {
@@ -459,28 +575,43 @@ else
                                         <tr>
                                             <th class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Action</th>
                                             <th class="text-center align-middle text-wrap" style="width: 17%; font-size: 15px;">Item Code</th>
-                                            <th class="text-center align-middle text-wrap" style="width: 30%; font-size: 15px;">Item Description</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 35%; font-size: 15px;">Item Description</th>
                                             <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Item Qty</th>
-                                            <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">UOM</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 15%; font-size: 15px;">UOM</th>
                                             <th class="text-center align-middle text-wrap" style="width: 18%; font-size: 15px;">Item Amount</th>
-                                            <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Discount</th>
+                                            @*<th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Discount</th>*@
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach (var line in fundReturnLine)
                                         {
                                             <tr>
-                                                <td><button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="(() => fundReturnLine.Remove(line))"><i class="oi oi-delete"></i></button></td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                                    <button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="(() => fundReturnLine.Remove(line))" disabled="@(isLoading || successUpload)"><i class="oi oi-delete"></i></button>
+                                                </td>
 
-                                                <td><input type="text" class="form-control" @bind-value="line.ItemCode" readonly="@(successUpload ? "readonly" : null)" /></td>
-                                                <td><input type="text" class="form-control" @bind-value="line.ItemDescription" readonly="@(successUpload ? "readonly" : null)" /></td>
-                                                <td><input type="number" class="form-control" @bind-value="line.ItemQuantity" readonly="@(successUpload ? "readonly" : null)" /></td>
-                                                <td><input type="text" class="form-control" @bind-value="line.UOM" readonly="@(successUpload ? "readonly" : null)" /></td>
-                                                <td><input type="text" class="form-control" @bind-value="line.ItemAmount" readonly="@(successUpload ? "readonly" : null)" /></td>
-                                                <td><input type="number" class="form-control" @bind-value="line.ItemDiscount" readonly="@(successUpload ? "readonly" : null)" /></td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@line.ItemCode</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@line.ItemDescription</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;"><input type="number" class="form-control" @bind-value="line.ItemQuantity" readonly="@(isLoading || successUpload)" /></td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@line.UOM</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@line.ItemAmount.ToString("N0")</td>
+                                                @*<td class="text-center align-middle text-wrap" style="font-size:14px;"><input type="number" class="form-control" @bind-value="line.ItemDiscount" readonly="@(successUpload ? "readonly" : null)" /></td>*@
                                             </tr>
                                         }
                                     </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td class="text-center align-middle text-wrap fw-bold" colspan="5">Total Value</td>
+                                            @{
+                                                var sum = decimal.Zero;
+                                                fundReturnLine.ForEach(x =>
+                                                {
+                                                    sum += (x.ItemQuantity * x.ItemAmount);
+                                                });
+                                            }
+                                            <td class="text-center align-middle text-wrap fw-bold" colspan="1">Rp. @sum.ToString("N0") ,-</td>
+                                        </tr>
+                                    </tfoot>
                                 </table>
                             }
                             else
@@ -533,3 +664,80 @@ else
         <BPIWebApplication.Client.Shared.CustomLayout.SplashScreen></BPIWebApplication.Client.Shared.CustomLayout.SplashScreen>
     </div>
 }
+
+@*Document Onprogress Modal*@
+<div class="modal fade" id="selectitembyReceiptModal" tabindex="-3" role="dialog" aria-labelledby="selectitembyReceiptModalModalLabel" aria-hidden="true" style="background: rgba(0,0,0, 0.2);">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header cus-bg">
+                <h5 class="modal-title fw-bold" id="selectitembyReceiptModalModalLabel"><i class="oi oi-pin"></i> Select Item from List</h5>
+                <button type="button" class="close" data-dismiss="modal" data-target="#selectitembyReceiptModal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                
+                <div class="row">
+                    <div class="col">
+                        @if (isMiniLoading)
+                        {
+                            <p class="text-center">
+                                <span class="spinner-border"></span> <br />FETCH DATA FROM SERVER, PLEASE WAIT !
+                            </p>
+                        }
+                        else
+                        {
+                            @if (checkReceiptData())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover" style="width: 100%">
+                                        <caption>
+                                            Receipt No : @fundReturnHeader.ReceiptDocument
+                                        </caption>
+                                        <thead>
+                                            <tr>
+                                                <th scope="col" class="text-center align-middle text-wrap" style="width: 6%; font-size: 15px;">#</th>
+                                                <th scope="col" class="text-center align-middle text-wrap" style="width: 15%; font-size: 15px;">Item Code</th>
+                                                <th scope="col" class="text-center align-middle text-wrap" style="width: 36%; font-size: 15px;">Item Desc.</th>
+                                                <th scope="col" class="text-center align-middle text-wrap" style="width: 11%; font-size: 15px;">Qty Receipt</th>
+                                                <th scope="col" class="text-center align-middle text-wrap" style="width: 17%; font-size: 15px;">Value</th>
+                                                <th scope="col" class="text-center align-middle text-wrap" style="width: 11%; font-size: 15px;">UOM</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var dt in receiptData)
+                                            {
+                                                <tr>
+                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                                        <input class="form-check-input" type="checkbox" id="itemCheck" checked="@(selectedReceiptData.FirstOrDefault(x => x.itemCode.Equals(dt.itemCode)) != null)" @onclick="@(() => appendSelectedReceiptItem(dt))" />
+                                                    </td>
+                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">@dt.itemCode</td>
+                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">@dt.itemDesc</td>
+                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">@(Math.Abs(dt.qtyReceipt).ToString("N0"))</td>
+                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">Rp. @dt.unitAmountNet.ToString("N0") ,-</td>
+                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">@dt.uom</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-primary" role="alert">
+                                    <b>Data Empty !</b>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer cus-bg">
+                <button type="button" class="btn btn-success" data-dismiss="modal" data-target="#selectitembyReceiptModal" @onclick="selectItembyReceipt" disabled="@(isLoading || successUpload)"><i class="oi oi-thumb-up"></i> Select</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#selectitembyReceiptModal"><i class="oi oi-thumb-down"></i> Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -20,42 +20,37 @@
         public POMFApproval approvalData { get; set; } = new();
     }
 
+    public class POMFItemLinesMaxQuantity
+    {
+        public string POMFID { get; set; } = string.Empty;
+        public string ItemCode { get; set; } = string.Empty;
+        public int MaxQuantity { get; set; } = 0;
+    }
+
     public class NPwithReceiptNotoTMS
     {
         public string receiptNo { get; set; } = string.Empty;
         public string npNo { get; set; } = string.Empty;
     }
 
+    public class POMFTMSParam
+    {
+        public NPwithReceiptNotoTMS tmsParam { get; set; } = new();
+        public string facadeParam { get; set; } = string.Empty;
+    }
+
     public class NPwithReceiptNoResp
     {
-        private int qtyrcp = 0;
-        private int nptype = 0;
-
         public string itemCode { get; set; } = string.Empty;
         public string itemDesc { get; set; } = string.Empty;
-        public string qtyNP
-        {
-            get => qtyrcp.ToString("N0");
-            set
-            {
-                var x = 0;
-
-                x = Convert.ToInt32(Math.Round(Convert.ToDecimal(value)));
-
-                qtyrcp = Math.Abs(x);
-            }
-        }
+        public decimal qtyNP { get; set; } = decimal.Zero;
         public string uom { get; set; } = string.Empty;
-        public string type {
-            get => nptype.ToString();
-            set
-            {
-                var x = 0;
+        public int type { get; set; } = 0;
+    }
 
-                x = Convert.ToInt32(value);
-
-                nptype = x;
-            }
-        }
+    public class NPwithReceiptFetchDetail
+    {
+        public List<NPwithReceiptNoResp>? tmsResp { get; set; } = new();
+        public List<POMFItemLinesMaxQuantity>? itemDetailsMaxQuantity { get; set; } = new();
     }
 }

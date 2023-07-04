@@ -170,8 +170,8 @@ else
                                             {
                                                 @foreach (var location in ManagementService.locations)
                                                 {
-                                                    @*if (!location.locationName.Contains("DC"))
-                                                        continue;*@
+                                                    if (!location.locationName.Contains("DC"))
+                                                        continue;
 
                                                     <option value="@location.locationId">@location.locationId - @location.locationName</option>
                                                 }
@@ -504,7 +504,12 @@ else
                                     </div>
                                     <div class="col">
                                         <label for="riskrpemail">Email Risk RP : <i class="text-danger">&ast;</i></label>
-                                        <InputText id="riskrpemail" @bind-Value="incidentaccidentData.RiskRPEmail" placeholder="email_mitra@mitra10.com" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
+                                        <div class="input-group">
+                                            <InputText id="riskrpemail" @bind-Value="incidentaccidentData.RiskRPEmail" placeholder="Email Username" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
+                                            <div class="input-group-append">
+                                                <span class="input-group-text">@@mitra10.com</span>
+                                            </div>
+                                        </div>
                                         <ValidationMessage For="(() => incidentaccidentData.RiskRPEmail)" />
                                     </div>
                                 </div>
@@ -517,7 +522,12 @@ else
                                     </div>
                                     <div class="col">
                                         <label for="dormemail">Email DORM : <i class="text-danger">&ast;</i></label>
-                                        <InputText id="riskrpemail" @bind-Value="incidentaccidentData.DORMEmail" placeholder="email_mitra@mitra10.com" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
+                                        <div class="input-group">
+                                            <InputText id="dormemail" @bind-Value="incidentaccidentData.DORMEmail" placeholder="Email Username" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
+                                            <div class="input-group-append">
+                                                <span class="input-group-text">@@mitra10.com</span>
+                                            </div>
+                                        </div>
                                         <ValidationMessage For="(() => incidentaccidentData.DORMEmail)" />
                                     </div>
                                 </div>
@@ -619,7 +629,12 @@ else
                                 <div class="row my-2">
                                     <div class="col">
                                         <label for="mitigation_pic">Email PIC : <i class="text-danger">&ast;</i></label>
-                                        <InputText id="mitigation_pic" @bind-Value="incidentaccidentData.PIC" placeholder="email_mitra@mitra10.com" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
+                                        <div class="input-group">
+                                            <InputText id="mitigation_pic" @bind-Value="incidentaccidentData.PIC" placeholder="Email Username" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
+                                            <div class="input-group-append">
+                                                <span class="input-group-text">@@mitra10.com</span>
+                                            </div>
+                                        </div>
                                         <ValidationMessage For="(() => incidentaccidentData.PIC)" />
                                     </div>
                                 </div>
@@ -711,9 +726,9 @@ else
                                     <div class="col">
                                         @if (param == null)
                                         {
-                                            @*<button type="reset" title="Reset" class="btn btn-sm btn-dark" disabled="@((isLoading || successUpload) ? "disabled" : null)">
+                                            <button type="reset" title="Reset" class="btn btn-sm btn-dark" disabled="@((isLoading || successUpload) ? "disabled" : null)">
                                                 Reset
-                                            </button>*@
+                                            </button>
                                             <button type="submit" title="Submit" class="btn btn-sm btn-primary-cus fw-bold" disabled="@((isLoading || successUpload) ? "disabled" : null)" @onclick="submitIncidentAccident">
                                                 Create Report
                                             </button>
@@ -763,7 +778,7 @@ else
     </div>
 }
 
-@*Document Onprogress Modal*@
+@*Document Select Item by LM Modal*@
 <div class="modal fade" id="selectitembyLMModal" tabindex="-3" role="dialog" aria-labelledby="selectitembyLMModalLabel" aria-hidden="true" style="background: rgba(0,0,0, 0.2);">
     <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
         <div class="modal-content">

@@ -89,8 +89,8 @@ else
                                         <tr title="Click to view">
                                             <th scope="col" class="text-center align-middle text-wrap" style="width: 17%; font-size: 15px;">Refund ID</th>
                                             <th scope="col" class="text-center align-middle text-wrap" style="width: 14%; font-size: 15px;">Document Date</th>
-                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 14%; font-size: 15px;">Refund Type</th>
-                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 14%; font-size: 15px;">Commercial Type</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 28%; font-size: 15px;">Refund Type</th>
+                                            @*<th scope="col" class="text-center align-middle text-wrap" style="width: 14%; font-size: 15px;">Commercial Type</th>*@
                                             <th scope="col" class="text-center align-middle text-wrap" style="width: 16%; font-size: 15px;">Customer Name</th>
                                             <th scope="col" class="text-center align-middle text-wrap" style="width: 15%; font-size: 15px;">Refund Amount</th>
                                             <th scope="col" class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Document Status</th>
@@ -102,8 +102,11 @@ else
                                             <tr data-toggle="modal" data-target="#previewFundReturnModal" @onclick="(() => setRefundDocument(fundReturn))">
                                                 <td class="text-center align-middle text-wrap" style="font-size:14px;">@fundReturn.dataHeader.DocumentID</td>
                                                 <td class="text-center align-middle text-wrap" style="font-size:14px;">@fundReturn.dataHeader.RequestDate.ToString("dd MMMM yyyy HH:mm:ss")</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@fundReturn.dataHeader.FundReturnCategoryID</td>
-                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@fundReturn.dataHeader.CommercialType</td>
+                                                @{
+                                                    var type = FundReturnService.fundReturnCategories.SingleOrDefault(x => x.FundReturnCategoryID.Equals(fundReturn.dataHeader.FundReturnCategoryID));
+                                                }
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@type.FundReturnCategoryDescription</td>
+                                                @*<td class="text-center align-middle text-wrap" style="font-size:14px;">@fundReturn.dataHeader.CommercialType</td>*@
                                                 <td class="text-center align-middle text-wrap" style="font-size:14px;">@fundReturn.dataHeader.CustomerName</td>
                                                 <td class="text-center align-middle text-wrap" style="font-size:14px;">Rp. @fundReturn.dataHeader.RefundAmount.ToString("N0") ,-</td>
                                                 <td class="text-center align-middle text-wrap" style="font-size:14px;">@fundReturn.dataHeader.DocumentStatus</td>
@@ -177,7 +180,7 @@ else
 
 @*Preview Fund Return Document*@
 <div class="modal fade" id="previewFundReturnModal" tabindex="-2" role="dialog" aria-labelledby="previewFundReturnModalLabel" aria-hidden="true" style="background: rgba(0,0,0, 0.2);">
-    <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header cus-bg">
                 <h5 class="modal-title fw-bold" id="previewFundReturnModalLabel"><i class="oi oi-file"></i> Preview Refund Return Document</h5>
@@ -186,21 +189,38 @@ else
                 </button>
             </div>
             <div class="modal-body">
-                <div class="row">
-                    <div class="col fw-bold">Refund ID</div>
-                    <div class="col">: @previewRefundDocument.dataHeader.DocumentID</div>
+                <div class="border border-2 p-2">
+                    <div class="row">
+                        <div class="col align-middle text-center">
+                            <h5 class="fw-bold my-auto"> @previewRefundDocument.dataHeader.DocumentID </h5>
+                            <p class="my-auto"><small> Document Date : @previewRefundDocument.dataHeader.RequestDate.ToString("dddd, dd MMMM yyyy") </small></p>
+                            <p class="my-auto"><b> Document Status </b> - <em> @previewRefundDocument.dataHeader.DocumentStatus </em></p>
+                        </div>
+                    </div>
                 </div>
-                <div class="row">
-                    <div class="col fw-bold">Refund Request Date</div>
-                    <div class="col">: @previewRefundDocument.dataHeader.RequestDate.ToString("dddd, dd MMMM yyyy")</div>
+
+                <div class="row mt-4">
+                    <div class="col text-wrap">Berita Acara ini merupakan surat untuk proses melakukan transfer pengembalian dana kepada customer :</div>
                 </div>
                 <div class="row">
                     <div class="col fw-bold">Location</div>
-                    <div class="col">: @previewRefundDocument.dataHeader.LocationID</div>
+                    @{
+                        var loc = ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewRefundDocument.dataHeader.LocationID));
+                    }
+                    <div class="col">: 
+                        @if (loc != null)
+                        {
+                            @loc.locationName
+                        }
+                        else
+                        {
+                            @previewRefundDocument.dataHeader.LocationID
+                        }
+                    </div>
                 </div>
                 <div class="row mb-4">
                     <div class="col fw-bold">Commercial Type</div>
-                    <div class="col">: @previewRefundDocument.dataHeader.CommercialType</div>
+                    <div class="col">: @(previewRefundDocument.dataHeader.CommercialType.Equals("ONLINE") ? "Online" : "Offline")</div>
                 </div>
 
                 @*blank*@
@@ -211,7 +231,7 @@ else
                 </div>
                 <div class="row">
                     <div class="col fw-bold">Customer Type</div>
-                    <div class="col">: @previewRefundDocument.dataHeader.CustomerType</div>
+                    <div class="col">: @(previewRefundDocument.dataHeader.CustomerType.Equals("MEMBER") ? "Member" : "Non Member")</div>
                 </div>
                 @if (previewRefundDocument.dataHeader.CustomerType.Equals("MEMBER"))
                 {
@@ -246,7 +266,7 @@ else
                         }
                     </div>
                 </div>
-                @if (!previewRefundDocument.dataHeader.FundReturnCategoryID.Equals("RQST"))
+                @if (!previewRefundDocument.dataHeader.FundReturnCategoryID.Equals("XRKN"))
                 {
                     <div class="row">
                         <div class="col fw-bold">Receipt</div>
@@ -273,8 +293,48 @@ else
                     <div class="col">: @previewRefundDocument.dataHeader.Reason</div>
                 </div>
 
+                @if (checkPreviewRefundLines())
+                {
+                    <div class="row">
+                        <div class="col">
+                            <p class="fw-bold text-center align-middle"><i class="oi oi-list"></i> Item List(s) </p>
+
+                            <div class="table-responsive my-0">
+                                <table class="table table-sm table-hover" style="width: 100%">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center align-middle text-wrap" style="width: 19%; font-size: 15px;">Item Code</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 32%; font-size: 15px;">Item Description</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Refund Qty</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">UOM</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 11%; font-size: 15px;">Item Value (Rp.)</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 18%; font-size: 15px;">Discount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in previewRefundDocument.dataItemLines)
+                                        {
+                                            <tr>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemCode</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemDescription</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemQuantity.ToString("N0")</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.UOM</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Rp. @item.ItemAmount.ToString("N0") ,-</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemDiscount %</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                }
+
                 @*blank*@
 
+                <div class="row mt-4">
+                    <div class="col text-wrap">Data yang tertulis diatas adalah benar, dan agar dapat ditransfer ke :</div>
+                </div>
                 <div class="row">
                     <div class="col fw-bold">Bank Holder Name</div>
                     <div class="col">: @previewRefundDocument.dataHeader.BankHolderName</div>
@@ -294,10 +354,6 @@ else
                             @bk.BankShortName
                         }
                     </div>
-                </div>
-                <div class="row mb-2">
-                    <div class="col fw-bold">Document Status</div>
-                    <div class="col">: @previewRefundDocument.dataHeader.DocumentStatus</div>
                 </div>
 
                 @if (checkPreviewRefundApprovalLine())
@@ -335,42 +391,39 @@ else
                     </div>
                 }
 
-                @if (checkPreviewRefundLines())
-                {
-                    <div class="row mt-4">
-                        <div class="col">
-                            <p class="fw-bold text-center align-middle"><i class="oi oi-list"></i> Item List(s) </p>
+                <div class="row my-3">
+                    <div class="col">
+                        <p class="fw-bold text-center"><i class="oi oi-paperclip"></i> Attachment(s) </p>
 
-                                <div class="table-responsive my-0">
-                                    <table class="table table-sm table-hover" style="width: 100%">
-                                        <thead>
-                                            <tr>
-                                                <th class="text-center align-middle text-wrap" style="width: 19%; font-size: 15px;">Item Code</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 32%; font-size: 15px;">Item Description</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Request Qty</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">NP Qty</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 11%; font-size: 15px;">UOM</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 18%; font-size: 15px;">Item Value (Rp.)</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var item in previewRefundDocument.dataItemLines)
-                                            {
-                                                <tr>
-                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemCode</td>
-                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemDescription</td>
-                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemQuantity.ToString("N0")</td>
-                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.UOM</td>
-                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">Rp. @item.ItemAmount.ToString("N0") ,-</td>
-                                                    <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemDiscount %</td>
-                                                </tr>
-                                            }
-                                        </tbody>
-                                    </table>
-                                </div>
-                        </div>
+                        @if (checkPreviewRefundAttachment())
+                        {
+                            <div class="row flex-row flex-nowrap wrap-card overflow-auto">
+                                @foreach (var file in previewRefundDocument.dataAttachmentLines)
+                                {
+                                    @if (FundReturnService.fileStreams.SingleOrDefault(x => x.fileName.Equals(file.FilePath)) == null)
+                                        continue;
+
+                                    <div style="width: 280px;">
+                                        <div class="card" id="balanceCard" @onclick="@(async () => { await HandleViewDocument(FundReturnService.fileStreams.SingleOrDefault(x => x.fileName.Equals(file.FilePath)).content, file.FilePath.Split("!_!")[1]); })">
+                                            <div class="card-body">
+                                                <h6 class="card-title text-wrap text-truncate"><b> @file.FilePath.Split("!_!")[1] </b></h6>
+                                            </div>
+                                            <div class="card-footer">
+                                                <small class="text-muted"><i> #@file.LineNum - Click To View File</i></small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning alert-dismissible fade show my-2" role="alert">
+                                <strong>Empty Attachment !</strong>
+                            </div>
+                        }
                     </div>
-                }
+                </div>
             </div>
             <div class="modal-footer cus-bg">
                 

@@ -18,11 +18,14 @@ namespace BPIWebApplication.Client.Services.POMFServices
 
         Task<ResultModel<List<POMFDocument>>> getPOMFDocuments(string param);
         Task<ResultModel<List<POMFNPType>>> getPOMFNPType();
+        Task<ResultModel<List<POMFItemLinesMaxQuantity>>> getPOMFItemLineMaxQuantity(string param);
 
         // TMS
 
         Task<ResultModel<List<NPwithReceiptNoResp>>> getDetailsItemByReceiptNoAndNPNo(NPwithReceiptNotoTMS param, string token);
 
         Task<ResultModel<int>> getPOMFModuleNumberOfPage(string param);
+        Task<string[]> getPOMFAcceptedDocPrefix(string param);
+        Task<int> getPOMFAcceptedDocLength(string param);
     }
 }

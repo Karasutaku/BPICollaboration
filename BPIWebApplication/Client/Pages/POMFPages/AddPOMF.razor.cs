@@ -23,12 +23,16 @@ namespace BPIWebApplication.Client.Pages.POMFPages
 
         private List<NPwithReceiptNoResp> npReceiptData = new();
         private List<NPwithReceiptNoResp> selectedNPReceiptData = new();
+        private List<POMFItemLinesMaxQuantity>? maxThresholdQty = null;
 
         private string previousLoadedNP = string.Empty;
         private string previousLoadedReceipt = string.Empty;
 
+        private bool itemSelected = false;
+
         private bool isLoading = false;
         private bool isMiniLoading = false;
+        private bool isMaxQtyLoading = false;
         private bool successUpload = false;
 
         private bool alertTrigger = false;
@@ -196,29 +200,57 @@ namespace BPIWebApplication.Client.Pages.POMFPages
             {
                 pomfLines.Clear();
 
+                bool flag = false;
                 int n = 0;
-                selectedNPReceiptData.ForEach(x =>
-                {
-                    n++;
-                    pomfLines.Add(new POMFItemLineForm
-                    {
-                        POMFID = "",
-                        LineNum = n,
-                        ItemCode = x.itemCode,
-                        ItemDescription = x.itemDesc,
-                        RequestQuantity = 0,
-                        NPQuantity = Convert.ToInt32(x.qtyNP),
-                        ItemUOM = x.uom,
-                        ItemValue = "0",
-                        RequestToSite = "",
-                        ExternalRequestDocument = "",
-                        RequestDocumentDate = DateTime.MinValue,
-                        ExternalReceiveDocument = "",
-                        ReceiveDocumentDate = DateTime.MinValue
-                    });
-                });
 
                 var tp = selectedNPReceiptData.DistinctBy(x => x.type);
+
+                if (POMFService.npTypes.SingleOrDefault(z => z.NPTypeID.Equals(tp.First().type.ToString())).isAutomaticApproval)
+                {
+                    selectedNPReceiptData.ForEach(x =>
+                    {
+                        n++;
+                        pomfLines.Add(new POMFItemLineForm
+                        {
+                            POMFID = "",
+                            LineNum = n,
+                            ItemCode = x.itemCode,
+                            ItemDescription = x.itemDesc,
+                            RequestQuantity = Convert.ToInt32(x.qtyNP),
+                            NPQuantity = Convert.ToInt32(x.qtyNP),
+                            ItemUOM = x.uom,
+                            ItemValue = "0",
+                            RequestToSite = "",
+                            ExternalRequestDocument = "",
+                            RequestDocumentDate = DateTime.MinValue,
+                            ExternalReceiveDocument = "",
+                            ReceiveDocumentDate = DateTime.MinValue
+                        });
+                    });
+                }
+                else
+                {
+                    selectedNPReceiptData.ForEach(x =>
+                    {
+                        n++;
+                        pomfLines.Add(new POMFItemLineForm
+                        {
+                            POMFID = "",
+                            LineNum = n,
+                            ItemCode = x.itemCode,
+                            ItemDescription = x.itemDesc,
+                            RequestQuantity = 0,
+                            NPQuantity = Convert.ToInt32(x.qtyNP),
+                            ItemUOM = x.uom,
+                            ItemValue = "0",
+                            RequestToSite = "",
+                            ExternalRequestDocument = "",
+                            RequestDocumentDate = DateTime.MinValue,
+                            ExternalReceiveDocument = "",
+                            ReceiveDocumentDate = DateTime.MinValue
+                        });
+                    });
+                }
 
                 if (tp.Count() > 1)
                 {
@@ -226,9 +258,41 @@ namespace BPIWebApplication.Client.Pages.POMFPages
                     return;
                 }
 
-                pomfData.NPTypeID = tp.First().type;
+                pomfData.NPTypeID = tp.First().type.ToString();
+
+                #pragma warning disable CS4014
+                Task.Run(async () =>
+                {
+                    if (pomfData.NPNo.Length > 0)
+                    {
+                        isMaxQtyLoading = true;
+
+                        var dt = await POMFService.getPOMFItemLineMaxQuantity(CommonLibrary.Base64Encode(activeUser.location + "!_!" + pomfData.NPNo));
+
+                        if (dt.isSuccess)
+                        {
+                            maxThresholdQty = new();
+                            maxThresholdQty = dt.Data;
+                        }
+                        else
+                        {
+                            await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {dt.ErrorCode} - {dt.ErrorMessage} !");
+                        }
+
+                        isMaxQtyLoading = false;
+                        StateHasChanged();
+                    }
+                    else
+                    {
+                        await _jsModule.InvokeVoidAsync("showAlert", "Input NP No !");
+                    }
+                });
+                #pragma warning restore CS4014
+
+                itemSelected = true;
             }
 
+            selectedNPReceiptData.Clear();
             StateHasChanged();
         }
 
@@ -342,11 +406,45 @@ namespace BPIWebApplication.Client.Pages.POMFPages
 
             if (pomfData.NPTypeID.IsNullOrEmpty()) return false;
 
+            if (!pomfLines.Any()) return false;
+
             if (pomfLines.Any(x => x.RequestQuantity > x.NPQuantity)) return false;
 
-            if (pomfLines.Any(x => x.RequestQuantity <= 0)) { return false; }
+            if (pomfLines.Any(x => x.RequestQuantity <= 0)) return false;
+
+            foreach (var f in pomfLines)
+            {
+                var th = maxThresholdQty.SingleOrDefault(y => y.ItemCode.Equals(f.ItemCode));
+
+                if (th != null)
+                {
+                    if (f.RequestQuantity > (f.NPQuantity - th.MaxQuantity))
+                        return false;
+                }
+            }
+
+            var npAuto = POMFService.npTypes.SingleOrDefault(x => x.NPTypeID.Equals(pomfData.NPTypeID));
+
+            if (npAuto != null)
+            {
+                if (pomfLines.Any(x => x.RequestToSite.Equals("")) && !npAuto.isAutomaticApproval) { return false; }
+            }
 
             return true;
+        }
+
+        private void resetForm()
+        {
+            pomfData.CustomerName = string.Empty;
+            pomfData.ReceiptNo = string.Empty;
+            pomfData.NPNo = string.Empty;
+            pomfData.NPTypeID = string.Empty;
+            pomfLines.Clear();
+            selectedNPReceiptData.Clear();
+            maxThresholdQty = null;
+            itemSelected = false;
+            isMaxQtyLoading = false;
+            isMiniLoading = false;
         }
 
         private bool checkPOMFLine()

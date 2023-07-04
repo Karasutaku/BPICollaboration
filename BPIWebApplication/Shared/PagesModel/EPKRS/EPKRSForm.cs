@@ -62,14 +62,10 @@ namespace BPIWebApplication.Shared.PagesModel.EPKRS
         [Required(ErrorMessage = "Nama Risk RP Kosong!")]
         public string RiskRPName { get; set; } = string.Empty;
         [Required(ErrorMessage = "Email Risk RP Kosong!")]
-        [DataType(DataType.EmailAddress, ErrorMessage = "Format Harus EMAIL!")]
-        [EmailAddress]
         public string RiskRPEmail { get; set; } = string.Empty;
         [Required(ErrorMessage = "Nama DORM Kosong!")]
         public string DORMName { get; set; } = string.Empty;
         [Required(ErrorMessage = "Tanggal Pelaporan Kosong!")]
-        [DataType(DataType.EmailAddress, ErrorMessage = "Format Harus EMAIL!")]
-        [EmailAddress]
         public string DORMEmail { get; set; } = string.Empty;
         [Required(ErrorMessage = "Deskripsi Kejadian Kosong!")]
         public string CaseDescription { get; set; } = string.Empty;
@@ -87,9 +83,7 @@ namespace BPIWebApplication.Shared.PagesModel.EPKRS
         public string RiskDescription { get; set; } = string.Empty;
         [Required(ErrorMessage = "Dampak Kejadian Kosong!")]
         public string CauseDescription { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Tanggal Pelaporan Kosong!")]
-        [DataType(DataType.EmailAddress, ErrorMessage = "Format Harus EMAIL!")]
-        [EmailAddress]
+        [Required(ErrorMessage = "Email PIC Kosong!")]
         public string PIC { get; set; } = string.Empty;
         [Required(ErrorMessage = "Action Plan Kosong!")]
         public string ActionPlan { get; set; } = string.Empty;

@@ -18,18 +18,19 @@ namespace BPIWebApplication.Client.Services.FundReturnServices
         public List<FundReturnDocument> fundReturns { get; set; } = new();
         public List<Bank> banks { get; set; } = new();
         public List<FundReturnCategory> fundReturnCategories { get; set; } = new();
+        public List<BPIWebApplication.Shared.MainModel.Stream.FileStream> fileStreams { get; set; } = new();
 
-        public async Task<ResultModel<QueryModel<FundReturnDocument>>> createFundReturnDocument(QueryModel<FundReturnDocument> data)
+        public async Task<ResultModel<FundReturnUploadStream>> createFundReturnDocument(FundReturnUploadStream data)
         {
-            ResultModel<QueryModel<FundReturnDocument>> resData = new ResultModel<QueryModel<FundReturnDocument>>();
+            ResultModel<FundReturnUploadStream> resData = new ResultModel<FundReturnUploadStream>();
 
             try
             {
-                var result = await _http.PostAsJsonAsync<QueryModel<FundReturnDocument>>("api/endUser/FundReturn/createFundReturnDocument", data);
+                var result = await _http.PostAsJsonAsync<FundReturnUploadStream>("api/endUser/FundReturn/createFundReturnDocument", data);
 
                 if (result.IsSuccessStatusCode)
                 {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<FundReturnDocument>>>();
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<FundReturnUploadStream>>();
 
                     resData.Data = respBody.Data;
                     resData.isSuccess = respBody.isSuccess;
@@ -38,7 +39,7 @@ namespace BPIWebApplication.Client.Services.FundReturnServices
                 }
                 else
                 {
-                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<QueryModel<FundReturnDocument>>>();
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<FundReturnUploadStream>>();
 
                     resData.Data = respBody.Data;
                     resData.isSuccess = respBody.isSuccess;
@@ -244,6 +245,84 @@ namespace BPIWebApplication.Client.Services.FundReturnServices
             return resData;
         }
 
+        public async Task<ResultModel<List<BPIWebApplication.Shared.MainModel.Stream.FileStream>>> getFundReturnFileStream(string param)
+        {
+            ResultModel<List<BPIWebApplication.Shared.MainModel.Stream.FileStream>> resData = new ResultModel<List<BPIWebApplication.Shared.MainModel.Stream.FileStream>>();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<BPIWebApplication.Shared.MainModel.Stream.FileStream>>>($"api/endUser/FundReturn/getFundReturnFileStream/{param}");
+
+                if (result.isSuccess)
+                {
+                    fileStreams.AddRange(result.Data);
+
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+            return resData;
+        }
+
+        public async Task<ResultModel<List<ReceiptNoResp>>> getFundReturnDetailsItemByReceiptNo(ReceiptNotoTMS param, string token)
+        {
+            ResultModel<List<ReceiptNoResp>> resData = new();
+
+            try
+            {
+                _http.DefaultRequestHeaders.Clear();
+                _http.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+                var result = await _http.PostAsJsonAsync<ReceiptNotoTMS>("api/endUser/TMS/getDetailsItemByReceiptNo", param);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<ReceiptNoResp>>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                    else
+                    {
+                        resData.Data = respBody.Data;
+                        resData.isSuccess = respBody.isSuccess;
+                        resData.ErrorCode = respBody.ErrorCode;
+                        resData.ErrorMessage = respBody.ErrorMessage;
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<ReceiptNoResp>>>();
+
+                    resData.Data = respBody.Data;
+                    resData.isSuccess = respBody.isSuccess;
+                    resData.ErrorCode = respBody.ErrorCode;
+                    resData.ErrorMessage = respBody.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
         public async Task<ResultModel<int>> getFundReturnModuleNumberOfPage(string param)
         {
             ResultModel<int> resData = new ResultModel<int>();
@@ -276,6 +355,41 @@ namespace BPIWebApplication.Client.Services.FundReturnServices
             }
 
             return resData;
+        }
+
+        public async Task<int> getFundReturnMaxFileSize()
+        {
+            ResultModel<int> resData = new ResultModel<int>();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/endUser/FundReturn/getFundReturnMaxSizeUpload");
+
+                if (result.isSuccess)
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = 0;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData.Data;
         }
 
         //

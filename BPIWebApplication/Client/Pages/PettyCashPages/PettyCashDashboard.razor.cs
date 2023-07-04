@@ -404,9 +404,9 @@ namespace BPIWebApplication.Client.Pages.PettyCashPages
                     {
                         await HandleDownloadDocument(res.Data.content, res.Data.fileName);
 
-                        isLoading = false;
                         await _jsModule.InvokeVoidAsync("showAlert", "Export Success !");
                     }
+                    isLoading = false;
                 }
                 else
                 {

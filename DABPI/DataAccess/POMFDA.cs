@@ -327,6 +327,44 @@ namespace BPIDA.DataAccess
             return dt;
         }
 
+        internal DataTable getPOMFItemLineMaxQuantity(string location, string param)
+        {
+            DataTable dt = new DataTable("Data");
+
+            using (SqlConnection con = new SqlConnection(_conString))
+            {
+                con.Open();
+                SqlCommand command = new SqlCommand();
+
+                try
+                {
+                    command.Connection = con;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[getPOMFItemLineMaxQuantity]";
+                    command.CommandTimeout = 1000;
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@LocationID", location);
+                    command.Parameters.AddWithValue("@NPNo", param);
+
+                    SqlDataAdapter da = new SqlDataAdapter();
+                    da.SelectCommand = command;
+                    da.Fill(dt);
+
+                }
+                catch (SqlException ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    con.Close();
+                }
+            }
+
+            return dt;
+        }
+
         internal DataTable getPOMFNPTypeData()
         {
             DataTable dt = new DataTable("Data");

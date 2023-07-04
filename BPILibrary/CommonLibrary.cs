@@ -292,7 +292,7 @@ namespace BPILibrary
                         "</table";
 
                     if (subject.Length > 0) { msg.Subject = subject; } else { throw new Exception("Subject Empty !"); }
-                    if (body.Length > 0) { msg.Body = templateBody; } else { throw new Exception("Subject Empty !"); }
+                    if (body.Length > 0) { msg.Body = templateBody; } else { throw new Exception("Body Empty !"); }
                     msg.IsBodyHtml = isHtml;
 
                     smtp.Credentials = creds;

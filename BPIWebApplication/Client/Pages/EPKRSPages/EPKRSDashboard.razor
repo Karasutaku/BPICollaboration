@@ -430,6 +430,31 @@ else
                             <div class="tab-content" id="myTabContent">
                                 <div class="tab-pane fade show active" id="itemcase" role="tabpanel" aria-labelledby="itemcase-tab">
 
+                                    @if (activeUser.location.Equals("") && LoginService.activeUser.userPrivileges.Contains("XP"))
+                                    {
+                                        <form>
+                                            <div class="input-group mt-3">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text">
+                                                        @if (isExportLoading)
+                                                        {
+                                                            <b>@("Loading")</b>
+                                                        }
+                                                        else
+                                                        {
+                                                            @("Start and End Export Date")
+                                                        }
+                                                    </span>
+                                                </div>
+                                                <input type="date" class="form-control" @bind-value="startDateExport">
+                                                <input type="date" class="form-control" @bind-value="endDateExport">
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-outline-secondary fw-bold" type="button" @onclick="ExportItemCase">Export</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    }
+
                                     <form @onsubmit="itemCaseFilter">
                                         <div class="input-group my-3">
                                             <div class="input-group-prepend">
@@ -486,8 +511,8 @@ else
                                                                     <b> No. Loading Document : </b> @itemCase.itemCase.LoadingDocumentID, @itemCase.itemCase.LoadingDocumentDate.ToString("dd / MM / yyyy")
                                                                     <br />
                                                                     <b> Tanggal Pelaporan : </b> @itemCase.itemCase.ReportDate.ToString("dddd, dd MMMM yyyy")
-                                                                    @*<br />
-                                                                    <b> Variance : </b> @itemCase.itemCase.VarianceDate Day(s)*@
+                                                                    <br />
+                                                                    <b> Tanggal Terima Barang : </b> @itemCase.itemCase.ItemPickupDate.ToString("dddd, dd MMMM yyyy")
                                                                     <br />
                                                                     <b> Status Dokumen : </b> @itemCase.itemCase.DocumentStatus
                                                                 </p>
@@ -550,6 +575,31 @@ else
                                 </div>
 
                                 <div class="tab-pane fade" id="incac" role="tabpanel" aria-labelledby="incac-tab">
+
+                                    @if (activeUser.location.Equals("") && LoginService.activeUser.userPrivileges.Contains("XP"))
+                                    {
+                                        <form>
+                                            <div class="input-group mt-3">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text">
+                                                        @if (isExportLoading)
+                                                        {
+                                                            <b>@("Loading")</b>
+                                                        }
+                                                        else
+                                                        {
+                                                            @("Start and End Export Date")
+                                                        }
+                                                    </span>
+                                                </div>
+                                                <input type="date" class="form-control" @bind-value="startDateExport">
+                                                <input type="date" class="form-control" @bind-value="endDateExport">
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-outline-secondary fw-bold" type="button" @onclick="ExportIncidentAccident">Export</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    }
 
                                     <form @onsubmit="incidentAccidentFilter">
                                         <div class="input-group my-3">

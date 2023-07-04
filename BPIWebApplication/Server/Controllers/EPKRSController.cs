@@ -1020,7 +1020,7 @@ namespace BPIWebApplication.Server.Controllers
         }
 
         [HttpGet("getEPKRSMaxSizeUpload")]
-        public async Task<IActionResult> getStandarizationMaxSizeUpload()
+        public async Task<IActionResult> getEPKRSMaxSizeUpload()
         {
             ResultModel<int> res = new ResultModel<int>();
             IActionResult actionResult = null;
@@ -1438,6 +1438,124 @@ namespace BPIWebApplication.Server.Controllers
                 else
                 {
                     var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSIncidentAccidentInvolverStatisticsbyDept>>>();
+
+                    res.Data = null;
+
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpPost("getEPKRSIncidentAccidentReport")]
+        public async Task<IActionResult> getEPKRSIncidentAccidentReport(QueryModel<string> param)
+        {
+            ResultModel<BPIWebApplication.Shared.MainModel.Stream.FileStream> res = new ResultModel<BPIWebApplication.Shared.MainModel.Stream.FileStream>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/Facade/EPKRS/getEPKRSIncidentAccidentReport", param);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<BPIWebApplication.Shared.MainModel.Stream.FileStream>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                    else
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<BPIWebApplication.Shared.MainModel.Stream.FileStream>>();
+
+                    res.Data = null;
+
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpPost("getEPKRSItemCaseReport")]
+        public async Task<IActionResult> getEPKRSItemCaseReport(QueryModel<string> param)
+        {
+            ResultModel<BPIWebApplication.Shared.MainModel.Stream.FileStream> res = new ResultModel<BPIWebApplication.Shared.MainModel.Stream.FileStream>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/Facade/EPKRS/getEPKRSItemCaseReport", param);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<BPIWebApplication.Shared.MainModel.Stream.FileStream>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                    else
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<BPIWebApplication.Shared.MainModel.Stream.FileStream>>();
 
                     res.Data = null;
 

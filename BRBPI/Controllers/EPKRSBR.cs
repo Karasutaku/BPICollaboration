@@ -3,6 +3,8 @@ using BPIBR.Models.MainModel;
 using BPIBR.Models.MainModel.EPKRS;
 using BPIBR.Models.MainModel.Mailing;
 using BPILibrary;
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml.EMMA;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -180,7 +182,7 @@ namespace BPIBR.Controllers
                             , to
                             , cc
                             , new NetworkCredential(_autoEmailUser, _autoEmailPass)
-                            , mailing.Result.Data.MailSubject
+                            , string.Format(mailing.Result.Data.MailSubject, respBody.Data.Data.incidentAccident.CaseDescription)
                             , string.Format(mailing.Result.Data.MailMainBody, respBody.Data.Data.incidentAccident.DocumentID)
                             , true
                             , _mailPort
@@ -1601,6 +1603,192 @@ namespace BPIBR.Controllers
                 else
                 {
                     var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSIncidentAccidentInvolverStatisticsbyDept>>>();
+
+                    res.Data = null;
+
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpPost("getEPKRSIncidentAccidentReport")]
+        public async Task<IActionResult> getEPKRSIncidentAccidentReport(QueryModel<string> param)
+        {
+            ResultModel<BPIBR.Models.MainModel.Stream.FileStream> res = new ResultModel<BPIBR.Models.MainModel.Stream.FileStream>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/DA/EPKRS/getEPKRSIncidentAccidentReport", param);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSIncidentAccidentExport>>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        res.Data = new();
+
+                        using (var workbook = new XLWorkbook())
+                        {
+                            int headerFontSize = 10;
+
+                            workbook.Properties.Author = "BPI App Report";
+                            workbook.Properties.Title = "EPKRS Report";
+
+                            var worksheet = workbook.AddWorksheet("Incident Accident Report");
+
+                            var currCell = worksheet.Cell("A1");
+
+                            foreach (var info in typeof(EPKRSIncidentAccidentExport).GetProperties())
+                            {
+                                currCell.Value = info.Name;
+                                currCell.Style.Font.SetBold(true);
+                                currCell.Style.Font.SetFontSize(headerFontSize);
+                                currCell.Style.Fill.BackgroundColor = XLColor.AshGrey;
+
+                                currCell = currCell.CellRight(1);
+                            }
+
+                            worksheet.Cell("A2").InsertData(respBody.Data);
+
+                            MemoryStream ms = new MemoryStream();
+                            workbook.SaveAs(ms);
+
+                            res.Data.content = ms.ToArray();
+                            res.Data.type = "Report";
+                            res.Data.fileSize = Convert.ToInt32(ms.Length);
+                            res.Data.fileName = "Export Incident Accident.xlsx";
+                            res.Data.fileType = ".xlsx";
+                        }
+
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                    else
+                    {
+                        res.Data = null;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSIncidentAccidentExport>>>();
+
+                    res.Data = null;
+
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpPost("getEPKRSItemCaseReport")]
+        public async Task<IActionResult> getEPKRSItemCaseReport(QueryModel<string> param)
+        {
+            ResultModel<BPIBR.Models.MainModel.Stream.FileStream> res = new ResultModel<BPIBR.Models.MainModel.Stream.FileStream>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/DA/EPKRS/getEPKRSItemCaseReport", param);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSItemCaseExport>>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        res.Data = new();
+
+                        using (var workbook = new XLWorkbook())
+                        {
+                            int headerFontSize = 10;
+
+                            workbook.Properties.Author = "BPI App Report";
+                            workbook.Properties.Title = "EPKRS Report";
+
+                            var worksheet = workbook.AddWorksheet("Item Case Report");
+
+                            var currCell = worksheet.Cell("A1");
+
+                            foreach (var info in typeof(EPKRSItemCaseExport).GetProperties())
+                            {
+                                currCell.Value = info.Name;
+                                currCell.Style.Font.SetBold(true);
+                                currCell.Style.Font.SetFontSize(headerFontSize);
+                                currCell.Style.Fill.BackgroundColor = XLColor.AshGrey;
+
+                                currCell = currCell.CellRight(1);
+                            }
+
+                            worksheet.Cell("A2").InsertData(respBody.Data);
+
+                            MemoryStream ms = new MemoryStream();
+                            workbook.SaveAs(ms);
+
+                            res.Data.content = ms.ToArray();
+                            res.Data.type = "Report";
+                            res.Data.fileSize = Convert.ToInt32(ms.Length);
+                            res.Data.fileName = "Export Item Case.xlsx";
+                            res.Data.fileType = ".xlsx";
+                        }
+
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                    else
+                    {
+                        res.Data = null;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSItemCaseExport>>>();
 
                     res.Data = null;
 

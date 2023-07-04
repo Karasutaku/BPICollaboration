@@ -60,4 +60,14 @@ namespace BPIWebApplication.Shared.PagesModel.POMF
         public string ExternalReceiveDocument { get; set; } = string.Empty;
         public DateTime ReceiveDocumentDate { get; set; } = DateTime.Now;
     }
+
+    public class NPwithReceiptNoForm
+    {
+        public string itemCode { get; set; } = string.Empty;
+        public string itemDesc { get; set; } = string.Empty;
+        public int qtyNP { get; set; } = 0;
+        public int maxQty { get; set; } = 0;
+        public string uom { get; set; } = string.Empty;
+        public int type { get; set; } = 0;
+    }
 }

@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Runtime.Serialization.Json;
 using System.Text;
+using System.Text.Json;
+using System.Net.Http.Json;
 
 namespace BPIWebApplication.Server.Controllers
 {
@@ -14,7 +16,7 @@ namespace BPIWebApplication.Server.Controllers
     public class TMSController : Controller
     {
         private readonly HttpClient _http;
-        private readonly string _smsApi, _frameworkApi;
+        private readonly string _smsApi, _frameworkApi, _facade;
         private readonly int _appId;
 
         public TMSController(HttpClient http, IConfiguration config)
@@ -22,6 +24,7 @@ namespace BPIWebApplication.Server.Controllers
             _http = http;
             _smsApi = config.GetValue<string>("ConnectionStrings:SmsApi");
             _frameworkApi = config.GetValue<string>("ConnectionStrings:FrameworkApi");
+            _facade = config.GetValue<string>("ConnectionStrings:BpiFacade");
             _appId = config.GetValue<int>("AppIdentity:ID");
         }
 
@@ -45,15 +48,17 @@ namespace BPIWebApplication.Server.Controllers
 
                     if (respBody.errorResult.errorCode.Equals("00"))
                     {
-                        var temp = respBody.data.Replace(@"\", string.Empty);
+                        //var temp = respBody.data.Replace(@"\", string.Empty);
 
-                        using (var ms = new MemoryStream(Encoding.Unicode.GetBytes(temp)))
+                        using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(respBody.data)))
                         {
                             // Deserialization from string JSON
-                            DataContractJsonSerializer deserializer = new DataContractJsonSerializer(typeof(List<LoadingManifestResp>));
-                            var dt = (List<LoadingManifestResp>)deserializer.ReadObject(ms);
+                            //DataContractJsonSerializer deserializer = new DataContractJsonSerializer(typeof(List<LoadingManifestResp>));
+                            //var dt = (List<LoadingManifestResp>) deserializer.ReadObject(ms);
 
-                            res.Data = dt == null ? new() : dt;
+                            res.Data = JsonSerializer.Deserialize<List<LoadingManifestResp>>(ms);
+
+                            //res.Data = dt == null ? new() : dt;
                         }
 
                         res.isSuccess = true;
@@ -118,15 +123,17 @@ namespace BPIWebApplication.Server.Controllers
 
                     if (respBody.errorResult.errorCode.Equals("00"))
                     {
-                        var temp = respBody.data.Replace(@"\", string.Empty);
+                        //var temp = respBody.data.Replace(@"\", string.Empty);
 
-                        using (var ms = new MemoryStream(Encoding.Unicode.GetBytes(temp)))
+                        using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(respBody.data)))
                         {
                             // Deserialization from string JSON
-                            DataContractJsonSerializer deserializer = new DataContractJsonSerializer(typeof(List<ReceiptNoResp>));
-                            var dt = (List<ReceiptNoResp>)deserializer.ReadObject(ms);
+                            //DataContractJsonSerializer deserializer = new DataContractJsonSerializer(typeof(List<ReceiptNoResp>));
+                            //var dt = (List<ReceiptNoResp>)deserializer.ReadObject(ms);
 
-                            res.Data = dt == null ? new() : dt;
+                            res.Data = JsonSerializer.Deserialize<List<ReceiptNoResp>>(ms);
+
+                            //res.Data = dt == null ? new() : dt;
                         }
 
                         res.isSuccess = true;
@@ -176,6 +183,7 @@ namespace BPIWebApplication.Server.Controllers
         public async Task<IActionResult> getDetailsItemByReceiptNoAndNPNo([FromHeader(Name = "Authorization")] string token, NPwithReceiptNotoTMS data)
         {
             ResultModel<List<NPwithReceiptNoResp>> res = new ResultModel<List<NPwithReceiptNoResp>>();
+            res.Data = new();
             IActionResult actionResult = null;
 
             try
@@ -191,15 +199,17 @@ namespace BPIWebApplication.Server.Controllers
 
                     if (respBody.errorResult.errorCode.Equals("00"))
                     {
-                        var temp = respBody.data.Replace(@"\", string.Empty);
+                        //var temp = respBody.data.Replace(@"\", string.Empty);
 
-                        using (var ms = new MemoryStream(Encoding.Unicode.GetBytes(temp)))
+                        using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(respBody.data)))
                         {
                             // Deserialization from string JSON
-                            DataContractJsonSerializer deserializer = new DataContractJsonSerializer(typeof(List<NPwithReceiptNoResp>));
-                            var dt = (List<NPwithReceiptNoResp>)deserializer.ReadObject(ms);
+                            //DataContractJsonSerializer deserializer = new DataContractJsonSerializer(typeof(List<NPwithReceiptNoResp>));
+                            //var dt = (List<NPwithReceiptNoResp>)deserializer.ReadObject(ms);
 
-                            res.Data = dt == null ? new() : dt;
+                            res.Data = JsonSerializer.Deserialize<List<NPwithReceiptNoResp>>(ms);
+
+                            //res.Data = dt == null ? new() : dt;
                         }
 
                         res.isSuccess = true;
@@ -217,17 +227,6 @@ namespace BPIWebApplication.Server.Controllers
 
                         actionResult = Ok(respBody);
                     }
-                }
-                else
-                {
-                    var respBody = await result.Content.ReadFromJsonAsync<TMSResultModel>();
-
-                    res.Data = null;
-                    res.isSuccess = false;
-                    res.ErrorCode = respBody.errorResult.errorCode;
-                    res.ErrorMessage = respBody.errorResult.errorMessage;
-
-                    actionResult = Ok(respBody);
                 }
             }
             catch (Exception ex)
