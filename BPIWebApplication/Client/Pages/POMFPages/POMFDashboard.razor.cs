@@ -114,27 +114,39 @@ namespace BPIWebApplication.Client.Pages.POMFPages
 
             string loc = activeUser.location.Equals("") ? "HO" : activeUser.location;
 
-            string getPOMFDocumentParam = activeUser.location + "!_!!_!1!_!";
-            await POMFService.getPOMFDocuments(CommonLibrary.Base64Encode(getPOMFDocumentParam));
+            #pragma warning disable CS4014
+            Task.Run(async () =>
+            {
+                string getPOMFDocumentParam = activeUser.location + "!_!!_!1!_!";
+                await POMFService.getPOMFDocuments(CommonLibrary.Base64Encode(getPOMFDocumentParam));
 
-            string getPOMFConfDocumentParam = activeUser.location + "!_!WHERE DocumentStatus = \'Confirmed\'!_!1!_!CONF";
-            await POMFService.getPOMFDocuments(CommonLibrary.Base64Encode(getPOMFConfDocumentParam));
+                string getPOMFConfDocumentParam = activeUser.location + "!_!WHERE DocumentStatus = \'Confirmed\'!_!1!_!CONF";
+                await POMFService.getPOMFDocuments(CommonLibrary.Base64Encode(getPOMFConfDocumentParam));
 
-            string getPOMFDocumentpz = "POMFHeader!_!" + activeUser.location + "!_!";
-            var pomfpz = await POMFService.getPOMFModuleNumberOfPage(CommonLibrary.Base64Encode(getPOMFDocumentpz));
-            pomfNumberofPage = pomfpz.Data;
-            pomfPageActive = 1;
+                string getPOMFDocumentpz = "POMFHeader!_!" + activeUser.location + "!_!";
+                var pomfpz = await POMFService.getPOMFModuleNumberOfPage(CommonLibrary.Base64Encode(getPOMFDocumentpz));
+                pomfNumberofPage = pomfpz.Data;
+                pomfPageActive = 1;
 
-            string getPOMFCFDocumentpz = "POMFHeader!_!" + activeUser.location + "!_!WHERE DocumentStatus = \'Confirmed\'";
-            var pomfCFpz = await POMFService.getPOMFModuleNumberOfPage(CommonLibrary.Base64Encode(getPOMFCFDocumentpz));
-            pomfConfirmedNumberofPage = pomfCFpz.Data;
-            pomfConfirmedPageActive = 1;
+                string getPOMFCFDocumentpz = "POMFHeader!_!" + activeUser.location + "!_!WHERE DocumentStatus = \'Confirmed\'";
+                var pomfCFpz = await POMFService.getPOMFModuleNumberOfPage(CommonLibrary.Base64Encode(getPOMFCFDocumentpz));
+                pomfConfirmedNumberofPage = pomfCFpz.Data;
+                pomfConfirmedPageActive = 1;
 
-            await POMFService.getPOMFNPType();
-            acceptedDocReqPrefix = await POMFService.getPOMFAcceptedDocPrefix(CommonLibrary.Base64Encode("Request"));
-            acceptedDocRecPrefix = await POMFService.getPOMFAcceptedDocPrefix(CommonLibrary.Base64Encode("Receive"));
-            minDocLength = await POMFService.getPOMFAcceptedDocLength(CommonLibrary.Base64Encode("Min"));
-            maxDocLength = await POMFService.getPOMFAcceptedDocLength(CommonLibrary.Base64Encode("Max"));
+                StateHasChanged();
+            });
+
+            Task.Run(async () =>
+            {
+                await POMFService.getPOMFNPType();
+                acceptedDocReqPrefix = await POMFService.getPOMFAcceptedDocPrefix(CommonLibrary.Base64Encode("Request"));
+                acceptedDocRecPrefix = await POMFService.getPOMFAcceptedDocPrefix(CommonLibrary.Base64Encode("Receive"));
+                minDocLength = await POMFService.getPOMFAcceptedDocLength(CommonLibrary.Base64Encode("Min"));
+                maxDocLength = await POMFService.getPOMFAcceptedDocLength(CommonLibrary.Base64Encode("Max"));
+
+                StateHasChanged();
+            });
+            #pragma warning restore CS4014
 
             _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/POMFPages/POMFDashboard.razor.js");
         }
@@ -257,6 +269,17 @@ namespace BPIWebApplication.Client.Pages.POMFPages
             }
         }
 
+        private bool validateInputFilter(string paramValue)
+        {
+            if (paramValue.Any(x => !char.IsLetterOrDigit(x)))
+                return false;
+
+            if (paramValue.Length < 1)
+                return false;
+
+            return true;
+        }
+
         private async Task createDocumentApprove(string approveType)
         {
             try
@@ -282,7 +305,7 @@ namespace BPIWebApplication.Client.Pages.POMFPages
 
                     if (res.isSuccess)
                     {
-                        string param = approveType.Equals("Verify") ? "Verified" : approveType.Equals("Confirm") ? "Confirmed" : approveType.Equals("Release") ? "Released" : approveType.Equals("Receive") ? "Received" : "NAN";
+                        string param = approveType.Equals("Verify") ? "Verified" : approveType.Equals("Confirm") ? "Confirmed" : approveType.Equals("Release") ? "Released" : approveType.Equals("Receive") ? "Received" : approveType.Equals("Cancel") ? "Canceled" : "NAN";
 
                         previewPOMFDocument.dataHeader.DocumentStatus = param;
                         previewPOMFDocument.dataApproval.Add(res.Data.Data.Data);
@@ -500,6 +523,12 @@ namespace BPIWebApplication.Client.Pages.POMFPages
         {
             if (pomfDocumentFilterType.Length > 0)
             {
+                if (!validateInputFilter(pomfDocumentFilterValue))
+                {
+                    await _jsModule.InvokeVoidAsync("showAlert", "Input Value is not Valid !");
+                    return;
+                }
+
                 pomfFilterActive = true;
                 isLoading = true;
                 POMFService.pomfDocuments.Clear();
@@ -575,6 +604,12 @@ namespace BPIWebApplication.Client.Pages.POMFPages
             pomfFilterActive = false;
             isLoading = false;
             StateHasChanged();
+        }
+
+        private void redirectPOMFResolve(string temp)
+        {
+            string param = CommonLibrary.Base64Encode("RESOLVE!_!" + temp);
+            navigate.NavigateTo($"pomf/resolvepomf/{param}");
         }
 
         private bool checkPOMFDocuments()

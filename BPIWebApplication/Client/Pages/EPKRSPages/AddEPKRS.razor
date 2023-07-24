@@ -34,8 +34,7 @@ else
             {
                 <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
                     <strong>@alertMessage</strong> @alertBody
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close" @onclick="(() => alertTrigger = false)">
-                        <span aria-hidden="true">&times;</span>
+                    <button type="button" class="btn btn-close" data-dismiss="alert" aria-label="Close" @onclick="(() => alertTrigger = false)">
                     </button>
                 </div>
             }
@@ -45,8 +44,7 @@ else
             {
                 <div class="alert alert-success alert-dismissible fade show my-3" role="alert">
                     <strong>@alertMessage</strong> @alertBody
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close" @onclick="(() => successAlert = false)">
-                        <span aria-hidden="true">&times;</span>
+                    <button type="button" class="btn btn-close" data-dismiss="alert" aria-label="Close" @onclick="(() => successAlert = false)">
                     </button>
                 </div>
             }
@@ -103,6 +101,12 @@ else
                     {
                         <EditForm Model="@itemCaseData">
                             <DataAnnotationsValidator />
+
+                            <div class="row my-2">
+                                <div class="col">
+                                    <button type="button" title="Lihat Panduan" class="btn btn-sm btn-warning w-100" data-toggle="modal" data-target="#itemcGuideModal"><i class="oi oi-info"></i> <b>Panduan Pengisian</b></button>
+                                </div>
+                            </div>
 
                             @if (formPage == 1)
                             {
@@ -161,18 +165,12 @@ else
                                 <div class="row my-2">
                                     <div class="col">
                                         <label for="site_reporter">Site Pelapor :</label>
-                                        <InputText id="site_reporter" @bind-Value="itemCaseData.SiteReporter" class="form-control" readonly></InputText>
-                                    </div>
-                                    <div class="col">
-                                        <label for="site_sender">Site Pengirim : <i class="text-danger">&ast;</i></label>
-                                        <InputSelect id="site_sender" @bind-Value="itemCaseData.SiteSender" class="form-select" disabled="@(isLoading || successUpload)">
+                                        @*<InputText id="site_reporter" @bind-Value="itemCaseData.SiteReporter" class="form-control" readonly></InputText>*@
+                                        <InputSelect id="site_sender" @bind-Value="itemCaseData.SiteReporter" class="form-control" disabled>
                                             @if (checkLocation())
                                             {
                                                 @foreach (var location in ManagementService.locations)
                                                 {
-                                                    if (!location.locationName.Contains("DC"))
-                                                        continue;
-
                                                     <option value="@location.locationId">@location.locationId - @location.locationName</option>
                                                 }
                                             }
@@ -181,7 +179,6 @@ else
                                                 <option disabled value="BLANK">Location Empty</option>
                                             }
                                         </InputSelect>
-                                        <ValidationMessage For="(() => itemCaseData.SiteSender)" />
                                     </div>
                                 </div>
 
@@ -202,6 +199,81 @@ else
                             {
                                 <div class="row my-2">
                                     <div class="col">
+                                        <label for="riskrpnamerc">Nama Risk RP Penerima : <i class="text-danger">&ast;</i></label>
+                                        <InputText id="riskrpnamerc" @bind-Value="itemCaseData.ReceiverRiskRPName" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
+                                        <ValidationMessage For="(() => itemCaseData.ReceiverRiskRPName)" />
+                                    </div>
+                                    <div class="col">
+                                        <label for="dormemailrc">Email Risk RP Penerima : <i class="text-danger">&ast;</i></label>
+                                        <div class="input-group">
+                                            <InputText id="dormemailrc" @bind-Value="itemCaseData.ReceiverRiskRPEmail" placeholder="Email Username" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
+                                            <div class="input-group-append">
+                                                <span class="input-group-text">@@mitra10.com</span>
+                                            </div>
+                                        </div>
+                                        <ValidationMessage For="(() => itemCaseData.ReceiverRiskRPEmail)" />
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="dormnamerc">Nama DORM Penerima : <i class="text-danger">&ast;</i></label>
+                                        <InputText id="dormnamerc" @bind-Value="itemCaseData.ReceiverDORMName" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
+                                        <ValidationMessage For="(() => itemCaseData.ReceiverDORMName)" />
+                                    </div>
+                                    <div class="col">
+                                        <label for="dormemailrc">Email DORM Penerima : <i class="text-danger">&ast;</i></label>
+                                        <div class="input-group">
+                                            <InputText id="dormemailrc" @bind-Value="itemCaseData.ReceiverDORMEmail" placeholder="Email Username" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
+                                            <div class="input-group-append">
+                                                <span class="input-group-text">@@mitra10.com</span>
+                                            </div>
+                                        </div>
+                                        <ValidationMessage For="(() => itemCaseData.ReceiverDORMEmail)" />
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="riskrpnamesd">Nama Risk RP Pengirim : <i class="text-danger">&ast;</i></label>
+                                        <InputText id="riskrpnamesd" @bind-Value="itemCaseData.SenderRiskRPName" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
+                                        <ValidationMessage For="(() => itemCaseData.SenderRiskRPName)" />
+                                    </div>
+                                    <div class="col">
+                                        <label for="dormemailsd">Email Risk RP Pengirim : <i class="text-danger">&ast;</i></label>
+                                        <div class="input-group">
+                                            <InputText id="dormemailsd" @bind-Value="itemCaseData.SenderRiskRPEmail" placeholder="Email Username" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
+                                            <div class="input-group-append">
+                                                <span class="input-group-text">@@mitra10.com</span>
+                                            </div>
+                                        </div>
+                                        <ValidationMessage For="(() => itemCaseData.SenderRiskRPEmail)" />
+                                    </div>
+                                </div>
+
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="dormnamesd">Nama DORM Pengirim : <i class="text-danger">&ast;</i></label>
+                                        <InputText id="dormnamesd" @bind-Value="itemCaseData.SenderDORMName" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
+                                        <ValidationMessage For="(() => itemCaseData.SenderDORMName)" />
+                                    </div>
+                                    <div class="col">
+                                        <label for="dormemailsd">Email DORM Pengirim : <i class="text-danger">&ast;</i></label>
+                                        <div class="input-group">
+                                            <InputText id="dormemailsd" @bind-Value="itemCaseData.SenderDORMEmail" placeholder="Email Username" class="form-control" readonly="@((isLoading || successUpload) ? "readonly" : null)"></InputText>
+                                            <div class="input-group-append">
+                                                <span class="input-group-text">@@mitra10.com</span>
+                                            </div>
+                                        </div>
+                                        <ValidationMessage For="(() => itemCaseData.SenderDORMEmail)" />
+                                    </div>
+                                </div>
+                            }
+
+                            @if (formPage == 3)
+                            {
+                                <div class="row my-2">
+                                    <div class="col">
                                         <label for="ld_id">Loading Document ID : <i class="text-danger">&ast;</i></label>
                                         <div id="ld_id" class="input-group">
                                             <InputText @bind-Value="itemCaseData.LoadingDocumentID" class="form-control" disabled="@(isLoading || successUpload)"></InputText>
@@ -213,6 +285,26 @@ else
                                         <label for="ld_date">Tanggal Loading Document : <i class="text-danger">&ast;</i></label>
                                         <InputDate id="ld_date" @bind-Value="itemCaseData.LoadingDocumentDate" class="form-control" disabled></InputDate>
                                         <ValidationMessage For="(() => itemCaseData.LoadingDocumentDate)" />
+                                    </div>
+                                </div>
+                                
+                                <div class="row my-2">
+                                    <div class="col">
+                                        <label for="site_sender">Site Pengirim : <i class="text-danger">&ast;</i></label>
+                                        <InputSelect id="site_sender" @bind-Value="itemCaseData.SiteSender" class="form-select" disabled>
+                                            @if (checkLocation())
+                                            {
+                                                @foreach (var location in ManagementService.locations)
+                                                {
+                                                    <option value="@location.locationId">@location.locationId - @location.locationName</option>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <option disabled value="BLANK">Location Empty</option>
+                                            }
+                                        </InputSelect>
+                                        <ValidationMessage For="(() => itemCaseData.SiteSender)" />
                                     </div>
                                 </div>
 
@@ -368,7 +460,7 @@ else
                                     else
                                     {
                                         <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
-                                            <strong>Tambahkan Attachment dengan Tombol Diatas !</strong>
+                                            <strong>Lampiran berupa Berita Acara dan Bukti Dokumentasi Pengecekan Barang !</strong>
                                         </div>                                
                                     }
                                 }
@@ -376,13 +468,25 @@ else
 
                             <div class="row mt-3 mb-1">
                                 <div class="col">
+                                    @{
+                                        var pgMap1 = inputPageMapping.SingleOrDefault(x => x.Key.Equals("ITEMC")).Value.SingleOrDefault(y => y.Key.Equals(formPage));
+                                        var pgSubMap1 = inputPageMapping.SingleOrDefault(x => x.Key.Equals("ITEMC"));
+                                    }
                                     <div class="d-flex justify-content-between align-middle">
-                                        <button type="button" title="Previous Category" class="btn btn-sm btn-outline-info text-black fw-bold" disabled="@((formPage - 1) <= 0 ? "disabled" : null)" @onclick="(() => formPage -= 1)"><span class="oi oi-chevron-left"></span> Prev</button>
-                                        <p><span>&lt; @inputPageMapping.SingleOrDefault(x => x.Key.Equals("ITEMC")).Value.SingleOrDefault(y => y.Key.Equals(formPage)).Value &gt;</span></p>
-                                        <button type="button" title="Next Category" class="btn btn-sm btn-outline-info text-black fw-bold" disabled="@((formPage + 1) > inputPageMapping.SingleOrDefault(x => x.Key.Equals("ITEMC")).Value.Count() ? "disabled" : null)" @onclick="(() => formPage += 1)">Next <span class="oi oi-chevron-right"></span></button>
+                                        @if ((formPage - 1) > 0)
+                                        {
+                                            <button type="button" title="Previous Category" class="btn btn-sm btn-outline-info text-black fw-bold" disabled="@((formPage - 1) <= 0 ? "disabled" : null)" @onclick="(() => formPage -= 1)"><span class="oi oi-chevron-left"></span> Prev</button>
+                                        }
+                                        <p><span>&lt; @formPage / @pgSubMap1.Value.Count() &gt; @pgMap1.Value </span></p>
+                                        @if (formPage < inputPageMapping.SingleOrDefault(x => x.Key.Equals("ITEMC")).Value.Count())
+                                        {
+                                            <button type="button" title="Next Category" class="btn btn-sm btn-outline-info text-black fw-bold" disabled="@((formPage + 1) > inputPageMapping.SingleOrDefault(x => x.Key.Equals("ITEMC")).Value.Count() ? "disabled" : null)" @onclick="(() => formPage += 1)">Next <span class="oi oi-chevron-right"></span></button>
+                                        }
                                     </div>
                                 </div>
                             </div>
+                            
+                            <ValidationSummary />
 
                             @if (formPage.Equals(inputPageMapping.SingleOrDefault(x => x.Key.Equals("ITEMC")).Value.Count()))
                             {
@@ -410,6 +514,12 @@ else
                     {
                         <EditForm Model="@incidentaccidentData">
                             <DataAnnotationsValidator />
+                            
+                            <div class="row my-2">
+                                <div class="col">
+                                    <button type="button" title="Lihat Panduan" class="btn btn-sm btn-warning w-100" data-toggle="modal" data-target="#incacGuideModal"><i class="oi oi-info"></i>  <b>Panduan Pengisian</b></button>
+                                </div>
+                            </div>
 
                             @if (formPage == 1)
                             {
@@ -480,7 +590,20 @@ else
                                 <div class="row my-2">
                                     <div class="col">
                                         <label for="loc_report">Site Pelapor :</label>
-                                        <InputText id="loc_report" @bind-Value="incidentaccidentData.SiteReporter" class="form-control" readonly></InputText>
+                                        @*<InputText id="loc_report" @bind-Value="incidentaccidentData.SiteReporter" class="form-control" readonly></InputText>*@
+                                        <InputSelect id="site_sender" @bind-Value="incidentaccidentData.SiteReporter" class="form-control" disabled>
+                                            @if (checkLocation())
+                                            {
+                                                @foreach (var location in ManagementService.locations)
+                                                {
+                                                    <option value="@location.locationId">@location.locationId - @location.locationName</option>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <option disabled value="BLANK">Location Empty</option>
+                                            }
+                                        </InputSelect>
                                     </div>
                                     <div class="col">
                                         <label for="dept_id">Department Pelapor : <i class="text-danger">&ast;</i></label>
@@ -702,7 +825,7 @@ else
                                     else
                                     {
                                         <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
-                                            <strong>Please Add Attachment Using Button Above !</strong>
+                                            <strong>Lampiran berupa Berita Acara dan Bukti Dokumentasi Pengecekan Barang !</strong>
                                         </div>
                                     }
                                 }
@@ -710,10 +833,20 @@ else
 
                             <div class="row mt-3 mb-1">
                                 <div class="col">
+                                    @{
+                                        var pgMap2 = inputPageMapping.SingleOrDefault(x => x.Key.Equals("INCAC")).Value.SingleOrDefault(y => y.Key.Equals(formPage));
+                                        var pgSubMap2 = inputPageMapping.SingleOrDefault(x => x.Key.Equals("INCAC"));
+                                    }
                                     <div class="d-flex justify-content-between align-middle">
-                                        <button type="button" title="Previous Category" class="btn btn-sm btn-outline-info text-black fw-bold" disabled="@((formPage - 1) <= 0 ? "disabled" : null)" @onclick="(() => formPage -= 1)"><span class="oi oi-chevron-left"></span> Prev</button>
-                                        <p><span>&lt; @inputPageMapping.SingleOrDefault(x => x.Key.Equals("INCAC")).Value.SingleOrDefault(y => y.Key.Equals(formPage)).Value &gt;</span></p>
-                                        <button type="button" title="Next Category" class="btn btn-sm btn-outline-info text-black fw-bold" disabled="@((formPage + 1) > inputPageMapping.SingleOrDefault(x => x.Key.Equals("INCAC")).Value.Count() ? "disabled" : null)" @onclick="(() => formPage += 1)">Next <span class="oi oi-chevron-right"></span></button>
+                                        @if ((formPage - 1) > 0)
+                                        {
+                                            <button type="button" title="Previous Category" class="btn btn-sm btn-outline-info text-black fw-bold" disabled="@((formPage - 1) <= 0 ? "disabled" : null)" @onclick="(() => formPage -= 1)"><span class="oi oi-chevron-left"></span> Prev</button>
+                                        }
+                                        <p><span>&lt; @formPage / @pgSubMap2.Value.Count() &gt; @pgMap2.Value </span></p>
+                                        @if (formPage < inputPageMapping.SingleOrDefault(x => x.Key.Equals("INCAC")).Value.Count())
+                                        {
+                                            <button type="button" title="Next Category" class="btn btn-sm btn-outline-info text-black fw-bold" disabled="@((formPage + 1) > inputPageMapping.SingleOrDefault(x => x.Key.Equals("INCAC")).Value.Count() ? "disabled" : null)" @onclick="(() => formPage += 1)">Next <span class="oi oi-chevron-right"></span></button>
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -857,3 +990,306 @@ else
 </div>
 
 
+<div class="modal fade" id="itemcGuideModal" tabindex="-3" role="dialog" aria-labelledby="itemcGuideModalLabel" aria-hidden="true" style="background: rgba(0,0,0, 0.2);">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header cus-bg">
+                <h5 class="modal-title fw-bold" id="itemcGuideModalLabel"><i class="oi oi-book"></i> Panduan Pengisian EPKRS Barang Bermasalah</h5>
+                <button type="button" class="btn btn-close" data-dismiss="modal" data-target="#itemcGuideModal" aria-label="Close">
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="fw-bold text-center">Data dibawah adalah panduan atau pengertian dalam melakukan pengisian EPKRS, Mohon diperhatikan. Terima kasih</p>
+
+                <div class="table-responsive">
+                    <table class="table table-striped" style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="text-center align-middle text-wrap" style="width: 40%; font-size: 15px;">Kolom Pengisian</th>    
+                                <th scope="col" class="text-center align-middle text-wrap" style="width: 60%; font-size: 15px;">Pengertian</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Nama Risk RP (Responsible Person)</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Manager / Asisten Manager / Store Manager / DC Manager.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Email Risk RP</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Email Manager / Asisten Manager / Store Manager / DC Manager. <mark>(Diisi menggunakan email mitra10.com, Usernamenya saja tanpa menggunakan bagian @@mitra10.com)</mark>
+                                    <br />
+                                    Contoh: Email asli user.name@@mitra10.com, hanya diisi <mark>user.name</mark> saja.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Nama DORM (Divisi Operational Risk Manager)</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Nama General Manager / Regional Manager.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Email DORM</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Email General Manager / Regional Manager. <mark>(Diisi menggunakan email mitra10.com, Usernamenya saja tanpa menggunakan bagian @@mitra10.com)</mark>
+                                    <br />
+                                    Contoh: Email asli user.name@@mitra10.com, hanya diisi <mark>user.name</mark> saja.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Loading Document ID</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Nomor Loading Document barang yang bermasalah.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Qty</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Qty barang yang bermasalah.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Qty Stock</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Stock tersedia pada saat itu (<i>Stock Available</i>).
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Item Status</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Pilih tipe barang bermasalah, status keterlambatan penerimaan barang, status barang tercakup cctv dan status barang dilaporkan ke pengirim.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer cus-bg">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#itemcGuideModal"><i class="oi oi-x"></i> Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="incacGuideModal" tabindex="-3" role="dialog" aria-labelledby="incacGuideModalLabel" aria-hidden="true" style="background: rgba(0,0,0, 0.2);">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header cus-bg">
+                <h5 class="modal-title fw-bold" id="incacGuideModalLabel"><i class="oi oi-book"></i> Panduan Pengisian EPKRS Incident/Accident</h5>
+                <button type="button" class="btn btn-close" data-dismiss="modal" data-target="#incacGuideModal" aria-label="Close">
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="fw-bold text-center">Data dibawah adalah panduan atau pengertian dalam melakukan pengisian EPKRS, Mohon diperhatikan. Terima kasih</p>
+
+                <div class="table-responsive">
+                    <table class="table table-striped" style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="text-center align-middle text-wrap" style="width: 40%; font-size: 15px;">Type Resiko</th>
+                                <th scope="col" class="text-center align-middle text-wrap" style="width: 60%; font-size: 15px;">Pengertian</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Internal Fraud</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    (Pencurian, <i>Unauthorized Process</i>, <i>Fraud</i> oleh karyawan) Tindakan yang menjurus kepada pencurian, penipuan, penggelapan/pembobolan uang perusahaan, penyalahgunaan hak & milik perusahaan, menghindari ketentuan / hukum yang berlaku - <mark>yang dilakukan oleh orang dalam perusahaan</mark>.
+                                    <br />
+                                    Misal: Penjualan yang sengaja tidak dilaporkan, Mengambil uang tagihan pelanggan, Mencuri barang, Penyuapan, Komisi ilegal, dll.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">External Fraud</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    (Pencurian, Perampokan, <i>Fraud</i> oleh pihak ketiga) Tindakan yang menjurus kepada pencurian, penipuan, penyalahgunaan hal & milik perusahaan, menghindari ketentuan / hukum yang berlaku - <mark>yang dilakukan oleh pihak ketiga / eksternal</mark>.
+                                    <br />
+                                    Misal: Pencurian data informasi pelanggan, Customer mencuri barang perusahaan, Kerusakan data - <i>Hacker</i>, dll.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Employment Practices & Workplace Safety</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Tindakan yang <mark>tidak konsisten dengan ketentuan ketenagakerjaan dan keselamatan kerja atau tindakan yang menimbulkan tuntutan hukum karena adanya kecelakaan atau adanya diskriminasi kepada pegawai</mark>, dll.
+                                    <br />
+                                    Misal: PHK, Perselisihan karyawan, Kenyamanan & keamanan lingkungan kerja, dsb.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Client, Product & Business Practices</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Kegagalan memenuhi kewajiban kepada pelanggan (lalai/tidak sengaja) sifat dan rancangan produk <mark>(Komplain pelanggan terhadap produk, Brosur, Bisnis, dsb)</mark>.
+                                    <br />
+                                    Misal: Penjualan atau praktek perdagangan yang tidak sehat, Manipulasi pasar, Praktek bisnis yang tidak sesuai, dll.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Damage to Physical Assests</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Hilang atau rusaknya aset perusahaan akibat <mark>suatu peristiwa bencana alam</mark> dan hal lainnya.
+                                    <br />
+                                    Misal: Gempa bumi, Kebakaran, Huru hara, Banjir, dsb.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Business Disruption, & System Failures</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Gangguan terhadap <mark>kegiatan usaha atau kegagalan sistem</mark>.
+                                    <br />
+                                    Misal: <i>IT breakdowns, Hacking, Utility shortage / Blackout</i>.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Execution, Delivery & Process Management </td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Proses transaksi atau manajemen yang gagal, termasuk hubungan dagang dengan <i>Principal</i> / Vendor. <mark>(Kesalahan pencatatan, Kesalahan proses, Kesalahan bayar, Salah kirim/ alamat, Kecelakaan kendaran, dsb)</mark>.
+                                    <br />
+                                    Misal: Kegagalan pengiriman, Kesalahan komunikasi, Kesalahan input data, Kesalahan pemeliharaan, Data referensi, Kesalahan akuntansi, Perselisihan dengan pelanggan / <i>principal</i>, Kehilangan dokumen / data tagihan pelanggan.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped" style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="text-center align-middle text-wrap" style="width: 40%; font-size: 15px;">Kolom Pengisian</th>
+                                <th scope="col" class="text-center align-middle text-wrap" style="width: 60%; font-size: 15px;">Pengertian</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Nama Risk RP (Responsible Person)</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Manager / Asisten Manager / Store Manager / DC Manager.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Email Risk RP</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Email Manager / Asisten Manager / Store Manager / DC Manager. <mark>(Diisi menggunakan email mitra10.com, Usernamenya saja tanpa menggunakan bagian @@mitra10.com)</mark>
+                                    <br />
+                                    Contoh: Email asli user.name@@mitra10.com, hanya diisi <mark>user.name</mark> saja.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Nama DORM (Divisi Operational Risk Manager)</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Nama General Manager / Regional Manager.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Email DORM</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Email General Manager / Regional Manager. <mark>(Diisi menggunakan email mitra10.com, Usernamenya saja tanpa menggunakan bagian @@mitra10.com)</mark>
+                                    <br />
+                                    Contoh: Email asli user.name@@mitra10.com, hanya diisi <mark>user.name</mark> saja.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Deskripsi/Judul Kejadian</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Contoh : Issue yang terjadi (Barang Rusak / Kesalahan Handling / Pencurian Barang atau Kendaraan.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Department Terdampak</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Tuliskan divisi / Cabang / Departemen yang terkena dampak kerugian.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Kronologi</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Penjelasan Detail Kejadian.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Root Cause</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Tuliskan hasil analisa atas penyebab kejadian risiko tersebut - Apa penyebab yang paling utama sehingga kejadian tersebut terjadi (gunakan <i>Root Cause Analysis</i>).
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Deskripsi Kerugian</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Tuliskan detail dampak kerugian dari kejadian tersebut (Contoh : Granit Pecah).
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Estimasi Kerugian</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Kerugian secara Nominal (Rupiah).
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Jumlah Pengembalian</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Kerugian yang di ganti (Transaksi Oleh Karyawan / Potong Gaji / Klaim Asuransi )
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Deskripsi Risiko</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Tuliskan risiko apa saja yang bisa berdampak kepada perusahaan baik secara financial / non financial (Customer komplain / Refund).
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Dampak Kejadian</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Tuliskan perkiraan dampak / kerugian dari kejadian tersebut (Contoh : Loss Sales).
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Email PIC</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Tuliskan Email PIC yang terlibat untuk proses perbaikan / mitigasi tersebut serta yang akan menjadi koordinatornya. <mark>(Diisi menggunakan email mitra10.com, Usernamenya saja tanpa menggunakan bagian @@mitra10.com)</mark>
+                                    <br />
+                                    Contoh: Email asli user.name@@mitra10.com, hanya diisi <mark>user.name</mark> saja.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Action Plan</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Tuliskan tindakan/langkah sementara untuk menanggulangi dampak kejadian tersebut.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Tanggal Target </td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Tanggal Action Plan telah dilakukan.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Tanggal Mitigasi</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Tanggal Deskripsi Rencana Mitigasi telah dilakukan.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Deskripsi Rencana Mitigasi</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Perbaikan apa yang akan dilakukan untuk jangka panjangnya, agar kejadian yang sama tidak terulang lagi.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Attachment</td>
+                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                    Dokumen pendukung yang diupload, dapat berupa berita acara ataupun bukti-bukti kejadian.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer cus-bg">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#incacGuideModal"><i class="oi oi-x"></i> Close</button>
+            </div>
+        </div>
+    </div>
+</div>

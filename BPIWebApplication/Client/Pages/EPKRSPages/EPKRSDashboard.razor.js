@@ -67,7 +67,7 @@ export function initializeDoughnutChart(chartId, arrayLabels, arrayValue, chartT
                 title: {
                     display: true,
                     text: chartTitle,
-                    fontSize: 12
+                    fontSize: 15
                 }
             },
             tooltips: {
@@ -135,7 +135,7 @@ export function updateDoughnutChart(element, chartId, arrayLabels, arrayValue, c
                 title: {
                     display: true,
                     text: chartTitle,
-                    fontSize: 12
+                    fontSize: 15
                 }
             },
             tooltips: {
@@ -200,7 +200,7 @@ export function initializeBarChart(chartId, arrayLabels, arrayValue, chartTitle,
                 title: {
                     display: true,
                     text: chartTitle,
-                    fontSize: 12
+                    fontSize: 15
                 },
                 scales: {
                     yAxes: [{
@@ -214,8 +214,8 @@ export function initializeBarChart(chartId, arrayLabels, arrayValue, chartTitle,
                         label: function (tooltipItem, data) {
                             // get the data label and data value to display
                             // convert the data value to local string so it uses a comma seperated number
-                            var dataLabel = data.labels[tooltipItem.index];
-                            // var dataLabel = 'Loss Estimation ';
+                            // var dataLabel = data.labels[tooltipItem.index];
+                            var dataLabel = sub;
                             var value = ': ' + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString();
 
                             // make this isn't a multi-line label (e.g. [["label 1 - line 1, "line 2, ], [etc...]])
@@ -254,7 +254,7 @@ export function initializeBarChart(chartId, arrayLabels, arrayValue, chartTitle,
                 title: {
                     display: true,
                     text: chartTitle,
-                    fontSize: 12
+                    fontSize: 15
                 },
                 scales: {
                     yAxes: [{
@@ -268,8 +268,8 @@ export function initializeBarChart(chartId, arrayLabels, arrayValue, chartTitle,
                         label: function (tooltipItem, data) {
                             // get the data label and data value to display
                             // convert the data value to local string so it uses a comma seperated number
-                            var dataLabel = data.labels[tooltipItem.index];
-                            // var dataLabel = 'Loss Estimation ';
+                            // var dataLabel = data.labels[tooltipItem.index];
+                            var dataLabel = sub;
                             var value = ': ' + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString();
 
                             // make this isn't a multi-line label (e.g. [["label 1 - line 1, "line 2, ], [etc...]])
@@ -307,7 +307,7 @@ export function initializeBarChart(chartId, arrayLabels, arrayValue, chartTitle,
                 title: {
                     display: true,
                     text: chartTitle,
-                    fontSize: 12
+                    fontSize: 15
                 },
                 scales: {
                     yAxes: [{
@@ -322,7 +322,7 @@ export function initializeBarChart(chartId, arrayLabels, arrayValue, chartTitle,
                             // get the data label and data value to display
                             // convert the data value to local string so it uses a comma seperated number
                             // var dataLabel = data.labels[tooltipItem.index];
-                            var dataLabel = 'Loss Estimation ';
+                            var dataLabel = sub;
                             var value = ': Rp. ' + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString() + ' ,-';
 
                             // make this isn't a multi-line label (e.g. [["label 1 - line 1, "line 2, ], [etc...]])
@@ -390,7 +390,7 @@ export function updateBarChart(element, chartId, arrayLabels, arrayValue, chartT
                 title: {
                     display: true,
                     text: chartTitle,
-                    fontSize: 12
+                    fontSize: 15
                 },
                 scales: {
                     yAxes: [{
@@ -404,8 +404,8 @@ export function updateBarChart(element, chartId, arrayLabels, arrayValue, chartT
                         label: function (tooltipItem, data) {
                             // get the data label and data value to display
                             // convert the data value to local string so it uses a comma seperated number
-                            var dataLabel = data.labels[tooltipItem.index];
-                            // var dataLabel = 'Loss Estimation ';
+                            // var dataLabel = data.labels[tooltipItem.index];
+                            var dataLabel = sub;
                             var value = ': ' + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString();
 
                             // make this isn't a multi-line label (e.g. [["label 1 - line 1, "line 2, ], [etc...]])
@@ -443,7 +443,7 @@ export function updateBarChart(element, chartId, arrayLabels, arrayValue, chartT
                 title: {
                     display: true,
                     text: chartTitle,
-                    fontSize: 12
+                    fontSize: 15
                 },
                 scales: {
                     yAxes: [{
@@ -457,8 +457,8 @@ export function updateBarChart(element, chartId, arrayLabels, arrayValue, chartT
                         label: function (tooltipItem, data) {
                             // get the data label and data value to display
                             // convert the data value to local string so it uses a comma seperated number
-                            var dataLabel = data.labels[tooltipItem.index];
-                            // var dataLabel = 'Loss Estimation ';
+                            //var dataLabel = data.labels[tooltipItem.index];
+                            var dataLabel = sub;
                             var value = ': ' + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString();
 
                             // make this isn't a multi-line label (e.g. [["label 1 - line 1, "line 2, ], [etc...]])
@@ -496,7 +496,7 @@ export function updateBarChart(element, chartId, arrayLabels, arrayValue, chartT
                 title: {
                     display: true,
                     text: chartTitle,
-                    fontSize: 12
+                    fontSize: 15
                 },
                 scales: {
                     yAxes: [{
@@ -510,7 +510,7 @@ export function updateBarChart(element, chartId, arrayLabels, arrayValue, chartT
                         label: function (tooltipItem, data) {
                             // get the data label and data value to display
                             // convert the data value to local string so it uses a comma seperated number
-                            var dataLabel = data.labels[tooltipItem.index];
+                            var dataLabel = sub;
                             var value = ': Rp. ' + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString() + ' ,-';
 
                             // make this isn't a multi-line label (e.g. [["label 1 - line 1, "line 2, ], [etc...]])
@@ -561,7 +561,7 @@ export function initializeLineChart(chartId, arrayLabels, arrayValue, chartTitle
                 title: {
                     display: true,
                     text: chartTitle,
-                    fontSize: 12
+                    fontSize: 15
                 }
             },
             tooltips: {
@@ -624,7 +624,7 @@ export function updateLineChart(element, chartId, arrayLabels, arrayValue, chart
                 title: {
                     display: true,
                     text: chartTitle,
-                    fontSize: 12
+                    fontSize: 15
                 }
             },
             tooltips: {

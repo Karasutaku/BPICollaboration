@@ -1,8 +1,12 @@
 ﻿using BPIBR.Models.DbModel;
 using BPIBR.Models.MainModel;
 using BPIBR.Models.MainModel.Company;
+using BPIBR.Models.MainModel.Mailing;
 using BPIBR.Models.PagesModel.AddEditProject;
+using BPILibrary;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using System.Net;
 
 namespace BPIBR.Controllers
 {
@@ -11,11 +15,19 @@ namespace BPIBR.Controllers
     public class BPIBaseController : Controller
     {
         private readonly HttpClient _http;
+        private readonly IConfiguration _configuration;
+        private readonly string _autoEmailUser, _autoEmailPass, _mailHost;
+        private readonly int _mailPort;
 
         public BPIBaseController(HttpClient http, IConfiguration config)
         {
             _http = http;
+            _configuration = config;
             _http.BaseAddress = new Uri(config.GetValue<string>("BaseUri:BpiDA"));
+            _autoEmailUser = _configuration.GetValue<string>("AutoEmailCreds:Email");
+            _autoEmailPass = _configuration.GetValue<string>("AutoEmailCreds:Ticket");
+            _mailHost = _configuration.GetValue<string>("AutoEmailCreds:Host");
+            _mailPort = _configuration.GetValue<int>("AutoEmailCreds:Port");
         }
 
         [HttpGet("getAllBisnisUnitData/{param}")]
@@ -159,6 +171,94 @@ namespace BPIBR.Controllers
             try
             {
                 var result = await _http.GetFromJsonAsync<ResultModel<List<BPIBR.Models.MainModel.Company.Category>>>("api/DA/BPIBase/getAllCategories");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getRegionData")]
+        public async Task<IActionResult> getRegionData()
+        {
+            ResultModel<List<Region>> res = new();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<Region>>>("api/DA/BPIBase/getRegionData");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getMasterUOMData")]
+        public async Task<IActionResult> getMasterUOMData()
+        {
+            ResultModel<List<UOM>> res = new();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<UOM>>>("api/DA/BPIBase/getMasterUOMData");
 
                 if (result.isSuccess)
                 {
@@ -480,5 +580,89 @@ namespace BPIBR.Controllers
 
             return actionResult;
         }
+
+        [HttpPost("sendManualEmail")]
+        public async Task<IActionResult> sendManualEmail(CustomMailing data)
+        {
+            ResultModel<CustomMailing> res = new ResultModel<CustomMailing>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var mailing = await Task.Run(async () =>
+                {
+                    // Team Risk
+                    string param = CommonLibrary.Base64Encode($"{data.moduleName}!_!{data.actionName}!_!{data.locationId}");
+                    var dtMail = await _http.GetFromJsonAsync<ResultModel<Mailing>>($"api/DA/PettyCash/getMailingDetails/{param}");
+
+                    return dtMail;
+                });
+
+                if (mailing != null)
+                {
+                    if (mailing.isSuccess)
+                    {
+                        List<string>? xto = null;
+                        List<string>? xcc = null;
+
+                        if (data.to.Count() > 0)
+                        {
+                            xto = new();
+                            data.to.ForEach(lto => xto.Add(new string(lto.userEmail)));
+                        }
+
+                        if (data.cc.Count() > 0)
+                        {
+                            xcc = new();
+                            data.cc.ForEach(lcc => xcc.Add(new string(lcc.userEmail)));
+                        }
+
+                        if (data.moduleName.Equals("EPKRS"))
+                        {
+                            var sendMail = await CommonLibrary.sendEmail(
+                                data.from
+                                , xto
+                                , xcc
+                                , new NetworkCredential(_autoEmailUser, _autoEmailPass)
+                                , string.Format(mailing.Data.MailSubject, data.Subject)
+                                , string.Format(mailing.Data.MailMainBody, data.OtherString, data.Body)
+                                , true
+                                , _mailPort
+                                , _mailHost
+                                , true
+                            );
+
+                            res.Data = data;
+                            res.isSuccess = sendMail.isSuccess;
+                            res.ErrorCode = sendMail.ErrorCode;
+                            res.ErrorMessage = sendMail.ErrorMessage;
+
+                            actionResult = Ok(res);
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception($"{mailing.ErrorMessage} !");
+                    }
+                }
+                else
+                {
+                    throw new Exception("Mailing Response Data is NULL !");
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        //
     }
 }

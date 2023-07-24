@@ -1,6 +1,9 @@
-﻿using BPIWebApplication.Shared.DbModel;
+﻿using BPILibrary;
+using BPIWebApplication.Shared.DbModel;
 using BPIWebApplication.Shared.FileUploadModel;
 using BPIWebApplication.Shared.MainModel;
+using BPIWebApplication.Shared.MainModel.Company;
+using BPIWebApplication.Shared.MainModel.Mailing;
 using BPIWebApplication.Shared.MainModel.Procedure;
 using BPIWebApplication.Shared.PagesModel.AddEditProject;
 using BPIWebApplication.Shared.PagesModel.AddEditUser;
@@ -22,20 +25,8 @@ namespace BPIWebApplication.Client.Services.ManagementServices
         public List<Project> projects { get; set; } = new List<Project>();
         public List<LocationResp> locations { get; set; } = new List<LocationResp>();
         public List<BPIWebApplication.Shared.MainModel.Company.Category> categories { get; set; } = new();
-
-        // encode decode base 64
-
-        private static string Base64Decode(string base64EncodedData)
-        {
-            var base64EncodedBytes = Convert.FromBase64String(base64EncodedData);
-            return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
-        }
-
-        private static string Base64Encode(string plainText)
-        {
-            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
-            return Convert.ToBase64String(plainTextBytes);
-        }
+        public List<Region> regions { get; set; } = new();
+        public List<UOM> uoms { get; set; } = new();
 
         // get
 
@@ -164,6 +155,80 @@ namespace BPIWebApplication.Client.Services.ManagementServices
                 {
                     categories.Clear();
                     categories = result.Data;
+
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
+        public async Task<ResultModel<List<Region>>> getRegionData()
+        {
+            ResultModel<List<Region>> resData = new();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<Region>>>("api/endUser/BPIBase/getRegionData");
+
+                if (result.isSuccess)
+                {
+                    regions.Clear();
+                    regions = result.Data;
+
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+                else
+                {
+                    resData.Data = result.Data;
+                    resData.isSuccess = result.isSuccess;
+                    resData.ErrorCode = result.ErrorCode;
+                    resData.ErrorMessage = result.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
+        public async Task<ResultModel<List<UOM>>> getMasterUOMData()
+        {
+            ResultModel<List<UOM>> resData = new();
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<UOM>>>("api/endUser/BPIBase/getMasterUOMData");
+
+                if (result.isSuccess)
+                {
+                    uoms.Clear();
+                    uoms = result.Data;
 
                     resData.Data = result.Data;
                     resData.isSuccess = result.isSuccess;
@@ -425,7 +490,7 @@ namespace BPIWebApplication.Client.Services.ManagementServices
         {
             ResultModel<string> resData = new ResultModel<string>();
 
-            var temp = Base64Encode(DeptID);
+            var temp = CommonLibrary.Base64Encode(DeptID);
 
             try
             {
@@ -460,7 +525,7 @@ namespace BPIWebApplication.Client.Services.ManagementServices
         {
             ResultModel<string> resData = new ResultModel<string>();
 
-            var temp = Base64Encode(userEmail);
+            var temp = CommonLibrary.Base64Encode(userEmail);
 
             try
             {
@@ -495,7 +560,7 @@ namespace BPIWebApplication.Client.Services.ManagementServices
         {
             ResultModel<string> resData = new ResultModel<string>();
 
-            var temp = Base64Encode(projectName);
+            var temp = CommonLibrary.Base64Encode(projectName);
 
             try
             {
@@ -526,6 +591,44 @@ namespace BPIWebApplication.Client.Services.ManagementServices
             return resData.isSuccess;
         }
 
+        public async Task<ResultModel<CustomMailing>> sendManualEmail(CustomMailing data)
+        {
+            ResultModel<CustomMailing> resData = new ResultModel<CustomMailing>();
 
+            try
+            {
+                var result = await _http.PostAsJsonAsync<CustomMailing>("api/endUser/BPIBase/sendManualEmail", data);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<CustomMailing>>();
+
+                    resData.Data = respBody.Data;
+                    resData.isSuccess = respBody.isSuccess;
+                    resData.ErrorCode = respBody.ErrorCode;
+                    resData.ErrorMessage = respBody.ErrorMessage;
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<CustomMailing>>();
+
+                    resData.Data = respBody.Data;
+                    resData.isSuccess = respBody.isSuccess;
+                    resData.ErrorCode = respBody.ErrorCode;
+                    resData.ErrorMessage = respBody.ErrorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                resData.Data = null;
+                resData.isSuccess = false;
+                resData.ErrorCode = "99";
+                resData.ErrorMessage = ex.Message;
+            }
+
+            return resData;
+        }
+
+        //
     }
 }

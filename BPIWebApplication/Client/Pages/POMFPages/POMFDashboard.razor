@@ -4,6 +4,7 @@
 @inject IPOMFService POMFService
 @inject ILoginService LoginService
 @inject IManagementService ManagementService
+@inject NavigationManager navigate
 @inject IJSRuntime JS
 
 <PageTitle>EPKRS - Add POMF</PageTitle>
@@ -295,9 +296,20 @@ else
                     <div class="col fw-bold">POMF Date</div>
                     <div class="col">: @previewPOMFDocument.dataHeader.POMFDate.ToString("dddd, dd MMMM yyyy")</div>
                 </div>
+                @if (!previewPOMFDocument.dataHeader.DocumentReference.Equals(""))
+                {
+                    <div class="row">
+                        <div class="col fw-bold">POMF Reference Document</div>
+                        <div class="col">: @previewPOMFDocument.dataHeader.DocumentReference</div>
+                    </div>
+                }
                 <div class="row">
                     <div class="col fw-bold">Location</div>
                     <div class="col">: @previewPOMFDocument.dataHeader.LocationID</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Requester</div>
+                    <div class="col">: @previewPOMFDocument.dataHeader.Requester</div>
                 </div>
                 <div class="row">
                     <div class="col fw-bold">Customer Name</div>
@@ -319,6 +331,14 @@ else
                     <div class="col fw-bold">Document Status</div>
                     <div class="col">: @previewPOMFDocument.dataHeader.DocumentStatus</div>
                 </div>
+
+                @if (!previewPOMFDocument.dataHeader.Remarks.Equals(""))
+                {
+                    <div class="row mb-2">
+                        <div class="col fw-bold">Document Remarks</div>
+                        <div class="col">: @previewPOMFDocument.dataHeader.Remarks</div>
+                    </div>
+                }
 
                 @if (checkPreviewPOMFApprovalLine())
                 {
@@ -402,7 +422,7 @@ else
                                                 {
                                                     @if (!npAuto.isAutomaticApproval)
                                                     {
-                                                        <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                                        <td class="text-center align-middle" style="font-size:14px;">
                                                             <div class="btn-group dropdown">
                                                                 <button class="btn btn-sm dropdown-toggle" type="button" data-toggle="dropdown" data-boundary="viewport" aria-haspopup="true" aria-expanded="false">
                                                                     <i class="oi oi-eye"></i>
@@ -433,6 +453,15 @@ else
                                                                             <div class="row my-1">
                                                                                 <div class="col">
                                                                                     <b>Receive Document</b> : @item.ExternalReceiveDocument, @item.ReceiveDocumentDate.Value.ToString("dd MMMM yyyy")
+                                                                                </div>
+                                                                            </div>
+                                                                        }
+
+                                                                        @if (!item.Remarks.Equals(""))
+                                                                        {
+                                                                            <div class="row my-1">
+                                                                                <div class="col">
+                                                                                    <b>Remarks</b> : @item.Remarks
                                                                                 </div>
                                                                             </div>
                                                                         }
@@ -471,6 +500,15 @@ else
                                                                                     </div>
                                                                                 </div>
                                                                             }
+                                                                            
+                                                                            @if (!item.Remarks.Equals(""))
+                                                                            {
+                                                                                <div class="row my-1">
+                                                                                    <div class="col">
+                                                                                        <b>Remarks</b> : @item.Remarks
+                                                                                    </div>
+                                                                                </div>
+                                                                            }
 
                                                                         </div>
                                                                     </div>
@@ -498,13 +536,13 @@ else
                 }
                 @if (doc != null)
                 {
-                    @if (doc.isAutomaticApproval)
+                    @if (doc.isAutomaticApproval && previewPOMFDocument.dataHeader.DocumentReference.Equals(""))
                     {
                         @if (LoginService.activeUser.userPrivileges.Contains("RL"))
                         {
                             <button type="button" class="btn btn-warning fw-bold" data-toggle="modal" data-target="#pomfApprovalModal"
                             @onclick="@(() => setPOMFApproval("Release"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Confirmed") ? null : "disabled")">
-                                <i class="oi oi-document"></i> Release POMF
+                                <i class="oi oi-document"></i> Release
                             </button>
                         }
 
@@ -519,44 +557,53 @@ else
                         @if (LoginService.activeUser.userPrivileges.Contains("DL"))
                         {
                             <button type="button" class="btn btn-danger fw-bold" data-toggle="modal" data-target="#pomfApprovalModal" 
-                            @onclick="@(() => setPOMFApproval("Delete"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Confirmed") ? null : "disabled")"><i class="oi oi-basket"></i> Delete</button>
+                            @onclick="@(() => setPOMFApproval("Delete"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Confirmed") ? null : "disabled")"><i class="oi oi-basket"></i> Delete </button>
                         }
                     }
-                    else
+                    else if (!doc.isAutomaticApproval || previewPOMFDocument.dataHeader.DocumentReference.Equals("MANUAL"))
                     {
                         @if (LoginService.activeUser.userPrivileges.Contains("VR"))
                         {
                             <button type="button" class="btn btn-warning fw-bold" data-toggle="modal" data-target="#pomfApprovalModal" 
-                            @onclick="@(() => setPOMFApproval("Verify"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-clipboard"></i> Verify POMF</button>
+                            @onclick="@(() => setPOMFApproval("Verify"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-clipboard"></i> Verify </button>
                         }
                 
                         @if (LoginService.activeUser.userPrivileges.Contains("CF"))
                         {
                             <button type="button" class="btn btn-warning fw-bold" data-toggle="modal" data-target="#pomfApprovalModal" 
-                            @onclick="@(() => setPOMFApproval("Confirm"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Verified") ? null : "disabled")"><i class="oi oi-task"></i> Confirm POMF</button>
+                            @onclick="@(() => setPOMFApproval("Confirm"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Verified") ? null : "disabled")"><i class="oi oi-task"></i> Confirm </button>
                         }
                     
                         @if (LoginService.activeUser.userPrivileges.Contains("RL"))
                         {
                             <button type="button" class="btn btn-warning fw-bold" data-toggle="modal" data-target="#pomfApprovalModal" 
-                            @onclick="@(() => setPOMFApproval("Release"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Confirmed") ? null : "disabled")"><i class="oi oi-document"></i> Release POMF</button>
+                            @onclick="@(() => setPOMFApproval("Release"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Confirmed") ? null : "disabled")"><i class="oi oi-document"></i> Release </button>
                         }
                     
                         @if (LoginService.activeUser.userPrivileges.Contains("SB"))
                         {
                             <button type="button" class="btn btn-success fw-bold" data-toggle="modal" data-target="#pomfApprovalModal" 
-                            @onclick="@(() => setPOMFApproval("Receive"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Released") ? null : "disabled")"><i class="oi oi-check"></i> Received</button>
+                            @onclick="@(() => setPOMFApproval("Receive"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Released") ? null : "disabled")"><i class="oi oi-check"></i> Received </button>
+
+                            <button type="button" class="btn btn-secondary fw-bold" data-dismiss="modal" data-target="#previewPOMFModal"
+                            @onclick="@(() => redirectPOMFResolve(previewPOMFDocument.dataHeader.POMFID))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Received") ? null : "disabled")"><i class="oi oi-check"></i> Resolve </button>
                         }
 
                         @if (LoginService.activeUser.userPrivileges.Contains("DL"))
                         {
                             <button type="button" class="btn btn-danger fw-bold" data-toggle="modal" data-target="#pomfApprovalModal"
-                            @onclick="@(() => setPOMFApproval("Delete"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-basket"></i> Delete</button>
+                            @onclick="@(() => setPOMFApproval("Delete"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-basket"></i> Delete </button>
+                        }
+
+                        @if (LoginService.activeUser.userPrivileges.Contains("CN"))
+                        {
+                            <button type="button" class="btn btn-danger fw-bold" data-toggle="modal" data-target="#pomfApprovalModal"
+                            @onclick="@(() => setPOMFApproval("Cancel"))" disabled="@(previewPOMFDocument.dataHeader.DocumentStatus.Equals("Canceled"))"><i class="oi oi-ban"></i> Cancel </button>
                         }
                     }
                 }
 
-                <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#previewPOMFModal"><i class="oi oi-x"></i> Close</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#previewPOMFModal"><i class="oi oi-x"></i> Close </button>
             </div>
         </div>
     </div>
@@ -581,9 +628,20 @@ else
                     <div class="col fw-bold">POMF Date</div>
                     <div class="col">: @previewPOMFConfirmDocument.dataHeader.POMFDate.ToString("dddd, dd MMMM yyyy")</div>
                 </div>
+                @if (!previewPOMFDocument.dataHeader.DocumentReference.Equals(""))
+                {
+                    <div class="row">
+                        <div class="col fw-bold">POMF Reference Document</div>
+                        <div class="col">: @previewPOMFDocument.dataHeader.DocumentReference</div>
+                    </div>
+                }
                 <div class="row">
                     <div class="col fw-bold">Location</div>
                     <div class="col">: @previewPOMFConfirmDocument.dataHeader.LocationID</div>
+                </div>
+                <div class="row">
+                    <div class="col fw-bold">Requester</div>
+                    <div class="col">: @previewPOMFDocument.dataHeader.Requester</div>
                 </div>
                 <div class="row">
                     <div class="col fw-bold">Customer Name</div>
@@ -719,6 +777,16 @@ else
                                                                             <div class="row my-1">
                                                                                 <div class="col">
                                                                                     <b>Receive Document</b> : @item.ExternalReceiveDocument, @item.ReceiveDocumentDate.Value.ToString("dd MMMM yyyy")
+                                                                                </div>
+                                                                            </div>
+                                                                        }
+
+
+                                                                        @if (!item.Remarks.Equals(""))
+                                                                        {
+                                                                            <div class="row my-1">
+                                                                                <div class="col">
+                                                                                    <b>Remarks</b> : @item.Remarks
                                                                                 </div>
                                                                             </div>
                                                                         }
@@ -902,6 +970,12 @@ else
                 {
                     <button type="button" data-dismiss="modal" data-target="#pomfApprovalModal" class="btn btn-success fw-bold" @onclick="deleteDocument">
                         <i class="oi oi-thumb-up"></i> Delete !
+                    </button>
+                }
+                else if (previewPOMFApproval.ApprovalAction.Equals("Cancel"))
+                {
+                    <button type="button" data-dismiss="modal" data-target="#pomfApprovalModal" class="btn btn-success fw-bold" @onclick="@(() => createDocumentApprove("Cancel"))">
+                        <i class="oi oi-thumb-up"></i> Cancel !
                     </button>
                 }
 

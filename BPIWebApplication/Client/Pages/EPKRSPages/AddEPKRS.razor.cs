@@ -50,7 +50,8 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 "ITEMC", 
                 new Dictionary<int, string> {
                     { 1, "Report Header" },
-                    { 2, "Item Details and Attachment" }
+                    { 2, "Reported To" },
+                    { 3, "Item Details and Attachment" }
                 }
             },
             {
@@ -191,6 +192,14 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                             ItemPickupDate = data.itemCase.ItemPickupDate,
                             LoadingDocumentID = data.itemCase.LoadingDocumentID,
                             LoadingDocumentDate = data.itemCase.LoadingDocumentDate,
+                            ReceiverRiskRPName = data.itemCase.ReceiverRiskRPName,
+                            ReceiverRiskRPEmail = data.itemCase.ReceiverRiskRPEmail.Replace("@mitra10.com", string.Empty),
+                            ReceiverDORMName = data.itemCase.ReceiverDORMName,
+                            ReceiverDORMEmail = data.itemCase.ReceiverDORMEmail.Replace("@mitra10.com", string.Empty),
+                            SenderRiskRPName = data.itemCase.SenderRiskRPName,
+                            SenderRiskRPEmail = data.itemCase.SenderRiskRPEmail.Replace("@mitra10.com", string.Empty),
+                            SenderDORMName = data.itemCase.SenderDORMName,
+                            SenderDORMEmail = data.itemCase.SenderDORMEmail.Replace("@mitra10.com", string.Empty),
                             ExtendedMitigationPlan = data.itemCase.ExtendedMitigationPlan,
                             DocumentStatus = data.itemCase.DocumentStatus
                         };
@@ -252,7 +261,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                             ReturnAmount = data.incidentAccident.ReturnAmount,
                             RiskDescription = data.incidentAccident.RiskDescription,
                             CauseDescription = data.incidentAccident.CauseDescription,
-                            PIC = data.incidentAccident.PIC,
+                            PIC = data.incidentAccident.PIC.Replace("@mitra10.com", string.Empty),
                             ActionPlan = data.incidentAccident.ActionPlan,
                             TargetDate = data.incidentAccident.TargetDate,
                             MitigationPlan = data.incidentAccident.MitigationPlan,
@@ -388,11 +397,14 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
                 if (lmdate.Count() > 1)
                 {
-                    await _jsModule.InvokeVoidAsync("showAlert", "NP Type is More than 1 Type : Please Contact IT OPS !");
+                    await _jsModule.InvokeVoidAsync("showAlert", "LM Date is Note Relevant : Please Contact IT OPS !");
                     return;
                 }
 
                 itemCaseData.LoadingDocumentDate = Convert.ToDateTime(lmdate.First().createdDate);
+                itemCaseData.SiteSender = lmdate.First().siteNo;
+
+                selectedLMData.Clear();
             }
 
             StateHasChanged();
@@ -451,15 +463,12 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
         {
             if (RiskID.IsNullOrEmpty() || RiskID.Equals("BLANK")) { return false; }
             if (incidentaccidentData.SubRiskID.IsNullOrEmpty() || incidentaccidentData.SubRiskID.Equals("BLANK")) { return false; }
-            //if (incidentaccidentData.DocumentID.IsNullOrEmpty()) { return false; }
-            //incidentaccidentData.ReportDate
-            //incidentaccidentData.OccurenceDate
             if (incidentaccidentData.SiteReporter.IsNullOrEmpty()) { return false; }
             if (incidentaccidentData.DepartmentReporter.IsNullOrEmpty()) { return false; }
             if (incidentaccidentData.RiskRPName.IsNullOrEmpty()) { return false; }
-            if (incidentaccidentData.RiskRPEmail.IsNullOrEmpty()) { return false; }
+            if (incidentaccidentData.RiskRPEmail.IsNullOrEmpty() || incidentaccidentData.RiskRPEmail.Contains("@") || incidentaccidentData.RiskRPEmail.Contains("mitra10.com")) { return false; }
             if (incidentaccidentData.DORMName.IsNullOrEmpty()) { return false; }
-            if (incidentaccidentData.DORMEmail.IsNullOrEmpty()) { return false; }
+            if (incidentaccidentData.DORMEmail.IsNullOrEmpty() || incidentaccidentData.DORMEmail.Contains("@") || incidentaccidentData.DORMEmail.Contains("mitra10.com")) { return false; }
             if (incidentaccidentData.CaseDescription.IsNullOrEmpty()) { return false; }
             if (incidentaccidentData.DepartmentAffected.IsNullOrEmpty()) { return false; }
             if (incidentaccidentData.Cronology.IsNullOrEmpty()) { return false; }
@@ -469,14 +478,9 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             if (incidentaccidentData.ReturnAmount < 0) { return false; }
             if (incidentaccidentData.RiskDescription.IsNullOrEmpty()) { return false; }
             if (incidentaccidentData.CauseDescription.IsNullOrEmpty()) { return false; }
-            if (incidentaccidentData.PIC.IsNullOrEmpty()) { return false; }
+            if (incidentaccidentData.PIC.IsNullOrEmpty() || incidentaccidentData.PIC.Contains("@") || incidentaccidentData.PIC.Contains("mitra10.com")) { return false; }
             if (incidentaccidentData.ActionPlan.IsNullOrEmpty()) { return false; }
-            //incidentaccidentData.TargetDate
             if (incidentaccidentData.MitigationPlan.IsNullOrEmpty()) { return false; }
-            //incidentaccidentData.MitigationDate
-            //incidentaccidentData.ExtendedRootCause
-            //incidentaccidentData.ExtendedMitigationPlan
-            //incidentaccidentData.DocumentStatus
 
             return true;
         }
@@ -485,29 +489,27 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
         {
             if (RiskID.IsNullOrEmpty() || RiskID.Equals("BLANK")) { return false; }
             if (itemCaseData.SubRiskID.IsNullOrEmpty() || itemCaseData.SubRiskID.Equals("BLANK")) { return false; }
-            //itemCaseData.DocumentID
             if (itemCaseData.SiteReporter.IsNullOrEmpty()) { return false; }
             if (itemCaseData.SiteSender.IsNullOrEmpty()) { return false; }
-            //itemCaseData.ReportDate
-            //itemCaseData.ItemPickupDate
             if (itemCaseData.LoadingDocumentID.IsNullOrEmpty()) { return false; }
-            //itemCaseData.LoadingDocumentDate
-            //if (itemCaseData.ExtendedMitigationPlan.IsNullOrEmpty()) { return false; }
-            //itemCaseData.DocumentStatus
-            //itemLineData.DocumentID
+            if (itemCaseData.ReceiverRiskRPName.IsNullOrEmpty()) { return false; }
+            if (itemCaseData.ReceiverRiskRPEmail.IsNullOrEmpty() || itemCaseData.ReceiverRiskRPEmail.Contains("@") || itemCaseData.ReceiverRiskRPEmail.Contains("mitra10.com")) { return false; }
+            if (itemCaseData.ReceiverDORMName.IsNullOrEmpty()) { return false; }
+            if (itemCaseData.ReceiverDORMEmail.IsNullOrEmpty() || itemCaseData.ReceiverDORMEmail.Contains("@") || itemCaseData.ReceiverDORMEmail.Contains("mitra10.com")) { return false; }
+            if (itemCaseData.SenderRiskRPName.IsNullOrEmpty()) { return false; }
+            if (itemCaseData.SenderRiskRPEmail.IsNullOrEmpty() || itemCaseData.SenderRiskRPEmail.Contains("@") || itemCaseData.SenderRiskRPEmail.Contains("mitra10.com")) { return false; }
+            if (itemCaseData.SenderDORMName.IsNullOrEmpty()) { return false; }
+            if (itemCaseData.SenderDORMEmail.IsNullOrEmpty() || itemCaseData.SenderDORMEmail.Contains("@") || itemCaseData.SenderDORMEmail.Contains("mitra10.com")) { return false; }
             if (itemLineData.Count < 1) { return false; }
             if (itemLineData.Any(x => x.LineNum <= 0)) { return false; }
             if (itemLineData.Any(x => x.TRID.IsNullOrEmpty())) { return false; }
-            //if (itemLineData.Any(x => x.TRDate)) { }
             if (itemLineData.Any(x => x.ItemCode.IsNullOrEmpty())) { return false; }
             if (itemLineData.Any(x => x.ItemDescription.IsNullOrEmpty())) { return false; }
             if (itemLineData.Any(x => x.ItemRiskCategoryID.Equals("BLANK"))) { return false; }
-            //if (itemLineData.Any(x => x.).CategoryID) { }
             if (itemLineData.Any(x => x.ItemQuantity <= 0)) { return false; }
             if (itemLineData.Any(x => x.UOM.IsNullOrEmpty())) { return false; }
             if (itemLineData.Any(x => x.ItemValue < 0)) { return false; }
             if (itemLineData.Any(x => x.ItemStock < 0)) { return false; }
-            //if (itemLineData.Any(x => x.).VarianceDate) { }
             if (itemLineData.Any(x => x.isLate.Equals("BLANK"))) { return false; }
             if (itemLineData.Any(x => x.isCCTVCoverable.Equals("BLANK"))) { return false; }
             if (itemLineData.Any(x => x.isReportedtoSender.Equals("BLANK"))) { return false; }
@@ -515,7 +517,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             return true;
         }
 
-        private async void submitIncidentAccident()
+        private async Task submitIncidentAccident()
         {
             try
             {
@@ -527,7 +529,6 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 }
 
                 isLoading = true;
-                StateHasChanged();
 
                 IncidentAccidentStream uploadData = new();
                 uploadData.mainData = new();
@@ -589,18 +590,28 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
                 if (res.isSuccess)
                 {
+                    isLoading = false;
                     successUpload = true;
                     incidentaccidentData.DocumentID = res.Data.mainData.Data.incidentAccident.DocumentID;
-                    await _jsModule.InvokeVoidAsync("showAlert", "Data Creation Success !");
+                    successAlert = true;
+                    alertTrigger = false;
+                    alertMessage = "Data Creation Success !";
+                    alertBody = "";
+                    //await _jsModule.InvokeVoidAsync("showAlert", "Data Creation Success !");
                 }
                 else
                 {
+                    isLoading = false;
                     successUpload = false;
-                    await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
+                    alertTrigger = true;
+                    successAlert = false;
+                    alertMessage = "Data Creation Failed !";
+                    alertBody = $"Failed : {res.ErrorCode} - {res.ErrorMessage} !";
+                    //await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
                 }
 
-                isLoading = false;
                 StateHasChanged();
+
             }
             catch (Exception ex)
             {
@@ -609,7 +620,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             }
         }
 
-        private async void editIncidentAccident()
+        private async Task editIncidentAccident()
         {
             try
             {
@@ -621,7 +632,6 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 }
 
                 isLoading = true;
-                StateHasChanged();
 
                 QueryModel<IncidentAccident> uploadData = new();
                 uploadData.Data = new();
@@ -632,9 +642,9 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 uploadData.Data.SiteReporter = incidentaccidentData.SiteReporter;
                 uploadData.Data.DepartmentReporter = incidentaccidentData.DepartmentReporter;
                 uploadData.Data.RiskRPName = incidentaccidentData.RiskRPName;
-                uploadData.Data.RiskRPEmail = incidentaccidentData.RiskRPEmail.ToLower();
+                uploadData.Data.RiskRPEmail = incidentaccidentData.RiskRPEmail.ToLower() + "@mitra10.com";
                 uploadData.Data.DORMName = incidentaccidentData.DORMName;
-                uploadData.Data.DORMEmail = incidentaccidentData.DORMEmail.ToLower();
+                uploadData.Data.DORMEmail = incidentaccidentData.DORMEmail.ToLower() + "@mitra10.com";
                 uploadData.Data.CaseDescription = incidentaccidentData.CaseDescription;
                 uploadData.Data.DepartmentAffected = incidentaccidentData.DepartmentAffected;
                 uploadData.Data.Cronology = incidentaccidentData.Cronology;
@@ -644,7 +654,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 uploadData.Data.ReturnAmount = incidentaccidentData.ReturnAmount;
                 uploadData.Data.RiskDescription = incidentaccidentData.RiskDescription;
                 uploadData.Data.CauseDescription = incidentaccidentData.CauseDescription;
-                uploadData.Data.PIC = incidentaccidentData.PIC.ToLower();
+                uploadData.Data.PIC = incidentaccidentData.PIC.ToLower() + "@mitra10.com";
                 uploadData.Data.ActionPlan = incidentaccidentData.ActionPlan;
                 uploadData.Data.TargetDate = incidentaccidentData.TargetDate;
                 uploadData.Data.MitigationPlan = incidentaccidentData.MitigationPlan;
@@ -661,17 +671,27 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
                 if (res.isSuccess)
                 {
+                    isLoading = false;
                     successUpload = true;
-                    await _jsModule.InvokeVoidAsync("showAlert", "Data Edit Success !");
+                    successAlert = true;
+                    alertTrigger = false;
+                    alertMessage = "Data Edit Success !";
+                    alertBody = "";
+                    //await _jsModule.InvokeVoidAsync("showAlert", "Data Edit Success !");
                 }
                 else
                 {
+                    isLoading = false;
                     successUpload = false;
-                    await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
+                    alertTrigger = true;
+                    successAlert = false;
+                    alertMessage = "Data Creation Failed !";
+                    alertBody = $"Failed : {res.ErrorCode} - {res.ErrorMessage} !";
+                    //await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
                 }
 
-                isLoading = false;
                 StateHasChanged();
+
             }
             catch (Exception ex)
             {
@@ -680,7 +700,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             }
         }
 
-        private async void submitItemCase()
+        private async Task submitItemCase()
         {
             try
             {
@@ -692,7 +712,6 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 }
 
                 isLoading = true;
-                StateHasChanged();
 
                 ItemCaseStream uploadData = new();
                 uploadData.mainData = new();
@@ -706,6 +725,14 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 uploadData.mainData.Data.itemCase.ItemPickupDate = itemCaseData.ItemPickupDate;
                 uploadData.mainData.Data.itemCase.LoadingDocumentID = itemCaseData.LoadingDocumentID;
                 uploadData.mainData.Data.itemCase.LoadingDocumentDate = itemCaseData.LoadingDocumentDate;
+                uploadData.mainData.Data.itemCase.ReceiverRiskRPName = itemCaseData.ReceiverRiskRPName;
+                uploadData.mainData.Data.itemCase.ReceiverRiskRPEmail = itemCaseData.ReceiverRiskRPEmail.ToLower() + "@mitra10.com";
+                uploadData.mainData.Data.itemCase.ReceiverDORMName = itemCaseData.ReceiverDORMName;
+                uploadData.mainData.Data.itemCase.ReceiverDORMEmail = itemCaseData.ReceiverDORMEmail.ToLower() + "@mitra10.com";
+                uploadData.mainData.Data.itemCase.SenderRiskRPName = itemCaseData.SenderRiskRPName;
+                uploadData.mainData.Data.itemCase.SenderRiskRPEmail = itemCaseData.SenderRiskRPEmail.ToLower() + "@mitra10.com";
+                uploadData.mainData.Data.itemCase.SenderDORMName = itemCaseData.SenderDORMName;
+                uploadData.mainData.Data.itemCase.SenderDORMEmail = itemCaseData.SenderDORMEmail.ToLower() + "@mitra10.com";
                 uploadData.mainData.Data.itemCase.ExtendedMitigationPlan = "";
                 uploadData.mainData.Data.itemCase.DocumentStatus = "Open";
 
@@ -768,18 +795,28 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
 
                 if (res.isSuccess)
                 {
+                    isLoading = false;
                     successUpload = true;
                     itemCaseData.DocumentID = res.Data.mainData.Data.itemCase.DocumentID;
-                    await _jsModule.InvokeVoidAsync("showAlert", "Data Creation Success !");
+                    successAlert = true;
+                    alertTrigger = false;
+                    alertMessage = "Data Creation Success !";
+                    alertBody = "";
+                    //await _jsModule.InvokeVoidAsync("showAlert", "Data Creation Success !");
                 }
                 else
                 {
+                    isLoading = false;
                     successUpload = false;
-                    await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
+                    alertTrigger = true;
+                    successAlert = false;
+                    alertMessage = "Data Creation Failed !";
+                    alertBody = $"Failed : {res.ErrorCode} - {res.ErrorMessage} !";
+                    //await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
                 }
 
-                isLoading = false;
                 StateHasChanged();
+
             }
             catch (Exception ex)
             {
@@ -787,7 +824,7 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
             }
         }
 
-        private async void editItemCase()
+        private async Task editItemCase()
         {
             try
             {
@@ -799,7 +836,6 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 }
 
                 isLoading = true;
-                StateHasChanged();
 
                 QueryModel<EPKRSUploadItemCase> uploadData = new();
                 uploadData = new();
@@ -813,6 +849,14 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 uploadData.Data.itemCase.ItemPickupDate = itemCaseData.ItemPickupDate;
                 uploadData.Data.itemCase.LoadingDocumentID = itemCaseData.LoadingDocumentID;
                 uploadData.Data.itemCase.LoadingDocumentDate = itemCaseData.LoadingDocumentDate;
+                uploadData.Data.itemCase.ReceiverRiskRPName = itemCaseData.ReceiverRiskRPName;
+                uploadData.Data.itemCase.ReceiverRiskRPEmail = itemCaseData.ReceiverRiskRPEmail.ToLower() + "@mitra10.com";
+                uploadData.Data.itemCase.ReceiverDORMName = itemCaseData.ReceiverDORMName;
+                uploadData.Data.itemCase.ReceiverDORMEmail = itemCaseData.ReceiverDORMEmail.ToLower() + "@mitra10.com";
+                uploadData.Data.itemCase.SenderRiskRPName = itemCaseData.SenderRiskRPName;
+                uploadData.Data.itemCase.SenderRiskRPEmail = itemCaseData.SenderRiskRPEmail.ToLower() + "@mitra10.com";
+                uploadData.Data.itemCase.SenderDORMName = itemCaseData.SenderDORMName;
+                uploadData.Data.itemCase.SenderDORMEmail = itemCaseData.SenderDORMEmail.ToLower() + "@mitra10.com";
                 uploadData.Data.itemCase.ExtendedMitigationPlan = itemCaseData.ExtendedMitigationPlan;
                 uploadData.Data.itemCase.DocumentStatus = itemCaseData.DocumentStatus;
 
@@ -852,30 +896,34 @@ namespace BPIWebApplication.Client.Pages.EPKRSPages
                 uploadData.userActionDate = DateTime.Now;
 
                 var res = await EPKRSService.editEPKRSItemCaseData(uploadData);
-
+                
                 if (res.isSuccess)
                 {
+                    isLoading = false;
                     successUpload = true;
-                    await _jsModule.InvokeVoidAsync("showAlert", "Edit Data Success !");
+                    successAlert = true;
+                    alertTrigger = false;
+                    alertMessage = "Edit Data Success !";
+                    alertBody = "";
+                    //await _jsModule.InvokeVoidAsync("showAlert", "Edit Data Success !");
                 }
                 else
                 {
+                    isLoading = false;
                     successUpload = false;
-                    await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
+                    alertTrigger = true;
+                    successAlert = false;
+                    alertMessage = "Data Creation Failed !";
+                    alertBody = $"Failed : {res.ErrorCode} - {res.ErrorMessage} !";
+                    //await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
                 }
 
-                isLoading = false;
                 StateHasChanged();
             }
             catch (Exception ex)
             {
                 await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} !");
             }
-        }
-
-        private async void onFailedSubmit()
-        {
-            await _jsModule.InvokeVoidAsync("showAlert", "Failed : Please Check Your Input Field");
         }
 
         private void reportingTypeonChange(ChangeEventArgs e)

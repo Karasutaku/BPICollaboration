@@ -864,8 +864,8 @@ namespace BPIDA.Controllers
             return actionResult;
         }
 
-        [HttpGet("getEPKRSItemCase/{param}")]
-        public async Task<IActionResult> getEPKRSItemCaseData(string param)
+        [HttpPost("getEPKRSItemCase")]
+        public async Task<IActionResult> getEPKRSItemCaseData(QueryModel<string> param)
         {
             ResultModel<List<EPKRSUploadItemCase>> res = new ResultModel<List<EPKRSUploadItemCase>>();
             EPKRSDA da = new(_configuration);
@@ -879,7 +879,7 @@ namespace BPIDA.Controllers
 
             try
             {
-                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+                string[] temp = CommonLibrary.Base64Decode(param.Data).Split("!_!");
                 string loc = temp[0].Equals("") ? "HO" : temp[0];
 
                 dtItemCase = da.getEPKRSItemCaseData(loc, temp[1], Convert.ToInt32(temp[2]));
@@ -894,6 +894,14 @@ namespace BPIDA.Controllers
                     "ItemPickupDate",
                     "LoadingDocumentID",
                     "LoadingDocumentDate",
+                    "ReceiverRiskRPName",
+                    "ReceiverRiskRPEmail",
+                    "ReceiverDORMName",
+                    "ReceiverDORMEmail",
+                    "SenderRiskRPName",
+                    "SenderRiskRPEmail",
+                    "SenderDORMName",
+                    "SenderDORMEmail",
                     "ExtendedMitigationPlan",
                     "DocumentStatus" })
                 {
@@ -930,6 +938,14 @@ namespace BPIDA.Controllers
                         temp1.itemCase.ItemPickupDate = Convert.ToDateTime(dt["ItemPickupDate"]);
                         temp1.itemCase.LoadingDocumentID = dt["LoadingDocumentID"].ToString();
                         temp1.itemCase.LoadingDocumentDate = Convert.ToDateTime(dt["LoadingDocumentDate"]);
+                        temp1.itemCase.ReceiverRiskRPName = dt["ReceiverRiskRPName"].ToString();
+                        temp1.itemCase.ReceiverRiskRPEmail = dt["ReceiverRiskRPEmail"].ToString();
+                        temp1.itemCase.ReceiverDORMName = dt["ReceiverDORMName"].ToString();
+                        temp1.itemCase.ReceiverDORMEmail = dt["ReceiverDORMEmail"].ToString();
+                        temp1.itemCase.SenderRiskRPName = dt["SenderRiskRPName"].ToString();
+                        temp1.itemCase.SenderRiskRPEmail = dt["SenderRiskRPEmail"].ToString();
+                        temp1.itemCase.SenderDORMName = dt["SenderDORMName"].ToString();
+                        temp1.itemCase.SenderDORMEmail = dt["SenderDORMEmail"].ToString();
                         temp1.itemCase.ExtendedMitigationPlan = dt.IsNull("ExtendedMitigationPlan") ? "" : dt["ExtendedMitigationPlan"].ToString();
                         temp1.itemCase.DocumentStatus = dt["DocumentStatus"].ToString();
 
@@ -1006,8 +1022,8 @@ namespace BPIDA.Controllers
             return actionResult;
         }
 
-        [HttpGet("getEPKRSIncidentAccident/{param}")]
-        public async Task<IActionResult> getEPKRSIncidentAccidentData(string param)
+        [HttpPost("getEPKRSIncidentAccident")]
+        public async Task<IActionResult> getEPKRSIncidentAccidentData(QueryModel<string> param)
         {
             ResultModel<List<EPKRSUploadIncidentAccident>> res = new ResultModel<List<EPKRSUploadIncidentAccident>>();
             EPKRSDA da = new(_configuration);
@@ -1021,7 +1037,7 @@ namespace BPIDA.Controllers
 
             try
             {
-                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+                string[] temp = CommonLibrary.Base64Decode(param.Data).Split("!_!");
                 string loc = temp[0].Equals("") ? "HO" : temp[0];
 
                 dtIncidentAccident = da.getEPKRSIncidentAccidentData(loc, temp[1], Convert.ToInt32(temp[2]));
@@ -1061,7 +1077,7 @@ namespace BPIDA.Controllers
                 }
 
                 if (dtIncidentAccident.Rows.Count <= 0)
-                    throw new Exception("Fail Fetch Item Case Data");
+                    throw new Exception("Fail Fetch Incident Accident Data");
 
                 dtCaseAttachment = da.getEPKRSAttachmentData(dtParam);
 
@@ -1440,8 +1456,8 @@ namespace BPIDA.Controllers
             return actionResult;
         }
 
-        [HttpGet("getEPKRSGeneralStatistics/{param}")]
-        public async Task<IActionResult> getEPKRSGeneralStatistics(string param)
+        [HttpPost("getEPKRSGeneralStatistics")]
+        public async Task<IActionResult> getEPKRSGeneralStatistics(QueryModel<string> param)
         {
             ResultModel<List<EPKRSDocumentStatistics>> res = new ResultModel<List<EPKRSDocumentStatistics>>();
             EPKRSDA da = new(_configuration);
@@ -1451,9 +1467,9 @@ namespace BPIDA.Controllers
 
             try
             {
-                string temp = CommonLibrary.Base64Decode(param);
+                string[] temp = CommonLibrary.Base64Decode(param.Data).Split("!_!");
 
-                dtDocumentStatistics = da.getEPKRSGeneralStatisticsData(temp);
+                dtDocumentStatistics = da.getEPKRSGeneralStatisticsData(temp[0], temp[1]);
 
                 if (dtDocumentStatistics.Rows.Count > 0)
                 {
@@ -1485,6 +1501,172 @@ namespace BPIDA.Controllers
                 {
                     res.Data = null;
                     res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpPost("getEPKRSIncidentAccidentDataforStatistics")]
+        public async Task<IActionResult> getEPKRSIncidentAccidentDataforStatistics(QueryModel<string> param)
+        {
+            ResultModel<List<EPKRSIncidentAccidentforStats>> res = new ResultModel<List<EPKRSIncidentAccidentforStats>>();
+            EPKRSDA da = new(_configuration);
+            List<EPKRSIncidentAccidentforStats> incidentAccidentLines = new List<EPKRSIncidentAccidentforStats>();
+            DataTable dtIncidentAccident = new DataTable("EPKRSUploadIncidentAccident");
+            DataTable dtCaseAttachment = new DataTable("CaseAttachment");
+            DataTable dtCaseApproval = new DataTable("CaseApproval");
+            DataTable dtCaseInvolver = new DataTable("CaseInvolver");
+            DataTable dtParam = new DataTable("Parameter");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string temp = CommonLibrary.Base64Decode(param.Data);
+
+                dtIncidentAccident = da.getEPKRSIncidentAccidentDataforStatistics(temp);
+
+                dtParam = dtIncidentAccident.Copy();
+
+                foreach (var removedCol in new[] {
+                    "ReportingID",
+                    "RiskID",
+                    "ReportDate",
+                    "OccurenceDate",
+                    "SiteReporter",
+                    "DepartmentReporter",
+                    "RiskRPName",
+                    "RiskRPEmail",
+                    "DORMName",
+                    "DORMEmail",
+                    "CaseDescription",
+                    "DepartmentAffected",
+                    "Cronology",
+                    "RootCause",
+                    "LossDescription",
+                    "LossEstimation",
+                    "ReturnAmount",
+                    "RiskDescription",
+                    "CauseDescription",
+                    "PIC",
+                    "ActionPlan",
+                    "TargetDate",
+                    "MitigationPlan",
+                    "MitigationDate",
+                    "ExtendedRootCause" ,
+                    "ExtendedMitigationPlan",
+                    "DocumentStatus" })
+                {
+                    if (dtParam.Columns.Contains(removedCol))
+                        dtParam.Columns.Remove(removedCol);
+                }
+
+                if (dtIncidentAccident.Rows.Count <= 0)
+                    throw new Exception("Fail Fetch Incident Accident Data");
+
+                dtCaseAttachment = da.getEPKRSAttachmentData(dtParam);
+
+                if (dtCaseAttachment.Rows.Count <= 0)
+                    throw new Exception("Fail Fetch Attachment Data");
+
+                dtCaseApproval = da.getEPKRSApprovalData(dtParam);
+
+                dtCaseInvolver = da.getEPKRSIncidentAccidentInvolverData(dtParam);
+
+                if (dtIncidentAccident.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtIncidentAccident.Rows)
+                    {
+                        EPKRSIncidentAccidentforStats temp1 = new EPKRSIncidentAccidentforStats();
+
+                        temp1.incidentAccident.RiskID = dt["RiskID"].ToString();
+                        temp1.incidentAccident.SubRiskID = dt["SubRiskID"].ToString();
+                        temp1.incidentAccident.DocumentID = dt["DocumentID"].ToString();
+                        temp1.incidentAccident.ReportDate = Convert.ToDateTime(dt["ReportDate"]);
+                        temp1.incidentAccident.OccurenceDate = Convert.ToDateTime(dt["OccurenceDate"]);
+                        temp1.incidentAccident.SiteReporter = dt["SiteReporter"].ToString();
+                        temp1.incidentAccident.DepartmentReporter = dt["DepartmentReporter"].ToString();
+                        temp1.incidentAccident.RiskRPName = dt["RiskRPName"].ToString();
+                        temp1.incidentAccident.RiskRPEmail = dt["RiskRPEmail"].ToString();
+                        temp1.incidentAccident.DORMName = dt["DORMName"].ToString();
+                        temp1.incidentAccident.DORMEmail = dt["DORMEmail"].ToString();
+                        temp1.incidentAccident.CaseDescription = dt["CaseDescription"].ToString();
+                        temp1.incidentAccident.DepartmentAffected = dt["DepartmentAffected"].ToString();
+                        temp1.incidentAccident.Cronology = dt["Cronology"].ToString();
+                        temp1.incidentAccident.RootCause = dt["RootCause"].ToString();
+                        temp1.incidentAccident.LossDescription = dt["LossDescription"].ToString();
+                        temp1.incidentAccident.LossEstimation = Convert.ToDecimal(dt["LossEstimation"]);
+                        temp1.incidentAccident.ReturnAmount = Convert.ToDecimal(dt["ReturnAmount"]);
+                        temp1.incidentAccident.RiskDescription = dt["RiskDescription"].ToString();
+                        temp1.incidentAccident.CauseDescription = dt["CauseDescription"].ToString();
+                        temp1.incidentAccident.PIC = dt["PIC"].ToString();
+                        temp1.incidentAccident.ActionPlan = dt["ActionPlan"].ToString();
+                        temp1.incidentAccident.TargetDate = Convert.ToDateTime(dt["TargetDate"]);
+                        temp1.incidentAccident.MitigationPlan = dt["MitigationPlan"].ToString();
+                        temp1.incidentAccident.MitigationDate = Convert.ToDateTime(dt["MitigationDate"]);
+                        temp1.incidentAccident.ExtendedRootCause = dt.IsNull("ExtendedRootCause") ? "" : dt["ExtendedRootCause"].ToString();
+                        temp1.incidentAccident.ExtendedMitigationPlan = dt.IsNull("ExtendedMitigationPlan") ? "" : dt["ExtendedMitigationPlan"].ToString();
+                        temp1.incidentAccident.DocumentStatus = dt["DocumentStatus"].ToString();
+
+                        temp1.attachment = dtCaseAttachment.AsEnumerable().Where(y => y["DocumentID"].ToString().Equals(dt["DocumentID"].ToString())).Select(x => new CaseAttachment
+                        {
+                            DocumentID = x["DocumentID"].ToString(),
+                            LineNum = Convert.ToInt32(x["LineNum"]),
+                            UploadDate = Convert.ToDateTime(x["UploadDate"]),
+                            FileExtension = x["FileExtention"].ToString(),
+                            FilePath = x["FilePath"].ToString()
+                        }).ToList();
+
+                        if (dtCaseApproval.Rows.Count > 0)
+                        {
+                            temp1.Approval = dtCaseApproval.AsEnumerable().Where(y => y["DocumentID"].ToString().Equals(dt["DocumentID"].ToString())).Select(x => new DocumentApproval
+                            {
+                                DocumentID = x["DocumentID"].ToString(),
+                                ApprovalAction = x["ApprovalAction"].ToString(),
+                                Approver = x["Approver"].ToString(),
+                                ApproveDate = Convert.ToDateTime(x["ApproveDate"])
+                            }).ToList();
+                        }
+
+                        if (dtCaseInvolver.Rows.Count > 0)
+                        {
+                            temp1.Involver = dtCaseInvolver.AsEnumerable().Where(y => y["DocumentID"].ToString().Equals(dt["DocumentID"].ToString())).Select(x => new IncidentAccidentInvolver
+                            {
+                                DocumentID = x["DocumentID"].ToString(),
+                                InvolverName = x["InvolverName"].ToString(),
+                                InvolverDept = x["InvolverDept"].ToString(),
+                                InvolverPosition = x["InvolverPosition"].ToString(),
+                                InvolverTypeID = x["InvolverTypeID"].ToString()
+                            }).ToList();
+                        }
+
+                        incidentAccidentLines.Add(temp1);
+                    }
+
+                    res.Data = incidentAccidentLines;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = false;
                     res.ErrorCode = "01";
                     res.ErrorMessage = "Fetch Empty";
 
@@ -1568,8 +1750,8 @@ namespace BPIDA.Controllers
             return actionResult;
         }
 
-        [HttpGet("getEPKRSItemCaseCategoryStatistics/{param}")]
-        public async Task<IActionResult> getEPKRSItemCaseCategoryStatistics(string param)
+        [HttpPost("getEPKRSItemCaseCategoryStatistics")]
+        public async Task<IActionResult> getEPKRSItemCaseCategoryStatistics(QueryModel<string> param)
         {
             ResultModel<List<EPKRSItemCaseCategoryStatistics>> res = new ResultModel<List<EPKRSItemCaseCategoryStatistics>>();
             EPKRSDA da = new(_configuration);
@@ -1579,7 +1761,7 @@ namespace BPIDA.Controllers
 
             try
             {
-                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+                string[] temp = CommonLibrary.Base64Decode(param.Data).Split("!_!");
 
                 dtItemCaseCategoryStats = da.getEPKRSItemCaseCategoryStatisticsData(temp[0], temp[1]);
 
@@ -1626,8 +1808,8 @@ namespace BPIDA.Controllers
             return actionResult;
         }
 
-        [HttpGet("getEPKRSTopLocationReportStatistics/{param}")]
-        public async Task<IActionResult> getEPKRSTopLocationReportStatistics(string param)
+        [HttpPost("getEPKRSTopLocationReportStatistics")]
+        public async Task<IActionResult> getEPKRSTopLocationReportStatistics(QueryModel<string> param)
         {
             ResultModel<List<EPKRSTopLocationReportStatistics>> res = new ResultModel<List<EPKRSTopLocationReportStatistics>>();
             EPKRSDA da = new(_configuration);
@@ -1637,7 +1819,7 @@ namespace BPIDA.Controllers
 
             try
             {
-                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+                string[] temp = CommonLibrary.Base64Decode(param.Data).Split("!_!");
 
                 dtTopLocationReports = da.getEPKRSTopLocationReportStatisticsData(temp[0], temp[1]);
 
@@ -1683,8 +1865,8 @@ namespace BPIDA.Controllers
             return actionResult;
         }
 
-        [HttpGet("getEPKRSItemCategoriesStatistics/{param}")]
-        public async Task<IActionResult> getEPKRSItemCategoriesStatistics(string param)
+        [HttpPost("getEPKRSItemCategoriesStatistics")]
+        public async Task<IActionResult> getEPKRSItemCategoriesStatistics(QueryModel<string> param)
         {
             ResultModel<List<EPKRSItemCaseItemCategoryStatistics>> res = new ResultModel<List<EPKRSItemCaseItemCategoryStatistics>>();
             EPKRSDA da = new(_configuration);
@@ -1694,7 +1876,7 @@ namespace BPIDA.Controllers
 
             try
             {
-                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+                string[] temp = CommonLibrary.Base64Decode(param.Data).Split("!_!");
 
                 dtItemCategoryStats = da.getEPKRSItemCategoriesStatisticsData(temp[0], temp[1]);
 
@@ -1762,6 +1944,7 @@ namespace BPIDA.Controllers
                         EPKRSIncidentAccidentRegionalStatistics temp1 = new();
 
                         temp1.DORMEmail = dt["DORMEmail"].ToString();
+                        temp1.DORMName = dt["RegionPIC"].ToString();
                         temp1.TotalDocuments = Convert.ToInt32(dt["TotalDocuments"]);
                         temp1.TotalValues = Convert.ToDecimal(dt["TotalValues"]);
                         temp1.ReturnValues = Convert.ToDecimal(dt["ReturnValues"]);
@@ -1812,7 +1995,7 @@ namespace BPIDA.Controllers
             {
                 string[] temp = CommonLibrary.Base64Decode(param.Data).Split("!_!");
 
-                dtInvolverStats = da.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPositionData(temp[0], temp[1]);
+                dtInvolverStats = da.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverPositionData(temp[0], temp[1], Convert.ToInt32(temp[2]));
 
                 if (dtInvolverStats.Rows.Count > 0)
                 {
@@ -1870,7 +2053,7 @@ namespace BPIDA.Controllers
             {
                 string[] temp = CommonLibrary.Base64Decode(param.Data).Split("!_!");
 
-                dtInvolverStats = da.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDeptData(temp[0], temp[1]);
+                dtInvolverStats = da.getEPKRSIncidentAccidentInvolverStatisticsbyInvolverDeptData(temp[0], temp[1], Convert.ToInt32(temp[2]));
 
                 if (dtInvolverStats.Rows.Count > 0)
                 {
@@ -1886,6 +2069,65 @@ namespace BPIDA.Controllers
                     }
 
                     res.Data = involverStats;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpPost("getEPKRSIncidentAccidentLocationStatistics")]
+        public async Task<IActionResult> getEPKRSIncidentAccidentLocationStatistics(QueryModel<string> param)
+        {
+            ResultModel<List<EPKRSIncidentAccidentLocationStatistics>> res = new ResultModel<List<EPKRSIncidentAccidentLocationStatistics>>();
+            EPKRSDA da = new(_configuration);
+            List<EPKRSIncidentAccidentLocationStatistics> locationStats = new List<EPKRSIncidentAccidentLocationStatistics>();
+            DataTable dtLocationStats = new DataTable("EPKRSIncidentAccidentLocationStatistics");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(param.Data).Split("!_!");
+
+                dtLocationStats = da.getEPKRSIncidentAccidentLocationStatistics(temp[0], Convert.ToInt32(temp[1]));
+
+                if (dtLocationStats.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtLocationStats.Rows)
+                    {
+                        EPKRSIncidentAccidentLocationStatistics temp1 = new();
+
+                        temp1.SiteReporter = dt["SiteReporter"].ToString();
+                        temp1.TotalDocuments = Convert.ToInt32(dt["TotalDocuments"]);
+                        temp1.TotalValues = Convert.ToDecimal(dt["TotalValues"]);
+                        temp1.ReturnValues = Convert.ToDecimal(dt["ReturnValues"]);
+
+                        locationStats.Add(temp1);
+                    }
+
+                    res.Data = locationStats;
                     res.isSuccess = true;
                     res.ErrorCode = "00";
                     res.ErrorMessage = "";
@@ -2033,6 +2275,14 @@ namespace BPIDA.Controllers
                         temp1.ItemPickupDate = Convert.ToDateTime(dt["ItemPickupDate"]);
                         temp1.LoadingDocumentID = dt["LoadingDocumentID"].ToString();
                         temp1.LoadingDocumentDate = Convert.ToDateTime(dt["LoadingDocumentDate"]);
+                        temp1.ReceiverRiskRPName = dt["ReceiverRiskRPName"].ToString();
+                        temp1.ReceiverRiskRPEmail = dt["ReceiverRiskRPEmail"].ToString();
+                        temp1.ReceiverDORMName = dt["ReceiverDORMName"].ToString();
+                        temp1.ReceiverDORMEmail = dt["ReceiverDORMEmail"].ToString();
+                        temp1.SenderRiskRPName = dt["SenderRiskRPName"].ToString();
+                        temp1.SenderRiskRPEmail = dt["SenderRiskRPEmail"].ToString();
+                        temp1.SenderDORMName = dt["SenderDORMName"].ToString();
+                        temp1.SenderDORMEmail = dt["SenderDORMEmail"].ToString();
                         temp1.TRID = dt["TRID"].ToString();
                         temp1.TRDate = Convert.ToDateTime(dt["TRDate"]);
                         temp1.isLate = Convert.ToBoolean(dt["isLate"]);
@@ -2073,8 +2323,69 @@ namespace BPIDA.Controllers
             return actionResult;
         }
 
-        [HttpGet("getEPKRSModuleNumberOfPage/{param}")]
-        public async Task<IActionResult> getEPKRSModuleNumberOfPage(string param)
+        [HttpPost("getEPKRSCommentedUsersDiscussion")]
+        public async Task<IActionResult> getEPKRSCommentedUsersDiscussion(QueryModel<string> param)
+        {
+            ResultModel<List<EPKRSCommentedUser>> res = new ResultModel<List<EPKRSCommentedUser>>();
+            EPKRSDA da = new(_configuration);
+            List<EPKRSCommentedUser> commentedData = new List<EPKRSCommentedUser>();
+            DataTable dtCommentedData = new DataTable("EPKRSCommentedUser");
+            IActionResult actionResult = null;
+
+            try
+            {
+                string[] temp = CommonLibrary.Base64Decode(param.Data).Split("!_!");
+
+                dtCommentedData = da.getEPKRSCommentedUsersDiscussion(temp[0], temp[1], temp[2]);
+
+                if (dtCommentedData.Rows.Count > 0)
+                {
+                    foreach (DataRow dt in dtCommentedData.Rows)
+                    {
+                        EPKRSCommentedUser temp1 = new();
+
+                        temp1.rowGuid = dt["rowGuid"].ToString();
+                        temp1.DocumentID = dt["DocumentID"].ToString();
+                        temp1.UserName = dt["UserName"].ToString();
+                        temp1.CommentDate = Convert.ToDateTime(dt["CommentDate"]);
+                        temp1.Comment = dt["Comment"].ToString();
+                        temp1.ReplyRowGuid = dt["ReplyRowGuid"].ToString();
+
+                        commentedData.Add(temp1);
+                    }
+
+                    res.Data = commentedData;
+                    res.isSuccess = true;
+                    res.ErrorCode = "00";
+                    res.ErrorMessage = "";
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+                    res.isSuccess = true;
+                    res.ErrorCode = "01";
+                    res.ErrorMessage = "Fetch Empty";
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpPost("getEPKRSModuleNumberOfPage")]
+        public async Task<IActionResult> getEPKRSModuleNumberOfPage(QueryModel<string> param)
         {
             ResultModel<int> res = new ResultModel<int>();
             EPKRSDA da = new(_configuration);
@@ -2082,7 +2393,7 @@ namespace BPIDA.Controllers
 
             try
             {
-                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+                string[] temp = CommonLibrary.Base64Decode(param.Data).Split("!_!");
                 string loc = temp[1].Equals("") ? "HO" : temp[1];
 
                 res.Data = da.getEPKRSModuleNumberOfPageData(temp[0], loc, temp[2]);

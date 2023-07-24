@@ -1,17 +1,24 @@
 ﻿using BPILibrary;
+using BPIWebApplication.Client.Services.EPKRSServices;
 using BPIWebApplication.Shared.DbModel;
 using BPIWebApplication.Shared.MainModel;
 using BPIWebApplication.Shared.MainModel.Login;
 using BPIWebApplication.Shared.MainModel.POMF;
+using BPIWebApplication.Shared.PagesModel.EPKRS;
 using BPIWebApplication.Shared.PagesModel.POMF;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Components;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop;
+using System.Data.SqlTypes;
 
 namespace BPIWebApplication.Client.Pages.POMFPages
 {
     public partial class AddPOMF : ComponentBase
     {
+        [Parameter]
+        public string? param { get; set; } = null;
+
         private ActiveUser activeUser = new();
         private UserPrivileges privilegeDataParam = new();
         private List<string> userPriv = new();
@@ -114,10 +121,120 @@ namespace BPIWebApplication.Client.Pages.POMFPages
             paramGetCompanyLocation.MethodOrder = "ASC";
 
             await ManagementService.GetCompanyLocations(paramGetCompanyLocation);
+            await ManagementService.getMasterUOMData();
 
             await POMFService.getPOMFNPType();
 
             _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/POMFPages/AddPOMF.razor.js");
+        }
+
+        protected override async Task OnParametersSetAsync()
+        {
+            if (param != null)
+            {
+                string[] temp = CommonLibrary.Base64Decode(param).Split("!_!");
+
+                if (temp[0].Equals("RESOLVE"))
+                {
+                    var data = POMFService.pomfDocuments.SingleOrDefault(x => x.dataHeader.POMFID.Equals(temp[1]));
+
+                    if (data != null)
+                    {
+                        #pragma warning disable CS4014
+                        Task.Run(async () =>
+                        {
+                            if (pomfData.NPNo.Length > 0)
+                            {
+                                isMaxQtyLoading = true;
+
+                                var dt = await POMFService.getPOMFItemLineMaxQuantity(CommonLibrary.Base64Encode(activeUser.location + "!_!" + data.dataHeader.NPNo));
+
+                                if (dt.isSuccess)
+                                {
+                                    maxThresholdQty = new();
+                                    maxThresholdQty = dt.Data;
+                                }
+                                else
+                                {
+                                    await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {dt.ErrorCode} - {dt.ErrorMessage} !");
+                                }
+
+                                isMaxQtyLoading = false;
+                                StateHasChanged();
+                            }
+                            else
+                            {
+                                await _jsModule.InvokeVoidAsync("showAlert", "Input NP No !");
+                            }
+                        });
+                        #pragma warning restore CS4014
+
+                        pomfData = new POMFHeaderForm
+                        {
+                            POMFID = "",
+                            POMFDate = DateTime.Now,
+                            DocumentReference = temp[1],
+                            LocationID = data.dataHeader.LocationID,
+                            CustomerName = data.dataHeader.CustomerName,
+                            ReceiptNo = data.dataHeader.ReceiptNo,
+                            NPNo = data.dataHeader.NPNo,
+                            NPTypeID = data.dataHeader.NPTypeID,
+                            Requester = activeUser.userName,
+                            DocumentStatus = "",
+                            Remarks = ""
+                        };
+
+                        pomfLines = new();
+                        data.dataItemLines.ForEach(ln =>
+                        {
+                            int n = 1;
+
+                            if (ln.RequestQuantity < ln.NPQuantity)
+                            {
+                                pomfLines.Add(new POMFItemLineForm
+                                {
+                                    POMFID = "",
+                                    LineNum = n,
+                                    ItemCode = ln.ItemCode,
+                                    ItemDescription = ln.ItemDescription,
+                                    RequestQuantity = 0,
+                                    NPQuantity = ln.NPQuantity,
+                                    ItemUOM = ln.ItemUOM,
+                                    ItemValue = ln.ItemValue.ToString("N0"),
+                                    RequestToSite = "",
+                                    ExternalRequestDocument = "",
+                                    RequestDocumentDate = DateTime.MinValue,
+                                    ExternalReceiveDocument = "",
+                                    ReceiveDocumentDate = DateTime.MinValue,
+                                    Remarks = ""
+                                });
+                            }
+
+                            n++;
+                        });
+
+                        itemSelected = true;
+                    }
+                } else if (temp[0].Equals("MANUAL"))
+                {
+                    pomfData = new POMFHeaderForm
+                    {
+                        POMFID = "",
+                        POMFDate = DateTime.Now,
+                        DocumentReference = temp[1],
+                        LocationID = activeUser.location.Equals("") ? "HO" : activeUser.location,
+                        CustomerName = "",
+                        ReceiptNo = "",
+                        NPNo = "",
+                        NPTypeID = "",
+                        Requester = activeUser.userName,
+                        DocumentStatus = "",
+                        Remarks = ""
+                    };
+                }
+
+                StateHasChanged();
+            }
         }
 
         private async Task selectItembyNPandReceiptID()
@@ -224,7 +341,8 @@ namespace BPIWebApplication.Client.Pages.POMFPages
                             ExternalRequestDocument = "",
                             RequestDocumentDate = DateTime.MinValue,
                             ExternalReceiveDocument = "",
-                            ReceiveDocumentDate = DateTime.MinValue
+                            ReceiveDocumentDate = DateTime.MinValue,
+                            Remarks = ""
                         });
                     });
                 }
@@ -247,7 +365,8 @@ namespace BPIWebApplication.Client.Pages.POMFPages
                             ExternalRequestDocument = "",
                             RequestDocumentDate = DateTime.MinValue,
                             ExternalReceiveDocument = "",
-                            ReceiveDocumentDate = DateTime.MinValue
+                            ReceiveDocumentDate = DateTime.MinValue,
+                            Remarks = ""
                         });
                     });
                 }
@@ -321,21 +440,30 @@ namespace BPIWebApplication.Client.Pages.POMFPages
 
                         uploadData.Data.dataHeader.POMFID = pomfData.POMFID;
                         uploadData.Data.dataHeader.POMFDate = pomfData.POMFDate;
+                        uploadData.Data.dataHeader.DocumentReference = pomfData.DocumentReference;
                         uploadData.Data.dataHeader.LocationID = pomfData.LocationID;
                         uploadData.Data.dataHeader.CustomerName = pomfData.CustomerName.ToUpper();
                         uploadData.Data.dataHeader.ReceiptNo = pomfData.ReceiptNo;
                         uploadData.Data.dataHeader.NPNo = pomfData.NPNo;
                         uploadData.Data.dataHeader.NPTypeID = pomfData.NPTypeID;
                         uploadData.Data.dataHeader.Requester = activeUser.userName;
-                
+                        uploadData.Data.dataHeader.Remarks = pomfData.Remarks;
+
                         var doc = POMFService.npTypes.FirstOrDefault(x => x.NPTypeID.Equals(pomfData.NPTypeID));
                 
                         if (doc != null)
                         {
-                            if (doc.isAutomaticApproval)
-                                uploadData.Data.dataHeader.DocumentStatus = "Confirmed";
+                            if (param == null)
+                            {
+                                if (doc.isAutomaticApproval)
+                                    uploadData.Data.dataHeader.DocumentStatus = "Confirmed";
+                                else
+                                    uploadData.Data.dataHeader.DocumentStatus = "Open";
+                            }
                             else
+                            {
                                 uploadData.Data.dataHeader.DocumentStatus = "Open";
+                            }
                         }
                         else
                         {
@@ -367,7 +495,8 @@ namespace BPIWebApplication.Client.Pages.POMFPages
                                 ExternalRequestDocument = x.ExternalRequestDocument,
                                 RequestDocumentDate = null,
                                 ExternalReceiveDocument = x.ExternalReceiveDocument,
-                                ReceiveDocumentDate = null
+                                ReceiveDocumentDate = null,
+                                Remarks = x.Remarks
                             });
                         });
 
@@ -398,36 +527,55 @@ namespace BPIWebApplication.Client.Pages.POMFPages
 
         private bool validateForm()
         {
-            if (pomfData.CustomerName.IsNullOrEmpty()) return false;
-
-            if (pomfData.ReceiptNo.IsNullOrEmpty()) return false;
-
-            if (pomfData.NPNo.IsNullOrEmpty()) return false;
-
-            if (pomfData.NPTypeID.IsNullOrEmpty()) return false;
-
-            if (!pomfLines.Any()) return false;
-
-            if (pomfLines.Any(x => x.RequestQuantity > x.NPQuantity)) return false;
-
-            if (pomfLines.Any(x => x.RequestQuantity <= 0)) return false;
-
-            foreach (var f in pomfLines)
+            if (param == null)
             {
-                var th = maxThresholdQty.SingleOrDefault(y => y.ItemCode.Equals(f.ItemCode));
+                if (pomfData.CustomerName.IsNullOrEmpty()) return false;
 
-                if (th != null)
+                if (pomfData.ReceiptNo.IsNullOrEmpty()) return false;
+
+                if (pomfData.NPNo.IsNullOrEmpty()) return false;
+
+                if (pomfData.NPTypeID.IsNullOrEmpty()) return false;
+
+                if (!pomfLines.Any()) return false;
+
+                if (pomfLines.Any(x => x.RequestQuantity > x.NPQuantity)) return false;
+
+                if (pomfLines.Any(x => x.RequestQuantity <= 0)) return false;
+
+                foreach (var f in pomfLines)
                 {
-                    if (f.RequestQuantity > (f.NPQuantity - th.MaxQuantity))
-                        return false;
+                    var th = maxThresholdQty.SingleOrDefault(y => y.ItemCode.Equals(f.ItemCode));
+
+                    if (th != null)
+                    {
+                        if (f.RequestQuantity > (f.NPQuantity - th.MaxQuantity))
+                            return false;
+                    }
+                }
+
+                var npAuto = POMFService.npTypes.SingleOrDefault(x => x.NPTypeID.Equals(pomfData.NPTypeID));
+
+                if (npAuto != null)
+                {
+                    if (pomfLines.Any(x => x.RequestToSite.Equals("")) && !npAuto.isAutomaticApproval) { return false; }
                 }
             }
-
-            var npAuto = POMFService.npTypes.SingleOrDefault(x => x.NPTypeID.Equals(pomfData.NPTypeID));
-
-            if (npAuto != null)
+            else
             {
-                if (pomfLines.Any(x => x.RequestToSite.Equals("")) && !npAuto.isAutomaticApproval) { return false; }
+                if (pomfData.CustomerName.IsNullOrEmpty()) return false;
+
+                if (pomfData.ReceiptNo.IsNullOrEmpty()) return false;
+
+                if (pomfData.NPNo.IsNullOrEmpty()) return false;
+
+                if (pomfData.NPTypeID.IsNullOrEmpty()) return false;
+
+                if (!pomfLines.Any()) return false;
+
+                if (pomfLines.Any(x => x.RequestQuantity > x.NPQuantity)) return false;
+
+                if (pomfLines.Any(x => x.RequestQuantity <= 0)) return false;
             }
 
             return true;

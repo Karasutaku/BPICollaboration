@@ -46,6 +46,7 @@ namespace BPIDA.DataAccess
                     command.Parameters.Clear();
                     command.Parameters.AddWithValue("@POMFID", data.Data.POMFID);
                     command.Parameters.AddWithValue("@POMFDate", data.Data.POMFDate);
+                    command.Parameters.AddWithValue("@DocumentReference", data.Data.DocumentReference);
                     command.Parameters.AddWithValue("@LocationID", data.Data.LocationID);
                     command.Parameters.AddWithValue("@CustomerName", data.Data.CustomerName);
                     command.Parameters.AddWithValue("@ReceiptNo", data.Data.ReceiptNo);
@@ -53,6 +54,7 @@ namespace BPIDA.DataAccess
                     command.Parameters.AddWithValue("@NPTypeID", data.Data.NPTypeID);
                     command.Parameters.AddWithValue("@Requester", data.Data.Requester);
                     command.Parameters.AddWithValue("@DocumentStatus", data.Data.DocumentStatus);
+                    command.Parameters.AddWithValue("@Remarks", data.Data.Remarks);
                     command.Parameters.AddWithValue("@AuditUser", data.userEmail);
                     command.Parameters.AddWithValue("@AuditAction", data.userAction);
                     command.Parameters.AddWithValue("@AuditActionDate", data.userActionDate);

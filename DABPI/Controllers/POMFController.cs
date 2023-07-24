@@ -77,7 +77,8 @@ namespace BPIDA.Controllers
                         ExternalRequestDocument = x.ExternalRequestDocument,
                         RequestDocumentDate = null,
                         ExternalReceiveDocument = x.ExternalReceiveDocument,
-                        ReceiveDocumentDate = null
+                        ReceiveDocumentDate = null,
+                        Remarks = x.Remarks
                     });
                 });
 
@@ -277,6 +278,7 @@ namespace BPIDA.Controllers
 
                 foreach (var removedCol in new[] {
                     "POMFDate",
+                    "DocumentReference",
                     "LocationID",
                     "CustomerName",
                     "ReceiptNo",
@@ -284,6 +286,7 @@ namespace BPIDA.Controllers
                     "NPTypeID",
                     "Requester",
                     "DocumentStatus",
+                    "Remarks",
                     "AuditUser",
                     "AuditAction",
                     "AuditActionDate" })
@@ -313,6 +316,7 @@ namespace BPIDA.Controllers
 
                         temp1.dataHeader.POMFID = dt["POMFID"].ToString();
                         temp1.dataHeader.POMFDate = Convert.ToDateTime(dt["POMFDate"]);
+                        temp1.dataHeader.DocumentReference = dt["DocumentReference"].ToString();
                         temp1.dataHeader.LocationID = dt["LocationID"].ToString();
                         temp1.dataHeader.CustomerName = dt["CustomerName"].ToString();
                         temp1.dataHeader.ReceiptNo = dt["ReceiptNo"].ToString();
@@ -320,6 +324,7 @@ namespace BPIDA.Controllers
                         temp1.dataHeader.NPTypeID = dt["NPTypeID"].ToString();
                         temp1.dataHeader.Requester = dt["Requester"].ToString();
                         temp1.dataHeader.DocumentStatus = dt["DocumentStatus"].ToString();
+                        temp1.dataHeader.Remarks = dt["Remarks"].ToString();
 
                         temp1.dataItemLines = dtPOMFItemLine.AsEnumerable().Where(y => y["POMFID"].ToString().Equals(dt["POMFID"].ToString())).Select(x => new POMFItemLine
                         {
@@ -335,7 +340,8 @@ namespace BPIDA.Controllers
                             ExternalRequestDocument = x.IsNull("ExternalRequestDocument") ? "" : x["ExternalRequestDocument"].ToString(),
                             RequestDocumentDate = x.IsNull("RequestDocumentDate") ? new DateTime(DateTime.Now.Year, 1, 1) : Convert.ToDateTime(x["RequestDocumentDate"]),
                             ExternalReceiveDocument = x.IsNull("ExternalReceiveDocument") ? "" : x["ExternalReceiveDocument"].ToString(),
-                            ReceiveDocumentDate = x.IsNull("ReceiveDocumentDate") ? new DateTime(DateTime.Now.Year, 1, 1) : Convert.ToDateTime(x["ReceiveDocumentDate"])
+                            ReceiveDocumentDate = x.IsNull("ReceiveDocumentDate") ? new DateTime(DateTime.Now.Year, 1, 1) : Convert.ToDateTime(x["ReceiveDocumentDate"]),
+                            Remarks = x["Remarks"].ToString(),
                         }).ToList();
 
                         if (dtPOMFApproval.AsEnumerable().Where(y => y["POMFID"].ToString().Equals(dt["POMFID"].ToString())).ToList().Count > 0)

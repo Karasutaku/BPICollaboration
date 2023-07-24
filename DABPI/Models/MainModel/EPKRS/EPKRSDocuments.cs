@@ -10,6 +10,14 @@
         public DateTime ItemPickupDate { get; set; } = DateTime.Now;
         public string LoadingDocumentID { get; set; } = string.Empty;
         public DateTime LoadingDocumentDate { get; set; } = DateTime.Now;
+        public string ReceiverRiskRPName { get; set; } = string.Empty;
+        public string ReceiverRiskRPEmail { get; set; } = string.Empty;
+        public string ReceiverDORMName { get; set; } = string.Empty;
+        public string ReceiverDORMEmail { get; set; } = string.Empty;
+        public string SenderRiskRPName { get; set; } = string.Empty;
+        public string SenderRiskRPEmail { get; set; } = string.Empty;
+        public string SenderDORMName { get; set; } = string.Empty;
+        public string SenderDORMEmail { get; set; } = string.Empty;
         public string ExtendedMitigationPlan { get; set; } = string.Empty;
         public string DocumentStatus { get; set; } = string.Empty;
     }

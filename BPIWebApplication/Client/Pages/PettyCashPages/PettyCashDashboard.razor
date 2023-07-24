@@ -31,68 +31,71 @@ else
 
             @* CARD STORE LIST *@
 
-            <div class="my-4">
-                @if (activeUser.location.Equals(""))
-                {
-                    <div class="row mb-2">
-                        <div class="col">
-                            <input type="text" @bind="storeFilter" @bind:event="oninput" class="form-control h-100 w-100" placeholder="Filter Store" />
-                        </div>
-                    </div>
-                }
-
-                <div class="row flex-row flex-nowrap wrap-card overflow-auto">
-
+            @if (LoginService.activeUser.userPrivileges.Contains("EX"))
+            {
+                <div class="my-4">
                     @if (activeUser.location.Equals(""))
                     {
-                        <div style="width: 190px;">
-                            <div class="card" id="balanceCard" @onclick="@(() => showBalanceDetails(""))">
-                                <div class="card-body">
-                                    <h6 class="card-title text-wrap"><b> HEAD OFFICE </b></h6>
-                                    @*<small><i>Balance</i></small>
-                                    <p class="card-text-custom">Rp. 000.000.000</p>*@
-                                    
-                                    @if (isFetchBalanceActive)
-                                    {
-                                        <span id="spinnerLogin" class="spinner-border spinner-border-sm"></span>
-                                    }
-                                    @* <button type="button" class="btn btn-sm btn-primary">Details</button> *@
-                                </div>
-                                <div class="card-footer">
-                                    <small class="text-muted"><i>Click To View Details</i></small>
-                                </div>
+                        <div class="row mb-2">
+                            <div class="col">
+                                <input type="text" @bind="storeFilter" @bind:event="oninput" class="form-control h-100 w-100" placeholder="Filter Store" />
                             </div>
                         </div>
                     }
 
-                    @foreach (var loc in ManagementService.locations)
-                    {
-                        @if ((!activeUser.location.Contains(loc.locationId) && !activeUser.location.Equals("")) || !isVisible(loc))
-                            continue;
+                    <div class="row flex-row flex-nowrap wrap-card overflow-auto">
 
-                        <div style="width: 190px;">
-                            <div class="card" id="balanceCard" @onclick="@(() => showBalanceDetails(loc.locationId))">
-                                <div class="card-body">
-                                    <h6 class="card-title text-wrap"><b> @loc.locationName </b></h6>
-                                    @*<small><i>Balance</i></small>
-                                    <p class="card-text-custom">Rp. 000.000.000</p>*@
-                                    
-                                    @if (isFetchBalanceActive)
-                                    {
-                                        <span id="spinnerLogin" class="spinner-border spinner-border-sm"></span>
-                                    }
-                                    @* <button type="button" class="btn btn-sm btn-primary">Details</button> *@
-                                </div>
-                                <div class="card-footer">
-                                    <small class="text-muted"><i>Click To View Details</i></small>
+                        @if (activeUser.location.Equals(""))
+                        {
+                            <div style="width: 190px;">
+                                <div class="card" id="balanceCard" @onclick="@(() => showBalanceDetails(""))">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-wrap"><b> HEAD OFFICE </b></h6>
+                                        @*<small><i>Balance</i></small>
+                                        <p class="card-text-custom">Rp. 000.000.000</p>*@
+
+                                        @if (isFetchBalanceActive)
+                                        {
+                                            <span id="spinnerLogin" class="spinner-border spinner-border-sm"></span>
+                                        }
+                                        @* <button type="button" class="btn btn-sm btn-primary">Details</button> *@
+                                    </div>
+                                    <div class="card-footer">
+                                        <small class="text-muted"><i>Click To View Details</i></small>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    }
+                        }
+
+                        @foreach (var loc in ManagementService.locations)
+                        {
+                            @if ((!activeUser.location.Contains(loc.locationId) && !activeUser.location.Equals("")) || !isVisible(loc))
+                                continue;
+
+                            <div style="width: 190px;">
+                                <div class="card" id="balanceCard" @onclick="@(() => showBalanceDetails(loc.locationId))">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-wrap"><b> @loc.locationName </b></h6>
+                                        @*<small><i>Balance</i></small>
+                                        <p class="card-text-custom">Rp. 000.000.000</p>*@
+
+                                        @if (isFetchBalanceActive)
+                                        {
+                                            <span id="spinnerLogin" class="spinner-border spinner-border-sm"></span>
+                                        }
+                                        @* <button type="button" class="btn btn-sm btn-primary">Details</button> *@
+                                    </div>
+                                    <div class="card-footer">
+                                        <small class="text-muted"><i>Click To View Details</i></small>
+                                    </div>
+                                </div>
+                            </div>
+                        }
 
                 </div>
 
             </div>
+            }
         
             <div class="border border-2 p-2">
                 <h5 class="float-lg-end"><b>Ongoing Petty Cash Document</b></h5>

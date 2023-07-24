@@ -1,6 +1,7 @@
 ﻿using BPIFacade.Models.DbModel;
 using BPIFacade.Models.MainModel;
 using BPIFacade.Models.MainModel.Company;
+using BPIFacade.Models.MainModel.Mailing;
 using BPIFacade.Models.PagesModel.AddEditProject;
 using Microsoft.AspNetCore.Mvc;
 
@@ -159,6 +160,96 @@ namespace BPIFacade.Controllers
             try
             {
                 var result = await _http.GetFromJsonAsync<ResultModel<List<BPIFacade.Models.MainModel.Company.Category>>>("api/BR/BPIBase/getAllCategories");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+
+
+        [HttpGet("getRegionData")]
+        public async Task<IActionResult> getRegionData()
+        {
+            ResultModel<List<Region>> res = new();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<Region>>>("api/BR/BPIBase/getRegionData");
+
+                if (result.isSuccess)
+                {
+                    res.Data = result.Data;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    res.Data = null;
+
+                    res.isSuccess = result.isSuccess;
+                    res.ErrorCode = result.ErrorCode;
+                    res.ErrorMessage = result.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpGet("getMasterUOMData")]
+        public async Task<IActionResult> getMasterUOMData()
+        {
+            ResultModel<List<UOM>> res = new();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.GetFromJsonAsync<ResultModel<List<UOM>>>("api/BR/BPIBase/getMasterUOMData");
 
                 if (result.isSuccess)
                 {
@@ -480,5 +571,53 @@ namespace BPIFacade.Controllers
 
             return actionResult;
         }
+
+        [HttpPost("sendManualEmail")]
+        public async Task<IActionResult> sendManualEmail(CustomMailing data)
+        {
+            ResultModel<CustomMailing> res = new ResultModel<CustomMailing>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<CustomMailing>($"api/BR/BPIBase/sendManualEmail", data);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<CustomMailing>>();
+
+                    res.Data = respBody.Data;
+                    res.isSuccess = respBody.isSuccess;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<CustomMailing>>();
+
+                    res.Data = respBody.Data;
+                    res.isSuccess = respBody.isSuccess;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        //
     }
 }

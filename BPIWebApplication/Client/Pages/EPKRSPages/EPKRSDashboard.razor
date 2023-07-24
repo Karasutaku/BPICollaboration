@@ -1,4 +1,5 @@
 ﻿@page "/epkrs/dashboard"
+@using System.Text.Json;
 @inject Blazored.SessionStorage.ISessionStorageService sessionStorage
 @inject Blazored.SessionStorage.ISyncSessionStorageService syncSessionStorage
 @inject IEPKRSService EPKRSService
@@ -54,376 +55,16 @@ else
             
             <div class="container-fluid">
                 
-                @if (activeUser.location.Equals("") && LoginService.activeUser.userPrivileges.Contains("XP"))
-                {
-
-                    <div class="row mt-3">
-                    
-                        <div class="col">
-
-                            <div id="accordionStats" style="width: 100%;">
-
-                                <div class="card" style="width: 100%;">
-                                    <div class="card-header" id="epkrsstats">
-                                        <div class="border border-1">
-                                            <button id="epkrsstatstitle" class="btn w-100" data-toggle="collapse" data-target="#epkrsstatsdata" aria-expanded="true" aria-controls="epkrsstatsdata">
-                                                <b>EPKRS General Statistics</b>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div id="epkrsstatsdata" class="collapse" aria-labelledby="epkrsstatstitle" data-parent="#accordionStats">
-                                        <div class="card-body">
-
-                                            <ul class="nav nav-pills nav-fill my-1">
-                                                <li class="nav-item">
-                                                    <button type="button" class="nav-link" @onclick="(() => generalStatisticsFilterbyYear(selectedYearFilter - 2, false))">@(selectedYearFilter - 2)</button>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <button type="button" class="nav-link" @onclick="(() => generalStatisticsFilterbyYear(selectedYearFilter - 1, false))">@(selectedYearFilter - 1)</button>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <button type="button" class="nav-link active">@(selectedYearFilter)</button>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <button type="button" class="nav-link" @onclick="(() => generalStatisticsFilterbyYear(selectedYearFilter + 1, false))">@(selectedYearFilter + 1)</button>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <button type="button" class="nav-link" @onclick="(() => generalStatisticsFilterbyYear(selectedYearFilter + 2, false))">@(selectedYearFilter + 2)</button>
-                                                </li>
-                                            </ul>
-                                            
-                                            <ul class="nav nav-pills nav-fill my-1">
-                                                @foreach (var month in monthSelector)
-                                                {
-                                                    <li class="nav-item mx-1" @onclick="(() => { monthSelector[month.Key] = !monthSelector[month.Key]; StateHasChanged(); })">
-                                                        <button type="button" class="nav-link @(month.Value ? "active" : null)">@(new DateTime(selectedYearFilter, month.Key, 1).ToString("MMM"))</button>
-                                                    </li>
-                                                }
-                                            </ul>
-
-                                            <div class="row mb-2">
-                                                <div class="col">
-                                                    <button type="button" class="btn btn-sm btn-primary-cus w-100" disabled="@(generalStatisticsFiltered)" @onclick="generalStatisticsFilterbyMonth">Filter</button>
-                                                </div>
-                                                <div class="col">
-                                                    <button type="button" class="btn btn-sm btn-dark w-100" disabled="@(!generalStatisticsFiltered)" @onclick="(() => generalStatisticsFilterbyYear(DateTime.Now.Year, true))">Reset</button>
-                                                </div>
-                                            </div>
-
-                                            <div class="separator">General Data</div>
-
-                                            <div class="row my-2">
-                                                <div class="col">
-
-                                                    @if (previewGeneralStatistics != null)
-                                                    {
-                                                        <div class="table-responsive">
-                                                            <table class="table table-sm table-hover" style="width: 100%;">
-                                                                <thead>
-                                                                    <tr class="@(generalStatisticsRiskTypeFilterActive ? "table-success" : "table-primary")">
-                                                                        <th class="text-center align-middle text-wrap" style="width: 17%;">Reporting Type</th>
-                                                                        <th class="text-center align-middle text-wrap" style="width: 17%;">Risk Type</th>
-                                                                        <th class="text-center align-middle text-wrap" style="width: 8%;">Total Reports</th>
-                                                                        <th class="text-center align-middle text-wrap" style="width: 8%;">Open Reports</th>
-                                                                        <th class="text-center align-middle text-wrap" style="width: 8%;">Approved Reports</th>
-                                                                        <th class="text-center align-middle text-wrap" style="width: 8%;">On Progress Reports</th>
-                                                                        <th class="text-center align-middle text-wrap" style="width: 8%;">Closed Reports</th>
-                                                                        <th class="text-center align-middle text-wrap" style="width: 13%;">Report Total Value (Rp.)</th>
-                                                                        <th class="text-center align-middle text-wrap" style="width: 13%;">Report Return Value (Rp.)</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    @foreach (var stat in previewGeneralStatistics)
-                                                                    {
-                                                                        var repId = EPKRSService.reportingTypes.SingleOrDefault(x => x.ReportingID.Equals(stat.ReportingID));
-                                                                        var riskId = EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(stat.RiskID));
-                                                                        
-                                                                        <tr>
-                                                                            <td class="text-center align-middle text-wrap">
-                                                                                @if (repId != null) { @repId.ReportingDescription } else { @stat.ReportingID }
-                                                                            </td>
-                                                                                <td class="text-center align-middle text-wrap" id="filterSelector" @onclick="@(() => generalStatisticsFilterbyRiskType(stat.RiskID))">
-                                                                                @if (riskId != null) { @riskId.RiskDescription } else { @stat.ReportingID }
-                                                                            </td>
-                                                                            <td class="text-center align-middle text-wrap">@stat.ReportTotalDocuments.ToString("N0")</td>
-                                                                            <td class="text-center align-middle text-wrap">@stat.ReportTotalOpenDocuments.ToString("N0")</td>
-                                                                            <td class="text-center align-middle text-wrap">@stat.ReportTotalApprovedDocuments.ToString("N0")</td>
-                                                                            <td class="text-center align-middle text-wrap">@stat.ReportTotalOnProgressDocuments.ToString("N0")</td>
-                                                                            <td class="text-center align-middle text-wrap">@stat.ReportTotalClosedDocuments.ToString("N0")</td>
-                                                                            <td class="text-center align-middle text-wrap">Rp. @stat.ReportTotalValue.ToString("N0") ,-</td>
-                                                                            <td class="text-center align-middle text-wrap">Rp. @stat.ReportReturnValue.ToString("N0") ,-</td>
-                                                                        </tr>
-                                                                    }
-                                                                </tbody>
-                                                                <tfoot>
-                                                                    <tr>
-                                                                        <td class="text-center align-middle text-wrap fw-bold" colspan="2">Grand Total</td>
-                                                                        <td class="text-center align-middle text-wrap fw-bold">@previewGeneralStatistics.Sum(x => x.ReportTotalDocuments).ToString("N0")</td>
-                                                                        <td class="text-center align-middle text-wrap fw-bold">@previewGeneralStatistics.Sum(x => x.ReportTotalOpenDocuments).ToString("N0")</td>
-                                                                        <td class="text-center align-middle text-wrap fw-bold">@previewGeneralStatistics.Sum(x => x.ReportTotalApprovedDocuments).ToString("N0")</td>
-                                                                        <td class="text-center align-middle text-wrap fw-bold">@previewGeneralStatistics.Sum(x => x.ReportTotalOnProgressDocuments).ToString("N0")</td>
-                                                                        <td class="text-center align-middle text-wrap fw-bold">@previewGeneralStatistics.Sum(x => x.ReportTotalClosedDocuments).ToString("N0")</td>
-                                                                        <td class="text-center align-middle text-wrap fw-bold">Rp. @previewGeneralStatistics.Sum(x => x.ReportTotalValue).ToString("N0") ,-</td>
-                                                                        <td class="text-center align-middle text-wrap fw-bold">Rp. @previewGeneralStatistics.Sum(x => x.ReportReturnValue).ToString("N0") ,-</td>
-                                                                    </tr>
-                                                                </tfoot>
-                                                            </table>
-                                                        </div>
-                                                    }
-                                                    else
-                                                    {
-                                                        <div class="alert alert-primary" role="alert">
-                                                            <b>Data Empty !</b>
-                                                        </div>                                                        
-                                                    }
-
-                                                </div>
-                                            </div>
-
-                                            <div class="separator">Incident Accident Regional Statistics</div>
-
-                                            <div class="row my-2">
-                                                <div class="col">
-                                                    @if (previewRegionalStatistics != null)
-                                                    {
-                                                        <div class="table-responsive">
-                                                            <table class="table table-sm table-hover" style="width: 100%;">
-                                                                <thead>
-                                                                        <tr class="@(generalStatisticsRegionalFilterActive ? "table-success" : "table-primary")">
-                                                                        <th class="text-center align-middle text-wrap" style="width: 35%;">DORM</th>
-                                                                        <th class="text-center align-middle text-wrap" style="width: 15%;">Total Document(s) Reported</th>
-                                                                        <th class="text-center align-middle text-wrap" style="width: 25%;">Loss Estimation (Rp.)</th>
-                                                                        <th class="text-center align-middle text-wrap" style="width: 25%;">Return Values (Rp.)</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    @foreach (var stat in previewRegionalStatistics)
-                                                                    {
-                                                                        <tr>
-                                                                            <td class="text-center align-middle text-wrap" id="filterSelector" @onclick="(() => generalStatisticsFilterbyRegion(stat.DORMEmail))">@stat.DORMEmail</td>
-                                                                            <td class="text-center align-middle text-wrap">@stat.TotalDocuments.ToString("N0")</td>
-                                                                            <td class="text-center align-middle text-wrap">Rp. @stat.TotalValues.ToString("N0") ,-</td>
-                                                                            <td class="text-center align-middle text-wrap">Rp. @stat.ReturnValues.ToString("N0") ,-</td>
-                                                                        </tr>
-                                                                    }
-                                                                </tbody>
-                                                                <tfoot>
-                                                                    <tr>
-                                                                        <td class="text-center align-middle text-wrap fw-bold">Total</td>
-                                                                        <td class="text-center align-middle text-wrap fw-bold">@previewRegionalStatistics.Sum(x => x.TotalDocuments).ToString("N0")</td>
-                                                                        <td class="text-center align-middle text-wrap fw-bold">Rp. @previewRegionalStatistics.Sum(x => x.TotalValues).ToString("N0") ,-</td>
-                                                                        <td class="text-center align-middle text-wrap fw-bold">Rp. @previewRegionalStatistics.Sum(x => x.ReturnValues).ToString("N0") ,-</td>
-                                                                    </tr>
-                                                                </tfoot>
-                                                            </table>
-                                                        </div>
-                                                    }
-                                                    else
-                                                    {
-                                                        <div class="alert alert-primary" role="alert">
-                                                            <b>Data Empty !</b>
-                                                        </div>                                                        
-                                                    }
-                                                </div>
-                                            </div>
-
-                                            <div class="separator">Incident Accident Involved Person Statistics</div>
-
-                                            <div class="row my-2">
-                                                <div class="col">
-                                                    @if (previewInvolvedbyPosStatistics != null)
-                                                    {
-                                                        <div class="table-responsive">
-                                                            <table class="table table-sm table-hover" style="width: 100%;">
-                                                                <thead>
-                                                                    <tr class="@(generalStatisticsPositionFilterActive ? "table-success" : "table-primary")">
-                                                                        <th class="text-center align-middle text-wrap" style="width: 50%;">Position</th>
-                                                                        <th class="text-center align-middle text-wrap" style="width: 25%;">Total Document(s) Reported</th>
-                                                                        <th class="text-center align-middle text-wrap" style="width: 25%;"># Person(s) Involved</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    @foreach (var stat in previewInvolvedbyPosStatistics)
-                                                                    {
-                                                                        <tr>
-                                                                            <td class="text-center align-middle text-wrap" id="filterSelector" @onclick="@(() => generalStatisticsFilterbyPosition(stat.InvolverPosition))">@stat.InvolverPosition</td>
-                                                                            <td class="text-center align-middle text-wrap">@stat.TotalDocuments.ToString("N0")</td>
-                                                                            <td class="text-center align-middle text-wrap">@stat.TotalInvolver.ToString("N0")</td>
-                                                                        </tr>
-                                                                    }
-                                                                </tbody>
-                                                                <tfoot>
-                                                                    <tr>
-                                                                        <td class="text-center align-middle text-wrap fw-bold" colspan="2">Total</td>
-                                                                    <td class="text-center align-middle text-wrap fw-bold">@previewInvolvedbyPosStatistics.Sum(x => x.TotalInvolver).ToString("N0")</td>
-                                                                    </tr>
-                                                                </tfoot>
-                                                            </table>
-                                                        </div>
-                                                    }
-                                                    else
-                                                    {
-                                                        <div class="alert alert-primary" role="alert">
-                                                            <b>Data Empty !</b>
-                                                        </div>                                                        
-                                                    }
-                                                </div>
-
-                                                <div class="col">
-                                                    @if (previewInvolvedbyDeptStatistics != null)
-                                                    {
-                                                        <div class="table-responsive">
-                                                            <table class="table table-sm table-hover" style="width: 100%;">
-                                                                <thead>
-                                                                    <tr class="@(generalStatisticsDepartmentFilterActive ? "table-success" : "table-primary")">
-                                                                        <th class="text-center align-middle text-wrap" style="width: 50%;">Department</th>
-                                                                        <th class="text-center align-middle text-wrap" style="width: 25%;">Total Document(s) Reported</th>
-                                                                        <th class="text-center align-middle text-wrap" style="width: 25%;"># Person(s) Involved</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    @foreach (var stat in previewInvolvedbyDeptStatistics)
-                                                                    {
-                                                                        <tr>
-                                                                            <td class="text-center align-middle text-wrap" id="filterSelector" @onclick="@(() => generalStatisticsFilterbyDept(stat.InvolverDept))">@stat.InvolverDept</td>
-                                                                            <td class="text-center align-middle text-wrap">@stat.TotalDocuments.ToString("N0")</td>
-                                                                            <td class="text-center align-middle text-wrap">@stat.TotalInvolver.ToString("N0")</td>
-                                                                        </tr>
-                                                                    }
-                                                                </tbody>
-                                                                <tfoot>
-                                                                    <tr>
-                                                                        <td class="text-center align-middle text-wrap fw-bold" colspan="2">Total</td>
-                                                                    <td class="text-center align-middle text-wrap fw-bold">@previewInvolvedbyDeptStatistics.Sum(x => x.TotalInvolver).ToString("N0")</td>
-                                                                    </tr>
-                                                                </tfoot>
-                                                            </table>
-                                                        </div>
-                                                    }
-                                                    else
-                                                    {
-                                                        <div class="alert alert-primary" role="alert">
-                                                            <b>Data Empty !</b>
-                                                        </div>
-                                                    }
-                                                </div>
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-                
-                    <div class="row">
-
-                        <div class="col p-3">
-                            <div id="accordionPanel" style="width: 100%;">
-
-                                <div class="card" style="width: 100%;">
-                                    <div class="card-header" id="epkrsmpanel">
-                                        <div class="border border-1">
-                                            <button id="epkrsmpaneltitle" class="btn w-100" data-toggle="collapse" data-target="#epkrsmpaneldata" aria-expanded="true" aria-controls="epkrsmpaneldata" @onclick="initializeChart">
-                                                <b>EPKRS Monitoring Panel</b>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div id="epkrsmpaneldata" class="collapse" aria-labelledby="epkrsmpaneltitle" data-parent="#accordionPanel">
-                                        <div class="card-body">
-
-                                            <ul class="nav nav-pills nav-fill my-1">
-                                                <li class="nav-item">
-                                                    <button type="button" class="nav-link" @onclick="(() => monitoringPanelFilterbyYear(selectedYearFilterChart - 2, false))">@(selectedYearFilterChart - 2)</button>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <button type="button" class="nav-link" @onclick="(() => monitoringPanelFilterbyYear(selectedYearFilterChart - 1, false))">@(selectedYearFilterChart - 1)</button>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <button type="button" class="nav-link active">@(selectedYearFilterChart)</button>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <button type="button" class="nav-link" @onclick="(() => monitoringPanelFilterbyYear(selectedYearFilterChart + 1, false))">@(selectedYearFilterChart + 1)</button>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <button type="button" class="nav-link" @onclick="(() => monitoringPanelFilterbyYear(selectedYearFilterChart + 2, false))">@(selectedYearFilterChart + 2)</button>
-                                                </li>
-                                            </ul>
-
-                                            <ul class="nav nav-pills nav-fill my-1">
-                                                @foreach (var month in monthSelectorChart)
-                                                {
-                                                    <li class="nav-item mx-1" @onclick="(() => { monthSelectorChart[month.Key] = !monthSelectorChart[month.Key]; StateHasChanged(); })">
-                                                        <button type="button" class="nav-link @(month.Value ? "active" : null)">@(new DateTime(selectedYearFilterChart, month.Key, 1).ToString("MMM"))</button>
-                                                    </li>
-                                                }
-                                            </ul>
-
-                                            <div class="row mb-2">
-                                                <div class="col">
-                                                    <button type="button" class="btn btn-sm btn-primary-cus w-100" disabled="@(monitoringPanelFiltered)" @onclick="monitoringPanelFilterbyMonth">Filter</button>
-                                                </div>
-                                                <div class="col">
-                                                    <button type="button" class="btn btn-sm btn-dark w-100" disabled="@(!monitoringPanelFiltered)" @onclick="(() => monitoringPanelFilterbyYear(DateTime.Now.Year, true))">Reset</button>
-                                                </div>
-                                            </div>
-
-                                            <div class="row">
-                                                <div class="col align-middle text-center">
-                                                    @if (previewTopLocationReportStatistics != null)
-                                                    {
-                                                        <canvas @ref="topLocationReportStatsRef" id="topLocationReportStats" class="border border-2 p-1 w-100"></canvas>
-                                                    }
-                                                </div>
-                                                <div class="col align-middle text-center">
-                                                    @if (previewItemCategoryStatistics != null)
-                                                    {
-                                                        <canvas @ref="itemCategoryStatsRef" id="itemCategoryStats" class="border border-2 p-1 w-100"></canvas>
-                                                    }
-                                                </div>
-                                            </div>
-
-                                            <div class="row my-2">
-                                                <div class="col align-middle text-center">
-                                                    @if (previewItemCaseCategoryStatistics != null)
-                                                    {
-                                                        <canvas @ref="itemCaseValueStatsRef" id="itemCaseValueStats" class="border border-2 p-1 w-100"></canvas>
-                                                    }
-                                                </div>
-                                                <div class="col align-middle text-center">
-                                                    @if (previewItemCaseCategoryStatistics != null)
-                                                    {
-                                                        <canvas @ref="itemCaseCategoryStatsRef" id="itemCaseCategoryStats" class="border border-2 p-1 w-100"></canvas>
-                                                    }
-                                                </div>
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-
-                    </div>
-                }
-
-
                 <div class="row">
                     <div class="col">
                         <div class="border border-2 my-3 p-2">
                             <h5 class="float-lg-end"><b>Reported EPKRS Documents</b></h5>
                             <ul class="nav nav-pills flex-column flex-sm-row" id="myTab" role="tablist">
                                 <li class="nav-item">
-                                    <a class="nav-link active" id="itemcase-tab" data-toggle="tab" href="#itemcase" role="tab" aria-controls="itemcase" aria-selected="true">Item Case &lt; @itemCasePageActive of @itemCaseNumberofPages &gt;</a>
+                                    <a class="nav-link active" id="itemcase-tab" data-toggle="tab" href="#itemcase" role="tab" aria-controls="itemcase" aria-selected="true">Barang Bermasalah</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" id="incac-tab" data-toggle="tab" href="#incac" role="tab" aria-controls="incac" aria-selected="false">Incident/Accident &lt; @incidentAccidentPageActive of @incidentAccidentNumberofPages &gt;</a>
+                                    <a class="nav-link" id="incac-tab" data-toggle="tab" href="#incac" role="tab" aria-controls="incac" aria-selected="false">Incident/Accident</a>
                                 </li>
                             </ul>
 
@@ -432,8 +73,186 @@ else
 
                                     @if (activeUser.location.Equals("") && LoginService.activeUser.userPrivileges.Contains("XP"))
                                     {
+                                        <div class="row my-3">
+
+                                            <div class="col">
+                                                <div id="accordionPanel" style="width: 100%;">
+
+                                                    <div class="card" style="width: 100%;">
+                                                        <div class="card-header" id="epkrsmpanel">
+                                                            <div class="border border-1">
+                                                                <button id="epkrsmpaneltitle" class="btn w-100" data-toggle="collapse" data-target="#epkrsmpaneldata" aria-expanded="true" aria-controls="epkrsmpaneldata" @onclick="initializeChart">
+                                                                    <b>EPKRS Barang Bermasalah Statistics</b>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        <div id="epkrsmpaneldata" class="collapse" aria-labelledby="epkrsmpaneltitle" data-parent="#accordionPanel">
+                                                            <div class="card-body">
+
+                                                                <ul class="nav nav-pills nav-fill my-1">
+                                                                    <li class="nav-item">
+                                                                        <button type="button" class="nav-link" @onclick="(() => monitoringPanelFilterbyYear(selectedYearFilterChart - 2))">@(selectedYearFilterChart - 2)</button>
+                                                                    </li>
+                                                                    <li class="nav-item">
+                                                                        <button type="button" class="nav-link" @onclick="(() => monitoringPanelFilterbyYear(selectedYearFilterChart - 1))">@(selectedYearFilterChart - 1)</button>
+                                                                    </li>
+                                                                    <li class="nav-item">
+                                                                        <button type="button" class="nav-link active">@(selectedYearFilterChart)</button>
+                                                                    </li>
+                                                                    <li class="nav-item">
+                                                                        <button type="button" class="nav-link" @onclick="(() => monitoringPanelFilterbyYear(selectedYearFilterChart + 1))">@(selectedYearFilterChart + 1)</button>
+                                                                    </li>
+                                                                    <li class="nav-item">
+                                                                        <button type="button" class="nav-link" @onclick="(() => monitoringPanelFilterbyYear(selectedYearFilterChart + 2))">@(selectedYearFilterChart + 2)</button>
+                                                                    </li>
+                                                                </ul>
+
+                                                                <ul class="nav nav-pills nav-fill my-1">
+                                                                    @foreach (var month in monthSelectorChart)
+                                                                    {
+                                                                        <li class="nav-item mx-1" @onclick="(() => { monthSelectorChart[month.Key] = !monthSelectorChart[month.Key]; StateHasChanged(); })">
+                                                                            <button type="button" class="nav-link @(month.Value ? "active" : null)">@(new DateTime(selectedYearFilterChart, month.Key, 1).ToString("MMM"))</button>
+                                                                        </li>
+                                                                    }
+                                                                </ul>
+
+                                                                <div class="row mb-2">
+                                                                    <div class="col">
+                                                                        <button type="button" class="btn btn-sm btn-primary-cus w-100" @onclick="monitoringPanelFilterbyMonth">Filter</button>
+                                                                    </div>
+                                                                    <div class="col">
+                                                                        <button type="button" class="btn btn-sm btn-dark w-100" @onclick="(() => monitoringPanelFilterbyYear(DateTime.Now.Year))">Reset</button>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="separator">General Data</div>
+
+                                                                <div class="row my-2">
+                                                                    <div class="col">
+
+                                                                        @if (previewGeneralItemCaseStatistics != null)
+                                                                        {
+                                                                            <div class="table-responsive">
+                                                                                <table class="table table-sm table-hover" style="width: 100%;">
+                                                                                    <thead>
+                                                                                        <tr class="table-primary">
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 17%;">Reporting Type</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 17%;">Risk Type</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 8%;">Total Reports</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 8%;">Open Reports</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 8%;">Approved Reports</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 8%;">On Progress Reports</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 8%;">Closed Reports</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 13%;">Report Total Value (Rp.)</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 13%;">Report Return Value (Rp.)</th>
+                                                                                        </tr>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                        @foreach (var stat in previewGeneralItemCaseStatistics)
+                                                                                        {
+                                                                                            var repId = EPKRSService.reportingTypes.SingleOrDefault(x => x.ReportingID.Equals(stat.ReportingID));
+                                                                                            var riskId = EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(stat.RiskID));
+
+                                                                                            <tr>
+                                                                                                <td class="text-center align-middle text-wrap">
+                                                                                                    @if (repId != null)
+                                                                                                    {
+                                                                                                        @repId.ReportingDescription
+                                                                                                    }
+                                                                                                    else
+                                                                                                    {
+                                                                                                        @stat.ReportingID
+                                                                                                    }
+                                                                                                </td>
+                                                                                                <td class="text-center align-middle text-wrap" id="filterSelector">
+                                                                                                    @if (riskId != null)
+                                                                                                    {
+                                                                                                        @riskId.RiskDescription
+                                                                                                    }
+                                                                                                    else
+                                                                                                    {
+                                                                                                        @stat.ReportingID
+                                                                                                    }
+                                                                                                </td>
+                                                                                                <td class="text-center align-middle text-wrap">@stat.ReportTotalDocuments.ToString("N0")</td>
+                                                                                                <td class="text-center align-middle text-wrap">@stat.ReportTotalOpenDocuments.ToString("N0")</td>
+                                                                                                <td class="text-center align-middle text-wrap">@stat.ReportTotalApprovedDocuments.ToString("N0")</td>
+                                                                                                <td class="text-center align-middle text-wrap">@stat.ReportTotalOnProgressDocuments.ToString("N0")</td>
+                                                                                                <td class="text-center align-middle text-wrap">@stat.ReportTotalClosedDocuments.ToString("N0")</td>
+                                                                                                <td class="text-center align-middle text-wrap">Rp. @stat.ReportTotalValue.ToString("N0") ,-</td>
+                                                                                                <td class="text-center align-middle text-wrap">Rp. @stat.ReportReturnValue.ToString("N0") ,-</td>
+                                                                                            </tr>
+                                                                                        }
+                                                                                    </tbody>
+                                                                                    <tfoot>
+                                                                                        <tr>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold" colspan="2">Grand Total</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">@previewGeneralItemCaseStatistics.Sum(x => x.ReportTotalDocuments).ToString("N0")</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">@previewGeneralItemCaseStatistics.Sum(x => x.ReportTotalOpenDocuments).ToString("N0")</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">@previewGeneralItemCaseStatistics.Sum(x => x.ReportTotalApprovedDocuments).ToString("N0")</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">@previewGeneralItemCaseStatistics.Sum(x => x.ReportTotalOnProgressDocuments).ToString("N0")</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">@previewGeneralItemCaseStatistics.Sum(x => x.ReportTotalClosedDocuments).ToString("N0")</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">Rp. @previewGeneralItemCaseStatistics.Sum(x => x.ReportTotalValue).ToString("N0") ,-</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">Rp. @previewGeneralItemCaseStatistics.Sum(x => x.ReportReturnValue).ToString("N0") ,-</td>
+                                                                                        </tr>
+                                                                                    </tfoot>
+                                                                                </table>
+                                                                            </div>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <div class="alert alert-primary" role="alert">
+                                                                                <b>Data Empty !</b>
+                                                                            </div>
+                                                                        }
+
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="row">
+                                                                    <div class="col align-middle text-center">
+                                                                        @if (previewTopLocationReportStatistics != null)
+                                                                        {
+                                                                            <canvas @ref="topLocationReportStatsRef" id="topLocationReportStats" class="border border-2 p-1 w-100"></canvas>
+                                                                        }
+                                                                    </div>
+                                                                    <div class="col align-middle text-center">
+                                                                        @if (previewItemCategoryStatistics != null)
+                                                                        {
+                                                                            <canvas @ref="itemCategoryStatsRef" id="itemCategoryStats" class="border border-2 p-1 w-100"></canvas>
+                                                                        }
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="row my-2">
+                                                                    <div class="col align-middle text-center">
+                                                                        @if (previewItemCaseCategoryStatistics != null)
+                                                                        {
+                                                                            <canvas @ref="itemCaseValueStatsRef" id="itemCaseValueStats" class="border border-2 p-1 w-100"></canvas>
+                                                                        }
+                                                                    </div>
+                                                                    <div class="col align-middle text-center">
+                                                                        @if (previewItemCaseCategoryStatistics != null)
+                                                                        {
+                                                                            <canvas @ref="itemCaseCategoryStatsRef" id="itemCaseCategoryStats" class="border border-2 p-1 w-100"></canvas>
+                                                                        }
+                                                                    </div>
+                                                                </div>
+
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                        <p class="fw-bold separator">Export Data</p>
+
                                         <form>
-                                            <div class="input-group mt-3">
+                                            <div class="input-group my-3">
                                                 <div class="input-group-prepend">
                                                     <span class="input-group-text">
                                                         @if (isExportLoading)
@@ -454,6 +273,8 @@ else
                                             </div>
                                         </form>
                                     }
+                                    
+                                    <p class="separator">Page @itemCasePageActive of @itemCaseNumberofPages</p>
 
                                     <form @onsubmit="itemCaseFilter">
                                         <div class="input-group my-3">
@@ -461,7 +282,7 @@ else
                                                 <select class="form-select" @bind="itemCaseFilterType">
                                                     <option hidden disabled value="">Filter By</option>
                                                     <option value="ID">EPKRS ID</option>
-                                                    <option value="LOC">Lokasi</option>
+                                                    <option value="LOC">Lokasi Pelapor</option>
                                                     <option value="STATUS">Status</option>
                                                 </select>
                                             </div>
@@ -578,8 +399,589 @@ else
 
                                     @if (activeUser.location.Equals("") && LoginService.activeUser.userPrivileges.Contains("XP"))
                                     {
+                                        <div class="row my-3">
+
+                                            <div class="col">
+
+                                                <div id="accordionStats" style="width: 100%;">
+
+                                                    <div class="card" style="width: 100%;">
+                                                        <div class="card-header" id="epkrsstats">
+                                                            <div class="border border-1">
+                                                                <button id="epkrsstatstitle" class="btn w-100" data-toggle="collapse" data-target="#epkrsstatsdata" aria-expanded="true" aria-controls="epkrsstatsdata">
+                                                                    <b>EPKRS Incident Accident Statistics</b>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        <div id="epkrsstatsdata" class="collapse" aria-labelledby="epkrsstatstitle" data-parent="#accordionStats">
+                                                            <div class="card-body">
+
+                                                                <ul class="nav nav-pills nav-fill my-1">
+                                                                    <li class="nav-item">
+                                                                        <button type="button" class="nav-link" @onclick="(() => incacStatisticsFilterbyYear(selectedYearFilter - 2))">@(selectedYearFilter - 2)</button>
+                                                                    </li>
+                                                                    <li class="nav-item">
+                                                                        <button type="button" class="nav-link" @onclick="(() => incacStatisticsFilterbyYear(selectedYearFilter - 1))">@(selectedYearFilter - 1)</button>
+                                                                    </li>
+                                                                    <li class="nav-item">
+                                                                        <button type="button" class="nav-link active">@(selectedYearFilter)</button>
+                                                                    </li>
+                                                                    <li class="nav-item">
+                                                                        <button type="button" class="nav-link" @onclick="(() => incacStatisticsFilterbyYear(selectedYearFilter + 1))">@(selectedYearFilter + 1)</button>
+                                                                    </li>
+                                                                    <li class="nav-item">
+                                                                        <button type="button" class="nav-link" @onclick="(() => incacStatisticsFilterbyYear(selectedYearFilter + 2))">@(selectedYearFilter + 2)</button>
+                                                                    </li>
+                                                                </ul>
+
+                                                                <ul class="nav nav-pills nav-fill my-1">
+                                                                    @foreach (var month in monthSelector)
+                                                                    {
+                                                                        <li class="nav-item mx-1" @onclick="(() => { monthSelector[month.Key] = !monthSelector[month.Key]; StateHasChanged(); })">
+                                                                            <button type="button" class="nav-link @(month.Value ? "active" : null)">@(new DateTime(selectedYearFilter, month.Key, 1).ToString("MMM"))</button>
+                                                                        </li>
+                                                                    }
+                                                                </ul>
+
+                                                                <div class="row mb-2">
+                                                                    <div class="col">
+                                                                        <button type="button" class="btn btn-sm btn-primary-cus w-100" @onclick="incacStatisticsFilterbyMonth">Filter</button>
+                                                                    </div>
+                                                                    <div class="col">
+                                                                        <button type="button" class="btn btn-sm btn-dark w-100" @onclick="(() => incacStatisticsFilterbyYear(DateTime.Now.Year))">Reset</button>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="separator">General Data</div>
+
+                                                                <div class="row my-2">
+                                                                    <div class="col">
+
+                                                                        @if (incacDataforStatistics != null)
+                                                                        {
+                                                                            var previewforGeneral = incacDataforStatistics.GroupBy(x => x.incidentAccident.RiskID);
+
+                                                                            <div class="table-responsive">
+                                                                                <table class="table table-sm table-hover" style="width: 100%;">
+                                                                                    <thead>
+                                                                                        <tr class="table-primary">
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 17%;">Reporting Type</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 17%;">Risk Type</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 8%;">Total Reports</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 8%;">Open Reports</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 8%;">Approved Reports</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 8%;">On Progress Reports</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 8%;">Closed Reports</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 13%;">Report Total Value (Rp.)</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 13%;">Report Return Value (Rp.)</th>
+                                                                                        </tr>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                        @foreach (var stats in previewforGeneral.OrderBy(x => x.Key))
+                                                                                        {
+
+                                                                                            var riskId = EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(stats.Key));
+
+                                                                                            <tr class="@(incacRiskTypeValueFilter.Contains(stats.Key) ? "table-active" : null)">
+                                                                                                <td class="text-center align-middle text-wrap">INCIDENT/ACCIDENT</td>
+                                                                                                <td class="text-center align-middle text-wrap" id="filterSelector" @onclick="@(() => statsFilterbyRiskType(stats.Key))">
+                                                                                                    @if (riskId != null)
+                                                                                                    {
+                                                                                                        @riskId.RiskDescription
+                                                                                                    }
+                                                                                                    else
+                                                                                                    {
+                                                                                                        @stats.Key
+                                                                                                    }
+                                                                                                </td>
+                                                                                                <td class="text-center align-middle text-wrap">@stats.Count()</td>
+                                                                                                <td class="text-center align-middle text-wrap">@stats.Where(x => x.incidentAccident.DocumentStatus.Equals("Open")).Count()</td>
+                                                                                                <td class="text-center align-middle text-wrap">@stats.Where(x => x.incidentAccident.DocumentStatus.Equals("Approved")).Count()</td>
+                                                                                                <td class="text-center align-middle text-wrap">@stats.Where(x => x.incidentAccident.DocumentStatus.Equals("OnProgress")).Count()</td>
+                                                                                                <td class="text-center align-middle text-wrap">@stats.Where(x => x.incidentAccident.DocumentStatus.Equals("Closed")).Count()</td>
+                                                                                                <td class="text-center align-middle text-wrap">Rp. @stats.Sum(x => x.incidentAccident.LossEstimation).ToString("N0") ,-</td>
+                                                                                                <td class="text-center align-middle text-wrap">Rp. @stats.Sum(x => x.incidentAccident.ReturnAmount).ToString("N0") ,-</td>
+                                                                                            </tr>
+                                                                                        }
+                                                                                    </tbody>
+                                                                                    <tfoot>
+                                                                                        <tr>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold" colspan="2">Grand Total</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">@incacDataforStatistics.Count().ToString("N0")</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">@incacDataforStatistics.Where(x => x.incidentAccident.DocumentStatus.Equals("Open")).Count().ToString("N0")</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">@incacDataforStatistics.Where(x => x.incidentAccident.DocumentStatus.Equals("Approved")).Count().ToString("N0")</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">@incacDataforStatistics.Where(x => x.incidentAccident.DocumentStatus.Equals("OnProgress")).Count().ToString("N0")</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">@incacDataforStatistics.Where(x => x.incidentAccident.DocumentStatus.Equals("Closed")).Count().ToString("N0")</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">Rp. @incacDataforStatistics.Sum(x => x.incidentAccident.LossEstimation).ToString("N0") ,-</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">Rp. @incacDataforStatistics.Sum(x => x.incidentAccident.ReturnAmount).ToString("N0") ,-</td>
+                                                                                        </tr>
+                                                                                    </tfoot>
+                                                                                </table>
+                                                                            </div>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <div class="alert alert-primary" role="alert">
+                                                                                <b>Data Empty !</b>
+                                                                            </div>
+                                                                        }
+
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="separator">Incident Accident Regional Statistics</div>
+
+                                                                <div class="row my-2">
+                                                                    <div class="col">
+                                                                        @if (incacDataforStatistics != null)
+                                                                        {
+                                                                            var previewforRegional = incacDataforStatistics.GroupBy(x => x.incidentAccident.DORMEmail).OrderBy(y => y.Key);
+
+                                                                            <div class="table-responsive">
+                                                                                <table class="table table-sm table-hover" style="width: 100%;">
+                                                                                    <thead>
+                                                                                        <tr class="table-primary">
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 35%;">DORM</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 15%;">Total Document(s) Reported</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 25%;">Loss Estimation (Rp.)</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 25%;">Return Values (Rp.)</th>
+                                                                                        </tr>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                        @foreach (var stats in previewforRegional.OrderBy(x => x.Key).Skip((regionStatPageActive - 1) * statRowPerPage).Take(statRowPerPage))
+                                                                                        {
+                                                                                            var dormPrv = ManagementService.regions.SingleOrDefault(x => x.RegionPICEmail.Equals(stats.Key));
+
+                                                                                            <tr class="@(incacRegionValueFilter.Contains(stats.Key) ? "table-active" : null)">
+                                                                                                <td class="text-center align-middle text-wrap" id="filterSelector" @onclick="@(() => statsFilterbyRegion(stats.Key))">
+                                                                                                    @if (dormPrv != null)
+                                                                                                    {
+                                                                                                        @dormPrv.RegionPIC                                                                                                     
+                                                                                                    }
+                                                                                                    else
+                                                                                                    {
+                                                                                                        @stats.Key
+                                                                                                    }
+                                                                                                </td>
+                                                                                                <td class="text-center align-middle text-wrap">@stats.Count().ToString("N0")</td>
+                                                                                                <td class="text-center align-middle text-wrap">Rp. @stats.Sum(x => x.incidentAccident.LossEstimation).ToString("N0") ,-</td>
+                                                                                                <td class="text-center align-middle text-wrap">Rp. @stats.Sum(x => x.incidentAccident.ReturnAmount).ToString("N0") ,-</td>
+                                                                                            </tr>
+                                                                                        }
+                                                                                    </tbody>
+                                                                                    @*<tfoot>
+                                                                                        <tr>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">Total</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">@incacDataforStatistics.Count().ToString("N0")</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">Rp. @incacDataforStatistics.Sum(x => x.incidentAccident.LossEstimation).ToString("N0") ,-</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">Rp. @incacDataforStatistics.Sum(x => x.incidentAccident.ReturnAmount).ToString("N0") ,-</td>
+                                                                                        </tr>
+                                                                                    </tfoot>*@
+                                                                                </table>
+                                                                            </div>
+
+                                                                            <nav aria-label="Region Stats Pagination">
+                                                                                <ul class="pagination pagination-sm justify-content-center my-2">
+                                                                                    @if ((regionStatPageActive - 1) > 0)
+                                                                                    {
+                                                                                        <li class="page-item px-1 paging-style" @onclick="(() => regionStatPageSelect((regionStatPageActive - 1)))"><span class="page-link">Previous</span></li>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <li class="page-item px-1 disabled dis-paging-style"><span class="page-link">Previous</span></li>
+                                                                                    }
+
+                                                                                    <li class="page-item active dis-paging-style"><span class="page-link">@regionStatPageActive</span></li>
+
+                                                                                    @if (previewforRegional.OrderBy(x => x.Key).Skip((regionStatPageActive) * statRowPerPage).Take(statRowPerPage).Count() > 0)
+                                                                                    {
+                                                                                        <li class="page-item px-1 paging-style" @onclick="(() => regionStatPageSelect((regionStatPageActive + 1)))"><span class="page-link">Next</span></li>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <li class="page-item px-1 disabled dis-paging-style"><span class="page-link">Next</span></li>
+                                                                                    }
+                                                                                </ul>
+                                                                            </nav>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <div class="alert alert-primary" role="alert">
+                                                                                <b>Data Empty !</b>
+                                                                            </div>
+                                                                        }
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <div class="separator">Incident Accident Locations Statistics</div>
+
+                                                                <div class="row my-2">
+                                                                    <div class="col">
+                                                                        @if (incacDataforStatistics != null)
+                                                                        {
+                                                                            var previewforLocation = incacDataforStatistics.GroupBy(x => x.incidentAccident.SiteReporter).OrderBy(y => y.Key);
+
+                                                                            <div class="table-responsive">
+                                                                                <table class="table table-sm table-hover" style="width: 100%;">
+                                                                                    <thead>
+                                                                                        <tr class="table-primary">
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 35%;">Location</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 15%;">Total Document(s) Reported</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 25%;">Loss Estimation (Rp.)</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 25%;">Return Values (Rp.)</th>
+                                                                                        </tr>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                        @foreach (var stats in previewforLocation.OrderBy(x => x.Key).Skip((locStatPageActive - 1) * statRowPerPage).Take(statRowPerPage))
+                                                                                        {
+                                                                                            <tr class="@(incacLocationValueFilter.Contains(stats.Key) ? "table-active" : null)">
+                                                                                                @{
+                                                                                                    var locdt = ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(stats.Key));
+                                                                                                }
+                                                                                                <td class="text-center align-middle text-wrap" id="filterSelector" @onclick="@(() => statsFilterbyLocation(stats.Key))">
+                                                                                                    @if (locdt != null)
+                                                                                                    {
+                                                                                                        @locdt.locationName
+                                                                                                    }
+                                                                                                    else
+                                                                                                    {
+                                                                                                        @if (stats.Key.Equals("HO"))
+                                                                                                        {
+                                                                                                            @("HEAD OFFICE")
+                                                                                                        }
+                                                                                                        else
+                                                                                                        {
+                                                                                                            @stats.Key
+                                                                                                        }
+                                                                                                    }
+                                                                                                </td>
+                                                                                                <td class="text-center align-middle text-wrap">@stats.Count().ToString("N0")</td>
+                                                                                                <td class="text-center align-middle text-wrap">Rp. @stats.Sum(x => x.incidentAccident.LossEstimation).ToString("N0") ,-</td>
+                                                                                                <td class="text-center align-middle text-wrap">Rp. @stats.Sum(x => x.incidentAccident.ReturnAmount).ToString("N0") ,-</td>
+                                                                                            </tr>
+                                                                                        }
+                                                                                    </tbody>
+                                                                                    @*<tfoot>
+                                                                                        <tr>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">Total</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">@incacDataforStatistics.Count().ToString("N0")</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">Rp. @incacDataforStatistics.Sum(x => x.incidentAccident.LossEstimation).ToString("N0") ,-</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">Rp. @incacDataforStatistics.Sum(x => x.incidentAccident.ReturnAmount).ToString("N0") ,-</td>
+                                                                                        </tr>
+                                                                                    </tfoot>*@
+                                                                                </table>
+                                                                            </div>
+
+                                                                            <nav aria-label="Location Stats Pagination">
+                                                                                <ul class="pagination pagination-sm justify-content-center my-2">
+                                                                                    @if ((locStatPageActive - 1) > 0)
+                                                                                    {
+                                                                                        <li class="page-item px-1 paging-style" @onclick="(() => locStatPageSelect((locStatPageActive - 1)))"><span class="page-link">Previous</span></li>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <li class="page-item px-1 disabled dis-paging-style"><span class="page-link">Previous</span></li>
+                                                                                    }
+
+                                                                                    <li class="page-item active dis-paging-style"><span class="page-link">@locStatPageActive</span></li>
+
+                                                                                    @if (previewforLocation.OrderBy(x => x.Key).Skip((locStatPageActive) * statRowPerPage).Take(statRowPerPage).Count() > 0)
+                                                                                    {
+                                                                                        <li class="page-item px-1 paging-style" @onclick="(() => locStatPageSelect((locStatPageActive + 1)))"><span class="page-link">Next</span></li>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <li class="page-item px-1 disabled dis-paging-style"><span class="page-link">Next</span></li>
+                                                                                    }
+                                                                                </ul>
+                                                                            </nav>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <div class="alert alert-primary" role="alert">
+                                                                                <b>Data Empty !</b>
+                                                                            </div>
+                                                                        }
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="separator">Incident Accident Involved Person Statistics</div>
+
+                                                                <div class="row my-2">
+                                                                    <div class="col">
+                                                                        @if (incacDataforStatistics != null)
+                                                                        {
+                                                                            var previewforPos = incacDataforStatistics.SelectMany(x => (x.Involver ?? new List<BPIWebApplication.Shared.MainModel.EPKRS.IncidentAccidentInvolver>(){})
+                                                                                .DefaultIfEmpty(new BPIWebApplication.Shared.MainModel.EPKRS.IncidentAccidentInvolver()), (p, c) => new { p, c }).GroupBy(f => f.c.InvolverPosition, f => f.p).OrderBy(y => y.Key);
+
+                                                                            <div class="table-responsive">
+                                                                                <table class="table table-sm table-hover" style="width: 100%;">
+                                                                                    <thead>
+                                                                                        <tr class="table-primary">
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 50%;">Position</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 25%;">Total Document(s) Reported</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 25%;"># Person(s) Involved</th>
+                                                                                        </tr>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                        @foreach (var stats in previewforPos.Where(ex => !ex.Key.Equals("")).OrderBy(x => x.Key).Skip((involvedPositionPageActive - 1) * statRowPerPage).Take(statRowPerPage))
+                                                                                        {
+                                                                                            <tr class="@(incacPositionValueFilter.Contains(stats.Key) ? "table-active" : null)">
+                                                                                                <td class="text-center align-middle text-wrap" id="filterSelector" @onclick="@(() => statsFilterbyInvolverPosition(stats.Key))">@stats.Key</td>
+                                                                                                <td class="text-center align-middle text-wrap">@incacDataforStatistics.SelectMany(x => x.Involver).Where(z => z.InvolverPosition.Equals(stats.Key)).DistinctBy(ds => ds.DocumentID).Count().ToString("N0")</td>
+                                                                                                <td class="text-center align-middle text-wrap">@incacDataforStatistics.SelectMany(x => x.Involver).Where(z => z.InvolverPosition.Equals(stats.Key)).DistinctBy(ds => ds.InvolverName).Count().ToString("N0")</td>
+                                                                                            </tr>
+                                                                                        }
+                                                                                    </tbody>
+                                                                                    @*<tfoot>
+                                                                                        <tr>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold" colspan="2">Total</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">@incacDataforStatistics.SelectMany(x => x.Involver).Where(z => z.InvolverPosition.Equals(stats.Key)).DistinctBy(ds => ds.InvolverName).Count().ToString("N0")</td>
+                                                                                        </tr>
+                                                                                    </tfoot>*@
+                                                                                </table>
+                                                                            </div>
+
+                                                                            <nav aria-label="Involved Position Pagination">
+                                                                                <ul class="pagination pagination-sm justify-content-center my-2">
+                                                                                    @if ((involvedPositionPageActive - 1) > 0)
+                                                                                    {
+                                                                                        <li class="page-item px-1 paging-style" @onclick="(() => posStatPageSelect((involvedPositionPageActive - 1)))"><span class="page-link">Previous</span></li>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <li class="page-item px-1 disabled dis-paging-style"><span class="page-link">Previous</span></li>
+                                                                                    }
+
+                                                                                    <li class="page-item active dis-paging-style"><span class="page-link">@involvedPositionPageActive</span></li>
+
+                                                                                    @if (previewforPos.Where(ex => !ex.Key.Equals("")).OrderBy(x => x.Key).Skip((involvedPositionPageActive) * statRowPerPage).Take(statRowPerPage).Count() > 0) 
+                                                                                    {
+                                                                                        <li class="page-item px-1 paging-style" @onclick="(() => posStatPageSelect((involvedPositionPageActive + 1)))"><span class="page-link">Next</span></li>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <li class="page-item px-1 disabled dis-paging-style"><span class="page-link">Next</span></li>
+                                                                                    }
+                                                                                </ul>
+                                                                            </nav>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <div class="alert alert-primary" role="alert">
+                                                                                <b>Data Empty !</b>
+                                                                            </div>
+                                                                        }
+                                                                    </div>
+
+                                                                    <div class="col">
+                                                                        @if (incacDataforStatistics != null)
+                                                                        {
+                                                                            var previewforDept = incacDataforStatistics.SelectMany(x => (x.Involver ?? new List<BPIWebApplication.Shared.MainModel.EPKRS.IncidentAccidentInvolver>(){})
+                                                                            .DefaultIfEmpty(new BPIWebApplication.Shared.MainModel.EPKRS.IncidentAccidentInvolver()), (p, c) => new { p, c }).GroupBy(f => f.c.InvolverDept, f => f.p).OrderBy(y => y.Key);
+
+                                                                            <div class="table-responsive">
+                                                                                <table class="table table-sm table-hover" style="width: 100%;">
+                                                                                    <thead>
+                                                                                        <tr class="table-primary">
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 50%;">Department</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 25%;">Total Document(s) Reported</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 25%;"># Person(s) Involved</th>
+                                                                                        </tr>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                        @foreach (var stats in previewforDept.Where(ex => !ex.Key.Equals("")).OrderBy(x => x.Key).Skip((involvedDeptPageActive - 1) * statRowPerPage).Take(statRowPerPage))
+                                                                                        {
+                                                                                            var deptdt = ManagementService.departments.SingleOrDefault(x => x.DepartmentID.Equals(stats.Key));
+                                                                                            
+                                                                                            <tr class="@(incacDeptValueFilter.Contains(stats.Key) ? "table-active" : null)">
+                                                                                                <td class="text-center align-middle text-wrap" id="filterSelector" @onclick="@(() => statsFilterbyInvolverDept(stats.Key))">
+                                                                                                    @if (deptdt != null)
+                                                                                                    {
+                                                                                                        @deptdt.DepartmentName
+                                                                                                    }
+                                                                                                    else
+                                                                                                    {
+                                                                                                        @stats.Key
+                                                                                                    }
+                                                                                                </td>
+                                                                                                <td class="text-center align-middle text-wrap">@incacDataforStatistics.SelectMany(x => x.Involver).Where(z => z.InvolverDept.Equals(stats.Key)).DistinctBy(ds => ds.DocumentID).Count().ToString("N0")</td>
+                                                                                                <td class="text-center align-middle text-wrap">@incacDataforStatistics.SelectMany(x => x.Involver).Where(z => z.InvolverDept.Equals(stats.Key)).DistinctBy(ds => ds.InvolverName).Count().ToString("N0")</td>
+                                                                                            </tr>
+                                                                                        }
+                                                                                    </tbody>
+                                                                                    @*<tfoot>
+                                                                                        <tr>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold" colspan="2">Total</td>
+                                                                                            <td class="text-center align-middle text-wrap fw-bold">@incacDataforStatistics.SelectMany(x => x.Involver).DistinctBy(ds => ds.InvolverName).Count().ToString("N0")</td>
+                                                                                        </tr>
+                                                                                    </tfoot>*@
+                                                                                </table>
+                                                                            </div>
+
+                                                                            <nav aria-label="Involved Dept Pagination">
+                                                                                <ul class="pagination pagination-sm justify-content-center my-2">
+                                                                                    @if ((involvedDeptPageActive - 1) > 0)
+                                                                                    {
+                                                                                        <li class="page-item px-1 paging-style" @onclick="(() => deptStatPageSelect((involvedDeptPageActive - 1)))"><span class="page-link">Previous</span></li>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <li class="page-item px-1 disabled dis-paging-style"><span class="page-link">Previous</span></li>
+                                                                                    }
+
+                                                                                    <li class="page-item active dis-paging-style"><span class="page-link">@involvedDeptPageActive</span></li>
+
+                                                                                    @if (previewforDept.Where(ex => !ex.Key.Equals("")).OrderBy(x => x.Key).Skip((involvedDeptPageActive) * statRowPerPage).Take(statRowPerPage).Count() > 0) 
+                                                                                    {
+                                                                                        <li class="page-item px-1 paging-style" @onclick="(() => deptStatPageSelect((involvedDeptPageActive + 1)))"><span class="page-link">Next</span></li>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <li class="page-item px-1 disabled dis-paging-style"><span class="page-link">Next</span></li>
+                                                                                    }
+                                                                                </ul>
+                                                                            </nav>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <div class="alert alert-primary" role="alert">
+                                                                                <b>Data Empty !</b>
+                                                                            </div>
+                                                                        }
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="row my-2">
+                                                                    <div class="col">
+
+                                                                        @if (incacDataforStatistics != null)
+                                                                        {
+                                                                            <div class="table-responsive">
+                                                                                <table class="table table-sm table-hover" style="width: 100%;">
+                                                                                    <thead>
+                                                                                        <tr class="table-primary">
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 13%;">PKRS ID</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 13%;">DORM</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 10%;">Site Pelapor</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 15%;">Tipe Risk</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 25%;">Deskripsi Kejadian</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 10%;">Tanggal Kejadian</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 12%;">Feedback On Progress</th>
+                                                                                            <th class="text-center align-middle text-wrap" style="width: 12%;">Status Dokumen</th>
+                                                                                        </tr>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                        @foreach (var stats in incacDataforStatistics.OrderBy(x => x.incidentAccident.ReportDate).Skip((prevStatDocPageActive - 1) * statRowPerPage).Take(statRowPerPage))
+                                                                                        {
+                                                                                            var riskIdPrv = EPKRSService.riskTypes.SingleOrDefault(x => x.RiskID.Equals(stats.incidentAccident.RiskID));
+                                                                                            var onprgsPrv = stats.Approval.SingleOrDefault(x => x.ApprovalAction.Equals("OnProgress"));
+                                                                                            var regPrv = ManagementService.regions.SingleOrDefault(x => x.RegionPICEmail.Equals(stats.incidentAccident.DORMEmail));
+                                                                                        
+                                                                                            <tr>
+                                                                                                <td class="text-center align-middle text-wrap">@stats.incidentAccident.DocumentID</td>
+                                                                                                <td class="text-center align-middle text-wrap">
+                                                                                                    @if (regPrv != null)
+                                                                                                    {
+                                                                                                        @regPrv.RegionPIC
+                                                                                                    }
+                                                                                                    else
+                                                                                                    {
+                                                                                                        @stats.incidentAccident.DORMEmail
+                                                                                                    }
+                                                                                                </td>
+                                                                                                <td class="text-center align-middle text-wrap">
+                                                                                                    @if (ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(stats.incidentAccident.SiteReporter)) != null)
+                                                                                                    {
+                                                                                                        @ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(stats.incidentAccident.SiteReporter)).locationName
+                                                                                                    }
+                                                                                                    else if (stats.incidentAccident.SiteReporter.Equals("HO"))
+                                                                                                    {
+                                                                                                        @("HEAD OFFICE")
+                                                                                                    }
+                                                                                                    else
+                                                                                                    {
+                                                                                                        @stats.incidentAccident.SiteReporter
+                                                                                                    }
+                                                                                                </td>
+                                                                                                <td class="text-center align-middle text-wrap">
+                                                                                                    @if (riskIdPrv != null)
+                                                                                                    {
+                                                                                                        @riskIdPrv.RiskDescription
+                                                                                                    }
+                                                                                                    else
+                                                                                                    {
+                                                                                                        @stats.incidentAccident.RiskID   
+                                                                                                    }
+                                                                                                </td>
+                                                                                                <td class="text-center align-middle text-wrap">@stats.incidentAccident.CaseDescription</td>
+                                                                                                <td class="text-center align-middle text-wrap">@stats.incidentAccident.OccurenceDate.ToString("dd/MM/yyyy")</td>
+                                                                                                <td class="text-center align-middle text-wrap">
+                                                                                                    @if (onprgsPrv != null)
+                                                                                                    {
+                                                                                                        @onprgsPrv.Approver
+                                                                                                    }
+                                                                                                    else
+                                                                                                    {
+                                                                                                        @("Not Yet !")
+                                                                                                    }
+                                                                                                </td>
+                                                                                                <td class="text-center align-middle text-wrap">@stats.incidentAccident.DocumentStatus</td>
+                                                                                            </tr>
+                                                                                        }
+                                                                                    </tbody>
+                                                                                </table>
+                                                                            </div>
+
+                                                                            <nav aria-label="Prev Doc Pagination">
+                                                                                <ul class="pagination pagination-sm justify-content-center my-2">
+                                                                                    @if ((prevStatDocPageActive - 1) > 0)
+                                                                                    {
+                                                                                        <li class="page-item px-1 paging-style" @onclick="(() => prevStatDocPageSelect((prevStatDocPageActive - 1)))"><span class="page-link">Previous</span></li>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <li class="page-item px-1 disabled dis-paging-style"><span class="page-link">Previous</span></li>
+                                                                                    }
+
+                                                                                    <li class="page-item active dis-paging-style"><span class="page-link">@prevStatDocPageActive</span></li>
+
+                                                                                    @if (incacDataforStatistics.OrderBy(x => x.incidentAccident.ReportDate).Skip((prevStatDocPageActive) * statRowPerPage).Take(statRowPerPage).Count() > 0) 
+                                                                                    {
+                                                                                        <li class="page-item px-1 paging-style" @onclick="(() => prevStatDocPageSelect((prevStatDocPageActive + 1)))"><span class="page-link">Next</span></li>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <li class="page-item px-1 disabled dis-paging-style"><span class="page-link">Next</span></li>
+                                                                                    }
+                                                                                </ul>
+                                                                            </nav>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <div class="alert alert-primary" role="alert">
+                                                                                <b>Data Empty !</b>
+                                                                            </div>  
+                                                                        }
+
+                                                                    </div>
+                                                                </div>
+
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+                                        
+                                        <p class="fw-bold separator">Export Data</p>
+
                                         <form>
-                                            <div class="input-group mt-3">
+                                            <div class="input-group my-3">
                                                 <div class="input-group-prepend">
                                                     <span class="input-group-text">
                                                         @if (isExportLoading)
@@ -601,13 +1003,15 @@ else
                                         </form>
                                     }
 
+                                    <p class="separator">Page @incidentAccidentPageActive of @incidentAccidentNumberofPages</p>
+
                                     <form @onsubmit="incidentAccidentFilter">
                                         <div class="input-group my-3">
                                             <div class="input-group-prepend">
                                                 <select class="form-select" @bind="incidentAccidentFilterType">
                                                     <option hidden disabled value="">Filter By</option>
                                                     <option value="ID">EPKRS ID</option>
-                                                    <option value="LOC">Lokasi</option>
+                                                    <option value="LOC">Lokasi Pelapor</option>
                                                     <option value="STATUS">Status</option>
                                                 </select>
                                             </div>
@@ -790,6 +1194,7 @@ else
                     <div class="col col-4 fw-bold">Tipe Sub Risiko</div>
                     <div class="col col-8 text-wrap">: @(ariskSubType != null ? ariskSubType.SubRiskDescription : "")</div>
                 </div>
+
                 <div class="row">
                     <div class="col col-4 fw-bold">Site Pelapor</div>
                     <div class="col col-8">: @(ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewItemCase.SiteReporter)) == null ? previewItemCase.SiteReporter.Equals("HO") ? "HEAD OFFICE" : previewItemCase.SiteReporter : ManagementService.locations.SingleOrDefault(x => x.locationId.Equals(previewItemCase.SiteReporter)).locationName)</div>
@@ -806,26 +1211,27 @@ else
                     <div class="col col-4 fw-bold">Tanggal Loading Document</div>
                     <div class="col col-8">: @previewItemCase.LoadingDocumentDate.ToString("dd MMMM yyyy")</div>
                 </div>
-                <div class="row">
+                <div class="row mb-4">
                     <div class="col col-4 fw-bold">Tanggal Penerimaan Barang</div>
                     <div class="col col-8">: @previewItemCase.ItemPickupDate.ToString("dd MMMM yyyy")</div>
                 </div>
-                @*<div class="row">
-                    <div class="col col-4 fw-bold">Late Status</div>
-                    <div class="col col-8">: @(previewItemCase.isLate.Equals(true) ? "Late" : "On Time")</div>
+
+                <div class="row">
+                    <div class="col col-4 fw-bold">Risk RP Penerima</div>
+                    <div class="col col-8">: @previewItemCase.ReceiverRiskRPName - <em> @previewItemCase.ReceiverRiskRPEmail </em></div>
                 </div>
                 <div class="row">
-                    <div class="col col-4 fw-bold">Variance</div>
-                    <div class="col col-8">: @previewItemCase.VarianceDate Day(s)</div>
+                    <div class="col col-4 fw-bold">DORM Penerima</div>
+                    <div class="col col-8">: @previewItemCase.ReceiverDORMName - <em> @previewItemCase.ReceiverDORMEmail </em></div>
                 </div>
                 <div class="row">
-                    <div class="col col-4 fw-bold">CCTV Status</div>
-                    <div class="col col-8">: @(previewItemCase.isCCTVCoverable.Equals(true) ? "Covered" : "Not Covered") </div>
+                    <div class="col col-4 fw-bold">Risk RP Pengirim</div>
+                    <div class="col col-8">: @previewItemCase.SenderRiskRPName - <em> @previewItemCase.SenderRiskRPEmail </em></div>
                 </div>
-                <div class="row">
-                    <div class="col col-4 fw-bold">Report Sender Status</div>
-                    <div class="col col-8">: @(previewItemCase.isReportedtoSender.Equals(true) ? "Reported" : "Not Reported")</div>
-                </div>*@
+                <div class="row mb-4">
+                    <div class="col col-4 fw-bold">DORM Pengirim</div>
+                    <div class="col col-8">: @previewItemCase.SenderDORMName - <em> @previewItemCase.SenderDORMEmail </em></div>
+                </div>
 
                 @if (previewItemCase.DocumentStatus.Equals("OnProgress") || previewItemCase.DocumentStatus.Equals("Closed"))
                 {
@@ -839,99 +1245,99 @@ else
                     <div class="col">
                         @if (checkPreviewItemLine())
                         {
-                            @*<div class="table-responsive">*@
-                            <table class="table table-sm table-hover" style="width: 100%">
-                                <caption>
-                                    @*Total @previewItemLine.Count() Item(s) in Report*@
-                                </caption>
-                                <thead>
-                                    <tr>
-                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 16%; font-size: 15px;">TR ID</th>
-                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Tgl. TR</th>
-                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Kode Barang</th>
-                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 20%; font-size: 15px;">Detail Barang</th>
-                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Tipe Risiko</th>
-                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Stok</th>
-                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">UOM</th>
-                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 14%; font-size: 15px;">Nilai</th>
-                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Qty</th>
-                                        <th scope="col" class="text-center align-middle text-wrap" style="width: 5%;">Prvw.</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var item in previewItemLine)
-                                    {
-                                        var riskCat = EPKRSService.itemRiskCategories.SingleOrDefault(x => x.ItemRiskCategoryID.Equals(item.ItemRiskCategoryID));
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover" style="width: 100%">
+                                    <caption>
+                                        @*Total @previewItemLine.Count() Item(s) in Report*@
+                                    </caption>
+                                    <thead>
+                                        <tr>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 16%; font-size: 15px;">TR ID</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Tgl. TR</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Kode Barang</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 20%; font-size: 15px;">Detail Barang</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Tipe Risiko</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Stok</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">UOM</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 14%; font-size: 15px;">Nilai</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Qty</th>
+                                            <th scope="col" class="text-center align-middle text-wrap" style="width: 5%;">Prvw.</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in previewItemLine)
+                                        {
+                                            var riskCat = EPKRSService.itemRiskCategories.SingleOrDefault(x => x.ItemRiskCategoryID.Equals(item.ItemRiskCategoryID));
                                             
-                                        <tr class="dropdown">
-                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.TRID</td>
-                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.TRDate.ToString("dd/MM/yyyy")</td>
-                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemCode</td>
-                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemDescription</td>
-                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">
-                                                @if (riskCat != null)
-                                                    @riskCat.CategoryDescription
-                                                else
-                                                    @item.ItemRiskCategoryID
-                                            </td>
-                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemStock</td>
-                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.UOM</td>
-                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">Rp. @item.ItemValue.ToString("N0") ,-</td>
-                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemQuantity</td>
-                                            <td class="text-center align-middle text-wrap" style="font-size:14px;">
-                                                <div class="btn-group dropdown">
-                                                    <button class="btn btn-sm dropdown-toggle" type="button" data-toggle="dropdown" data-boundary="viewport" aria-haspopup="true" aria-expanded="false">
-                                                        <i class="oi oi-eye"></i>
-                                                    </button>
-                                                    <div class="dropdown-menu dropdown-menu-right" id="dropdownSelector" onclick="event.stopPropagation();">
-                                                        <div class="px-4 py-2">
+                                            <tr>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.TRID</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.TRDate.ToString("dd/MM/yyyy")</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemCode</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemDescription</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                                    @if (riskCat != null)
+                                                        @riskCat.CategoryDescription
+                                                    else
+                                                        @item.ItemRiskCategoryID
+                                                </td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemStock</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.UOM</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">Rp. @item.ItemValue.ToString("N0") ,-</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">@item.ItemQuantity</td>
+                                                <td class="text-center align-middle text-wrap" style="font-size:14px;">
+                                                    <div class="btn-group dropdown">
+                                                        <button class="btn btn-sm dropdown-toggle" type="button" data-toggle="dropdown" data-boundary="viewport" aria-haspopup="true" aria-expanded="false">
+                                                            <i class="oi oi-eye"></i>
+                                                        </button>
+                                                        <div class="dropdown-menu dropdown-menu-right" id="dropdownSelector" onclick="event.stopPropagation();">
+                                                            <div class="px-4 py-2">
 
-                                                            <div class="row my-1">
-                                                                <div class="col">
-                                                                    <b>Time Variance</b> : @item.VarianceDate.ToString("N0") Hari
+                                                                <div class="row my-1">
+                                                                    <div class="col">
+                                                                        <b>Time Variance</b> : @item.VarianceDate.ToString("N0") Hari
+                                                                    </div>
                                                                 </div>
-                                                            </div>
 
-                                                            <div class="row my-1">
-                                                                <div class="col">
-                                                                    <b>Status Terlambat</b> : @(item.isLate ? "YA" : "TIDAK")
+                                                                <div class="row my-1">
+                                                                    <div class="col">
+                                                                        <b>Status Terlambat</b> : @(item.isLate ? "YA" : "TIDAK")
+                                                                    </div>
                                                                 </div>
-                                                            </div>
 
-                                                            <div class="row my-1">
-                                                                <div class="col">
-                                                                    <b>Status Tercakup CCTV</b> : @(item.isCCTVCoverable ? "YA" : "TIDAK")
+                                                                <div class="row my-1">
+                                                                    <div class="col">
+                                                                        <b>Status Tercakup CCTV</b> : @(item.isCCTVCoverable ? "YA" : "TIDAK")
+                                                                    </div>
                                                                 </div>
-                                                            </div>
 
-                                                            <div class="row my-1">
-                                                                <div class="col">
-                                                                    <b>Status Pemberitahuan ke Pengirim</b> : @(item.isReportedtoSender ? "YA" : "TIDAK")
+                                                                <div class="row my-1">
+                                                                    <div class="col">
+                                                                        <b>Status Pemberitahuan ke Pengirim</b> : @(item.isReportedtoSender ? "YA" : "TIDAK")
+                                                                    </div>
                                                                 </div>
-                                                            </div>
 
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td class="text-center align-middle text-wrap fw-bold" colspan="7">Total Value</td>
-                                        @{
-                                            var sum = decimal.Zero;
-                                            previewItemLine.ForEach(x =>
-                                            {
-                                                sum += (x.ItemQuantity * x.ItemValue);
-                                            });
+                                                </td>
+                                            </tr>
                                         }
-                                        <td class="text-center align-middle text-wrap fw-bold" colspan="3">Rp. @sum.ToString("N0") ,-</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                            @*</div>*@
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td class="text-center align-middle text-wrap fw-bold" colspan="7">Total Value</td>
+                                            @{
+                                                var sum = decimal.Zero;
+                                                previewItemLine.ForEach(x =>
+                                                {
+                                                    sum += (x.ItemQuantity * x.ItemValue);
+                                                });
+                                            }
+                                            <td class="text-center align-middle text-wrap fw-bold" colspan="3">Rp. @sum.ToString("N0") ,-</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
                         }
                         else
                         {
@@ -1012,20 +1418,21 @@ else
             <div class="modal-footer cus-bg">
                 @if (LoginService.activeUser.userPrivileges.Contains("AP"))
                 {
-                    <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Approve"))" disabled="@(previewItemCase.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-task"></i> Approve Report</button>
+                    <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Approve"))" disabled="@(previewItemCase.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-task"></i> Approve </button>
                     <button type="button" class="btn btn-dark mt-1 fw-bold" data-dismiss="modal" data-target="#itemCasePreviewModal" @onclick="@(() => redirectDocumentEdit("ITEMC"))" disabled="@(previewItemCase.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-pencil"></i> Edit</button>
                 }
                 @if (LoginService.activeUser.userPrivileges.Contains("CF"))
                 {
-                    <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#onprogressModal" @onclick="@(() => setDocumentApprovalData("OnProgress"))" disabled="@(previewItemCase.DocumentStatus.Equals("Approved") ? null : "disabled")"><i class="oi oi-flag"></i> Report On Progress</button>
+                    <button type="button" class="btn btn-info mt-1 fw-bold" data-toggle="modal" data-target="#customEmailModal" @onclick="@(() => setCustomEmailDocReminder("CreateReminder"))"><i class="oi oi-share-boxed"></i> Email Notification</button>
+                    <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#onprogressModal" @onclick="@(() => setDocumentApprovalData("OnProgress"))" disabled="@(previewItemCase.DocumentStatus.Equals("Approved") ? null : "disabled")"><i class="oi oi-flag"></i> On Progress</button>
                 }
                 @if (LoginService.activeUser.userPrivileges.Contains("RL"))
                 {
-                    <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Close"))" disabled="@(previewItemCase.DocumentStatus.Equals("OnProgress") ? null : "disabled")"><i class="oi oi-lock-locked"></i> Close Report</button>
+                    <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Close"))" disabled="@(previewItemCase.DocumentStatus.Equals("OnProgress") ? null : "disabled")"><i class="oi oi-lock-locked"></i> Close</button>
                 }
                 @if (LoginService.activeUser.userPrivileges.Contains("ED"))
                 {
-                    <button type="button" class="btn btn-dark mt-1 fw-bold" data-dismiss="modal" data-target="#itemCasePreviewModal" @onclick="@(() => redirectDocumentEdit("ITEMC"))"><i class="oi oi-pencil"></i> Edit</button>
+                    <button type="button" class="btn btn-dark mt-1 fw-bold" data-dismiss="modal" data-target="#itemCasePreviewModal" @onclick="@(() => redirectDocumentEdit("ITEMC"))" disabled="@previewItemCase.DocumentStatus.Equals("Closed")"><i class="oi oi-pencil"></i> Revise</button>
                 }
                 @if (LoginService.activeUser.userPrivileges.Contains("DL"))
                 {
@@ -1305,20 +1712,21 @@ else
             <div class="modal-footer cus-bg">
                 @if (LoginService.activeUser.userPrivileges.Contains("AP"))
                 {
-                    <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Approve"))" disabled="@(previewIncidentAccident.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-task"></i> Approve Report</button>
+                    <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Approve"))" disabled="@(previewIncidentAccident.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-task"></i> Approve </button>
                     <button type="button" class="btn btn-dark mt-1 fw-bold" data-dismiss="modal" data-target="#incidentAccidentPreviewModal" @onclick="@(() => redirectDocumentEdit("INCAC"))" disabled="@(previewIncidentAccident.DocumentStatus.Equals("Open") ? null : "disabled")"><i class="oi oi-pencil"></i> Edit</button>
                 }
                 @if (LoginService.activeUser.userPrivileges.Contains("CF"))
                 {
-                    <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#onprogressModal" @onclick="@(() => setDocumentApprovalData("OnProgress"))" disabled="@(previewIncidentAccident.DocumentStatus.Equals("Approved") ? null : "disabled")"><i class="oi oi-flag"></i> Report On Progress</button>
+                    <button type="button" class="btn btn-info mt-1 fw-bold" data-toggle="modal" data-target="#customEmailModal" @onclick="@(() => setCustomEmailDocReminder("CreateReminder"))"><i class="oi oi-share-boxed"></i> Email Notification</button>
+                    <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#onprogressModal" @onclick="@(() => setDocumentApprovalData("OnProgress"))" disabled="@(previewIncidentAccident.DocumentStatus.Equals("Approved") ? null : "disabled")"><i class="oi oi-flag"></i> On Progress</button>
                 }
                 @if (LoginService.activeUser.userPrivileges.Contains("RL"))
                 {
-                    <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Close"))" disabled="@(previewIncidentAccident.DocumentStatus.Equals("OnProgress") ? null : "disabled")"><i class="oi oi-lock-locked"></i> Close Report</button>
+                    <button type="button" class="btn btn-warning mt-1 fw-bold" data-toggle="modal" data-target="#approvalModal" @onclick="@(() => setDocumentApprovalData("Close"))" disabled="@(previewIncidentAccident.DocumentStatus.Equals("OnProgress") ? null : "disabled")"><i class="oi oi-lock-locked"></i> Close </button>
                 }
                 @if (LoginService.activeUser.userPrivileges.Contains("ED"))
                 {
-                    <button type="button" class="btn btn-dark mt-1 fw-bold" data-dismiss="modal" data-target="#incidentAccidentPreviewModal" @onclick="@(() => redirectDocumentEdit("INCAC"))"><i class="oi oi-pencil"></i> Edit</button>
+                    <button type="button" class="btn btn-dark mt-1 fw-bold" data-dismiss="modal" data-target="#incidentAccidentPreviewModal" @onclick="@(() => redirectDocumentEdit("INCAC"))" disabled="@previewItemCase.DocumentStatus.Equals("Closed")"><i class="oi oi-pencil"></i> Revise</button>
                 }
                 @if (LoginService.activeUser.userPrivileges.Contains("DL"))
                 {
@@ -1670,6 +2078,154 @@ else
                     <i class="oi oi-thumb-up"></i> On Progress !
                 </button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#onprogressModal"><i class="oi oi-thumb-down"></i> Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@*Custom Email*@
+<div class="modal fade" id="customEmailModal" tabindex="-3" role="dialog" aria-labelledby="customEmailModalLabel" aria-hidden="true" style="background: rgba(0,0,0, 0.2);">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header cus-bg">
+                <h5 class="modal-title fw-bold" id="customEmailModalLabel"><i class="oi oi-script"></i> Custom Email Sender</h5>
+                <button type="button" class="btn btn-close" data-dismiss="modal" data-target="#customEmailModal" aria-label="Close">
+                </button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="@customMailData">
+                    <div class="row mb-2">
+                        <div class="col">
+                            <label for="customemailfrom">From :</label>
+                            <InputText id="customemailfrom" @bind-Value="customMailData.from" class="form-control" readonly />
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col">
+                            <label for="customemailto">To :</label>
+                            <div class="input-group">
+                                <InputText id="customemailto" @bind-Value="emailInputTo" placeholder="Email Username" class="form-control w-50" />
+                                <div class="input-group-append w-50">
+                                    <span class="input-group-text w-100">@@mitra10.com</span>
+                                    <button class="btn btn-outline-secondary w-100" type="button"
+                                    @onclick="@(() => { if (!customMailData.to.Any(x => x.userEmail.Contains(emailInputTo))) { customMailData.to.Add(new() { LineNo = customMailData.to.Count() + 1, userEmail = emailInputTo }); emailInputTo = ""; } })">
+                                        Add Recipient
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered" style="width: 100%">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center align-middle text-wrap" style="width: 10%;">Action</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 90%;">User Email</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var toUser in customMailData.to)
+                                        {
+                                            <tr>
+                                                <td class="text-center align-middle text-wrap">
+                                                    <button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="@(() => customMailData.to.Remove(toUser))"><i class="oi oi-delete"></i></button>
+                                                </td>
+                                                <td class="text-center align-middle text-wrap">
+                                                    @(toUser.userEmail + "@mitra10.com")
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col">
+                            <label for="customemailcc">CC :</label>
+                            <div class="input-group">
+                                <InputText id="customemailcc" @bind-Value="emailInputCC" placeholder="Email Username" class="form-control w-50" />
+                                <div class="input-group-append w-50">
+                                    <span class="input-group-text w-100">@@mitra10.com</span>
+                                    <button class="btn btn-outline-secondary w-100" type="button"
+                                    @onclick="@(() => { if (!customMailData.cc.Any(x => x.userEmail.Contains(emailInputCC))) { customMailData.cc.Add(new() { LineNo = customMailData.cc.Count() + 1, userEmail = emailInputCC }); emailInputCC = ""; } })">
+                                        Add Recipient
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered" style="width: 100%">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center align-middle text-wrap" style="width: 10%;">Action</th>
+                                            <th class="text-center align-middle text-wrap" style="width: 90%;">User Email</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var toUser in customMailData.cc)
+                                        {
+                                            <tr>
+                                                <td class="text-center align-middle text-wrap">
+                                                    <button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="@(() => customMailData.cc.Remove(toUser))"><i class="oi oi-delete"></i></button>
+                                                </td>
+                                                <td class="text-center align-middle text-wrap">
+                                                    @(toUser.userEmail + "@mitra10.com")
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col">
+                            <label for="customemailsubj">Subject :</label>
+                            <InputText id="customemailsubj" @bind-Value="customMailData.Subject" placeholder="Subject" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <label for="customemailbody">Body :</label>
+                            <InputTextArea id="customemailbody" @bind-Value="customMailData.Body" placeholder="Body" class="form-control" />
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+            <div class="modal-footer cus-bg">
+                <button type="button" class="btn btn-success fw-bold" data-toggle="modal" data-target="#customEmailConfModal" >
+                    <i class="oi oi-share-boxed"></i> Send Email !
+                </button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#onprogressModal"><i class="oi oi-x"></i> Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*Custom Email*@
+<div class="modal fade" id="customEmailConfModal" tabindex="-3" role="dialog" aria-labelledby="customEmailConfModalLabel" aria-hidden="true" style="background: rgba(0,0,0, 0.2);">
+    <div class="modal-dialog modal-dialog-centered modal" role="document">
+        <div class="modal-content">
+            <div class="modal-header cus-bg">
+                <h5 class="modal-title fw-bold" id="customEmailConfModalLabel"><i class="oi oi-warning"></i> Confirm Send Email</h5>
+                <button type="button" class="btn btn-close" data-dismiss="modal" data-target="#customEmailConfModal" aria-label="Close">
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="text-center fw-bold">Are You Sure ?</p>
+            </div>
+            <div class="modal-footer cus-bg">
+                <button type="button" class="btn btn-success fw-bold" data-dismiss="modal" data-target="#customEmailConfModal" @onclick="@(() => sendCustomEmailEPKRS())">
+                    <i class="oi oi-thumb-up"></i> Send !
+                </button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" data-target="#customEmailConfModal"><i class="oi oi-thumb-down"></i> Cancel</button>
             </div>
         </div>
     </div>

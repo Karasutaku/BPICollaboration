@@ -18,6 +18,22 @@ namespace BPIWebApplication.Shared.PagesModel.EPKRS
         public string LoadingDocumentID { get; set; } = string.Empty;
         [Required(ErrorMessage = "Kolom Tanggal Pengambilan Barang Kosong!")]
         public DateTime LoadingDocumentDate { get; set; } = DateTime.Now;
+        [Required(ErrorMessage = "Kolom Nama Risk RP Penerima Kosong!")]
+        public string ReceiverRiskRPName { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Kolom Email Risk RP Penerima Kosong!")]
+        public string ReceiverRiskRPEmail { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Kolom Nama DORM Penerima Kosong!")]
+        public string ReceiverDORMName { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Kolom Email DORM Penerima Kosong!")]
+        public string ReceiverDORMEmail { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Kolom Nama Risk RP Pengirim Kosong!")]
+        public string SenderRiskRPName { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Kolom Email Risk RP Pengirim Kosong!")]
+        public string SenderRiskRPEmail { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Kolom Nama DORM Pengirim Kosong!")]
+        public string SenderDORMName { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Kolom Email DORM Pengirim Kosong!")]
+        public string SenderDORMEmail { get; set; } = string.Empty;
         public string ExtendedMitigationPlan { get; set; } = string.Empty;
         public string DocumentStatus { get; set; } = string.Empty;
     }

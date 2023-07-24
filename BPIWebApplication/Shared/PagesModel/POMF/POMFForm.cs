@@ -7,6 +7,7 @@ namespace BPIWebApplication.Shared.PagesModel.POMF
     {
         public string POMFID { get; set; } = string.Empty;
         public DateTime POMFDate { get; set; } = DateTime.Now;
+        public string DocumentReference { get; set; } = string.Empty;
         public string LocationID { get; set; } = string.Empty;
         [Required(ErrorMessage = "Customer Name Data is required")]
         public string CustomerName { get; set; } = string.Empty;
@@ -18,6 +19,7 @@ namespace BPIWebApplication.Shared.PagesModel.POMF
         public string NPTypeID { get; set; } = string.Empty;
         public string Requester { get; set; } = string.Empty;
         public string DocumentStatus { get; set; } = string.Empty;
+        public string Remarks { get; set; } = string.Empty;
     }
 
     public class POMFItemLineForm
@@ -59,6 +61,7 @@ namespace BPIWebApplication.Shared.PagesModel.POMF
         public DateTime RequestDocumentDate { get; set; } = DateTime.Now;
         public string ExternalReceiveDocument { get; set; } = string.Empty;
         public DateTime ReceiveDocumentDate { get; set; } = DateTime.Now;
+        public string Remarks { get; set; } = string.Empty;
     }
 
     public class NPwithReceiptNoForm

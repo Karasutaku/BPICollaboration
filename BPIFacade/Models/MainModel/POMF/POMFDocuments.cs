@@ -4,6 +4,7 @@
     {
         public string POMFID { get; set; } = string.Empty;
         public DateTime POMFDate { get; set; } = DateTime.Now;
+        public string DocumentReference { get; set; } = string.Empty;
         public string LocationID { get; set; } = string.Empty;
         public string CustomerName { get; set; } = string.Empty;
         public string ReceiptNo { get; set; } = string.Empty;
@@ -11,6 +12,7 @@
         public string NPTypeID { get; set; } = string.Empty;
         public string Requester { get; set; } = string.Empty;
         public string DocumentStatus { get; set; } = string.Empty;
+        public string Remarks { get; set; } = string.Empty;
     }
 
     public class POMFItemLine
@@ -28,6 +30,7 @@
         public DateTime? RequestDocumentDate { get; set; } = DateTime.Now;
         public string ExternalReceiveDocument { get; set; } = string.Empty;
         public DateTime? ReceiveDocumentDate { get; set; } = DateTime.Now;
+        public string Remarks { get; set; } = string.Empty;
     }
 
     public class POMFApproval

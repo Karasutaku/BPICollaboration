@@ -1,4 +1,6 @@
 ﻿@page "/pomf/addpomf"
+@page "/pomf/addmanualpomf/{param}"
+@page "/pomf/resolvepomf/{param}"
 @inject Blazored.SessionStorage.ISessionStorageService sessionStorage
 @inject Blazored.SessionStorage.ISyncSessionStorageService syncSessionStorage
 @inject IPOMFService POMFService
@@ -58,155 +60,358 @@ else
                     <div class="row my-2">
                         <div class="col">
 
-                            <EditForm Model="@pomfData">
-                                <DataAnnotationsValidator />
+                            @if (param != null && CommonLibrary.Base64Decode(param).Split("!_!")[0].Equals("MANUAL"))
+                            {
+                                <EditForm Model="@pomfData">
+                                    <DataAnnotationsValidator />
 
-                                <div class="row my-2">
-                                    <div class="col">
-                                        <label for="pomf_id">POMF ID :</label>
-                                        <InputText id="doc_id" @bind-Value="pomfData.POMFID" class="form-control" readonly></InputText>
+                                    <div class="row my-2">
+                                        <div class="col">
+                                            <label for="pomf_id">POMF ID :</label>
+                                            <InputText id="doc_id" @bind-Value="pomfData.POMFID" class="form-control" readonly></InputText>
+                                        </div>
+                                        <div class="col">
+                                            <label for="pomf_date">POMF Date :</label>
+                                            <InputDate id="pomf_date" @bind-Value="pomfData.POMFDate" class="form-control" readonly></InputDate>
+                                        </div>
                                     </div>
-                                    <div class="col">
-                                        <label for="pomf_date">POMF Date :</label>
-                                        <InputDate id="pomf_date" @bind-Value="pomfData.POMFDate" class="form-control" readonly></InputDate>
-                                    </div>
-                                </div>
 
-                                <div class="row my-2">
-                                    <div class="col">
-                                        <label for="loc_id">Location ID :</label>
-                                        <InputText id="loc_id" @bind-Value="pomfData.LocationID" class="form-control" readonly></InputText>
+                                    <div class="row my-2">
+                                        <div class="col">
+                                            <label for="loc_id">Location ID :</label>
+                                            <InputText id="loc_id" @bind-Value="pomfData.LocationID" class="form-control" readonly></InputText>
+                                        </div>
+                                        <div class="col">
+                                            <label for="cust_name">Customer Name :</label>
+                                            <InputText id="cust_name" @bind-Value="pomfData.CustomerName" class="form-control" readonly="@(successUpload)"></InputText>
+                                            <ValidationMessage For="(() => pomfData.CustomerName)" />
+                                        </div>
                                     </div>
-                                    <div class="col">
-                                        <label for="cust_name">Customer Name :</label>
-                                        <InputText id="cust_name" @bind-Value="pomfData.CustomerName" class="form-control" readonly="@(successUpload ? "readonly" : null)"></InputText>
-                                        <ValidationMessage For="(() => pomfData.CustomerName)" />
+
+                                    <div class="row my-2">
+                                        <div class="col">
+                                            <label for="loc_id">Document Remarks :</label>
+                                            <InputTextArea id="loc_id" @bind-Value="pomfData.Remarks" class="form-control" readonly="@(successUpload)"></InputTextArea>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div class="row my-2">
-                                    <div class="col">
-                                        <label for="np_type">NP Type :</label>
-                                        <InputSelect id="np_type" @bind-Value="pomfData.NPTypeID" class="form-select" disabled>
-                                            @if (checkPOMFNPType())
-                                            {
-                                                <option hidden value="">Input NP Number</option>
-
-                                                @foreach (var nptype in POMFService.npTypes)
+                                    <div class="row my-2">
+                                        <div class="col">
+                                            <label for="np_type">NP Type :</label>
+                                            <InputSelect id="np_type" @bind-Value="pomfData.NPTypeID" class="form-select" disabled>
+                                                @if (checkPOMFNPType())
                                                 {
-                                                    <option value="@nptype.NPTypeID">@nptype.NPTypeDescription</option>
-                                                }
-                                            }
-                                            else
-                                            {
-                                                <option hidden value="">NP Type Empty</option>
-                                            }
-                                        </InputSelect>
-                                        <ValidationMessage For="(() => pomfData.NPTypeID)" />
-                                    </div>
-                                </div>
+                                                    <option hidden value="">Input Receipt and NP Number</option>
 
-                                <div class="row my-2">
-                                    <div class="col">
-                                        <label for="loc_id">Input Receipt & NP :</label>
-                                        <div class="input-group mb-3">
-                                            <div class="input-group-prepend">
-                                                <InputText id="receipt_no" @bind-Value="pomfData.ReceiptNo" class="form-control" placeholder="Receipt Number" readonly="@(successUpload || itemSelected ? "readonly" : null)"></InputText>
-                                            </div>
-                                            <InputText id="np_no" @bind-Value="pomfData.NPNo" class="form-control" placeholder="NP Number" readonly="@(successUpload || itemSelected ? "readonly" : null)"></InputText>
-                                            <div class="input-group-append">
-                                                <button class="btn btn-primary-cus" type="button" data-toggle="modal" data-target="#selectitembyNPandReceiptModal" @onclick="selectItembyNPandReceiptID" disabled="@(successUpload)">...</button>
+                                                    @foreach (var nptype in POMFService.npTypes)
+                                                    {
+                                                        <option value="@nptype.NPTypeID">@nptype.NPTypeDescription</option>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <option hidden value="">NP Type Empty</option>
+                                                }
+                                            </InputSelect>
+                                            <ValidationMessage For="(() => pomfData.NPTypeID)" />
+                                        </div>
+                                    </div>
+
+                                    <div class="row my-2">
+                                        <div class="col">
+                                            <label for="loc_id">Input Receipt & NP :</label>
+                                            <div class="input-group mb-3">
+                                                <div class="input-group-prepend">
+                                                    <InputText id="receipt_no" @bind-Value="pomfData.ReceiptNo" class="form-control" placeholder="Receipt Number" readonly="@(successUpload || itemSelected ? "readonly" : null)"></InputText>
+                                                </div>
+                                                <InputText id="np_no" @bind-Value="pomfData.NPNo" class="form-control" placeholder="NP Number" readonly="@(successUpload || itemSelected ? "readonly" : null)"></InputText>
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-primary-cus" type="button" data-toggle="modal" data-target="#selectitembyNPandReceiptModal" @onclick="selectItembyNPandReceiptID" disabled="@(successUpload)">...</button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                @if (checkPOMFLine())
-                                {
-                                    <table class="table table-sm table-bordered" style="width: 100%">
-                                        @{
-                                            var auto = POMFService.npTypes.SingleOrDefault(x => x.NPTypeID.Equals(pomfData.NPTypeID));
-                                        }
-                                        <thead>
-                                            <tr class="table-primary">
-                                                <th class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Action</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 15%; font-size: 15px;">Item Code</th>
-                                                <th class="text-center align-middle text-wrap" style="width: 32%; font-size: 15px;">Item Description</th>
-                                                @if (auto != null)
+                                    @if (checkPOMFLine())
+                                    {
+                                        <table class="table table-sm table-bordered" style="width: 100%">
+                                            @{
+                                                var auto = POMFService.npTypes.SingleOrDefault(x => x.NPTypeID.Equals(pomfData.NPTypeID));
+                                            }
+                                            <thead>
+                                                <tr class="table-primary">
+                                                    <th class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Action</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Item Code</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 20%; font-size: 15px;">Item Description</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 7%; font-size: 15px;">Request Qty</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">NP Qty</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 6%; font-size: 15px;">UOM</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 24%; font-size: 15px;">Request To</th>
+                                                    <th class="text-center align-middle text-wrap" style="width: 23%; font-size: 15px;">Remarks</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var line in pomfLines)
                                                 {
-                                                    @if (auto.isAutomaticApproval)
-                                                    {
-                                                        <th class="text-center align-middle text-wrap" style="width: 20%; font-size: 15px;">Request Qty</th>
-                                                        <th class="text-center align-middle text-wrap" style="width: 15%; font-size: 15px;">NP Qty</th>
-                                                        <th class="text-center align-middle text-wrap" style="width: 15%; font-size: 15px;">UOM</th>
-                                                    }
-                                                    else
-                                                    {
-                                                        <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">MAX REQUEST</th>
-                                                        <th class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Request Qty</th>
-                                                        <th class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">NP Qty</th>
-                                                        <th class="text-center align-middle text-wrap" style="width: 6%; font-size: 15px;">UOM</th>
-                                                        <th class="text-center align-middle text-wrap" style="width: 24%; font-size: 15px;">Request To</th>
-                                                    }
-                                                }
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var line in pomfLines)
-                                            {
-                                                <tr>
-                                                    <td class="text-center align-middle text-wrap"><button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="(() => pomfLines.Remove(line))" disabled="@(successUpload ? "disabled" : null)"><i class="oi oi-delete"></i></button></td>
+                                                    <tr>
+                                                        <td class="text-center align-middle text-wrap"><button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="(() => pomfLines.Remove(line))" disabled="@(successUpload ? "disabled" : null)"><i class="oi oi-delete"></i></button></td>
 
-                                                    <td class="text-center align-middle text-wrap">@line.ItemCode</td>
-                                                    <td class="text-center align-middle text-wrap">@line.ItemDescription</td>
-                                                    @if (auto != null)
-                                                    {
-                                                        @if (auto.isAutomaticApproval)
-                                                        {
-                                                            <td class="text-center align-middle text-wrap">@line.RequestQuantity</td>
-                                                            <td class="text-center align-middle text-wrap">@line.NPQuantity</td>
-                                                            <td class="text-center align-middle text-wrap">@line.ItemUOM</td>
-                                                        }
-                                                        else
-                                                        {
-                                                            <td class="text-center align-middle text-wrap bg-warning fw-bold">
-                                                                @if (isMaxQtyLoading)
+                                                        <td class="text-center align-middle text-wrap">@line.ItemCode</td>
+                                                        <td class="text-center align-middle text-wrap">@line.ItemDescription</td>
+                                                        <td class="text-center align-middle text-wrap"><input type="number" class="form-control" @bind-value="line.RequestQuantity" readonly="@(successUpload ? "readonly" : null)" /></td>
+                                                        <td class="text-center align-middle text-wrap">@line.NPQuantity</td>
+                                                        <td class="text-center align-middle text-wrap">
+                                                            <input type="text" class="form-control" @bind-value="line.ItemUOM" placeholder="Input UOM" list="uomList" readonly="@(successUpload)" />
+
+                                                            <datalist id="uomList">
+                                                                @foreach (var uom in ManagementService.uoms)
                                                                 {
-                                                                    <span class="spinner-border spinner-border-sm"></span>
+                                                                    <option value="@uom.UOMPreview">@uom.UOMDescription</option>
+                                                                }
+                                                            </datalist>
+                                                        </td>
+                                                        <td class="text-center align-middle text-wrap">
+                                                            <InputSelect id="site_sender" @bind-Value="line.RequestToSite" class="form-select" disabled="@(successUpload)">
+                                                                @if (checkLocation())
+                                                                {
+                                                                    <option hidden disabled value="">Select Request Location</option>
+
+                                                                    <option value="Supplier">SUPPLIER</option>
+                                                                    @foreach (var location in ManagementService.locations)
+                                                                    {
+                                                                        <option value="@location.locationId">@location.locationId - @location.locationName</option>
+                                                                    }
                                                                 }
                                                                 else
                                                                 {
-                                                                    @if (maxThresholdQty != null)
-                                                                    {
-                                                                        @if (maxThresholdQty.Count > 0)
-                                                                        {
-                                                                            var maxqty = maxThresholdQty.SingleOrDefault(x => x.ItemCode.Equals(line.ItemCode));
+                                                                    <option disabled value="BLANK">Location Empty</option>
+                                                                }
+                                                            </InputSelect>
+                                                        </td>
+                                                        <td class="text-center align-middle text-wrap"><input type="text" class="form-control" @bind-value="line.Remarks" readonly="@(successUpload ? "readonly" : null)" /></td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    }
 
-                                                                            @if (maxqty != null)
-                                                                            {
-                                                                                @(line.NPQuantity - maxqty.MaxQuantity)
-                                                                            }
-                                                                            else
-                                                                            {
-                                                                                @line.NPQuantity
-                                                                            }
+                                    <div class="row my-2">
+                                        <div class="col">
+                                            <button type="button" title="Reset Data" class="btn btn-dark fw-bold" disabled="@(successUpload ? "disabled" : null)" @onclick="resetForm">Reset</button>
+                                            <button type="submit" title="Submit Data" class="btn btn-primary-cus fw-bold" disabled="@(successUpload ? "disabled" : null)" @onclick="createPOMFDocument">Create POMF</button>
+                                        </div>
+                                    </div>
+                                </EditForm>
+                            }
+                            else
+                            {
+                                <EditForm Model="@pomfData">
+                                    <DataAnnotationsValidator />
+
+                                    <div class="row my-2">
+                                        <div class="col">
+                                            <label for="pomf_id">POMF ID :</label>
+                                            <InputText id="doc_id" @bind-Value="pomfData.POMFID" class="form-control" readonly></InputText>
+                                        </div>
+                                        <div class="col">
+                                            <label for="pomf_date">POMF Date :</label>
+                                            <InputDate id="pomf_date" @bind-Value="pomfData.POMFDate" class="form-control" readonly></InputDate>
+                                        </div>
+                                    </div>
+
+                                    <div class="row my-2">
+                                        <div class="col">
+                                            <label for="loc_id">Location ID :</label>
+                                            <InputText id="loc_id" @bind-Value="pomfData.LocationID" class="form-control" readonly></InputText>
+                                        </div>
+                                        <div class="col">
+                                            <label for="cust_name">Customer Name :</label>
+                                            <InputText id="cust_name" @bind-Value="pomfData.CustomerName" class="form-control" readonly="@(successUpload || (param != null))"></InputText>
+                                            <ValidationMessage For="(() => pomfData.CustomerName)" />
+                                        </div>
+                                    </div>
+
+                                    <div class="row my-2">
+                                        <div class="col">
+                                            <label for="loc_id">Document Remarks :</label>
+                                            <InputTextArea id="loc_id" @bind-Value="pomfData.Remarks" class="form-control" readonly="@(successUpload || (param != null))"></InputTextArea>
+                                        </div>
+                                    </div>
+
+                                    <div class="row my-2">
+                                        <div class="col">
+                                            <label for="np_type">NP Type :</label>
+                                            <InputSelect id="np_type" @bind-Value="pomfData.NPTypeID" class="form-select" disabled>
+                                                @if (checkPOMFNPType())
+                                                {
+                                                    <option hidden value="">Input Receipt and NP Number</option>
+
+                                                    @foreach (var nptype in POMFService.npTypes)
+                                                    {
+                                                        <option value="@nptype.NPTypeID">@nptype.NPTypeDescription</option>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <option hidden value="">NP Type Empty</option>
+                                                }
+                                            </InputSelect>
+                                            <ValidationMessage For="(() => pomfData.NPTypeID)" />
+                                        </div>
+                                    </div>
+
+                                    <div class="row my-2">
+                                        <div class="col">
+                                            <label for="loc_id">Input Receipt & NP :</label>
+                                            <div class="input-group mb-3">
+                                                <div class="input-group-prepend">
+                                                    <InputText id="receipt_no" @bind-Value="pomfData.ReceiptNo" class="form-control" placeholder="Receipt Number" readonly="@(successUpload || itemSelected ? "readonly" : null)"></InputText>
+                                                </div>
+                                                <InputText id="np_no" @bind-Value="pomfData.NPNo" class="form-control" placeholder="NP Number" readonly="@(successUpload || itemSelected ? "readonly" : null)"></InputText>
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-primary-cus" type="button" data-toggle="modal" data-target="#selectitembyNPandReceiptModal" @onclick="selectItembyNPandReceiptID" disabled="@(successUpload || (param != null))">...</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @if (checkPOMFLine())
+                                    {
+                                        <table class="table table-sm table-bordered" style="width: 100%">
+                                            @{
+                                                var auto = POMFService.npTypes.SingleOrDefault(x => x.NPTypeID.Equals(pomfData.NPTypeID));
+                                            }
+                                            <thead>
+                                                <tr class="table-primary">
+                                                    @if (param == null)
+                                                    {
+                                                        <th class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Action</th>
+                                                        <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">Item Code</th>
+                                                        <th class="text-center align-middle text-wrap" style="width: 22%; font-size: 15px;">Item Description</th>
+                                                        @if (auto != null)
+                                                        {
+                                                            @if (auto.isAutomaticApproval)
+                                                            {
+                                                                <th class="text-center align-middle text-wrap" style="width: 20%; font-size: 15px;">Request Qty</th>
+                                                                <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">NP Qty</th>
+                                                                <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">UOM</th>
+                                                                <th class="text-center align-middle text-wrap" style="width: 23%; font-size: 15px;">Remarks</th>
+                                                            }
+                                                            else
+                                                            {
+                                                                <th class="text-center align-middle text-wrap" style="width: 10%; font-size: 15px;">MAX REQUEST</th>
+                                                                <th class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Request Qty</th>
+                                                                <th class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">NP Qty</th>
+                                                                <th class="text-center align-middle text-wrap" style="width: 6%; font-size: 15px;">UOM</th>
+                                                                <th class="text-center align-middle text-wrap" style="width: 24%; font-size: 15px;">Request To</th>
+                                                                <th class="text-center align-middle text-wrap" style="width: 15%; font-size: 15px;">Remarks</th>
+                                                            }
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <th class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">Action</th>
+                                                        <th class="text-center align-middle text-wrap" style="width: 12%; font-size: 15px;">Item Code</th>
+                                                        <th class="text-center align-middle text-wrap" style="width: 25%; font-size: 15px;">Item Description</th>
+                                                        <th class="text-center align-middle text-wrap" style="width: 7%; font-size: 15px;">Request Qty</th>
+                                                        <th class="text-center align-middle text-wrap" style="width: 5%; font-size: 15px;">NP Qty</th>
+                                                        <th class="text-center align-middle text-wrap" style="width: 6%; font-size: 15px;">UOM</th>
+                                                        <th class="text-center align-middle text-wrap" style="width: 24%; font-size: 15px;">Request To</th>
+                                                        <th class="text-center align-middle text-wrap" style="width: 18%; font-size: 15px;">Remarks</th>
+                                                    }
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var line in pomfLines)
+                                                {
+                                                    <tr>
+                                                        @if (param == null)
+                                                        {
+                                                            <td class="text-center align-middle text-wrap"><button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="(() => pomfLines.Remove(line))" disabled="@(successUpload ? "disabled" : null)"><i class="oi oi-delete"></i></button></td>
+
+                                                            <td class="text-center align-middle text-wrap">@line.ItemCode</td>
+                                                            <td class="text-center align-middle text-wrap">@line.ItemDescription</td>
+                                                            @if (auto != null)
+                                                            {
+                                                                @if (auto.isAutomaticApproval)
+                                                                {
+                                                                    <td class="text-center align-middle text-wrap">@line.RequestQuantity</td>
+                                                                    <td class="text-center align-middle text-wrap">@line.NPQuantity</td>
+                                                                    <td class="text-center align-middle text-wrap">@line.ItemUOM</td>
+                                                                    <td class="text-center align-middle text-wrap"><input type="text" class="form-control" @bind-value="line.Remarks" readonly="@(successUpload ? "readonly" : null)" /></td>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <td class="text-center align-middle text-wrap bg-warning fw-bold">
+                                                                        @if (isMaxQtyLoading)
+                                                                        {
+                                                                            <span class="spinner-border spinner-border-sm"></span>
                                                                         }
                                                                         else
                                                                         {
-                                                                            @line.NPQuantity
+                                                                            @if (maxThresholdQty != null)
+                                                                            {
+                                                                                @if (maxThresholdQty.Count > 0)
+                                                                                {
+                                                                                    var maxqty = maxThresholdQty.SingleOrDefault(x => x.ItemCode.Equals(line.ItemCode));
+
+                                                                                    @if (maxqty != null)
+                                                                                    {
+                                                                                        @(line.NPQuantity - maxqty.MaxQuantity)
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        @line.NPQuantity
+                                                                                    }
+                                                                                }
+                                                                                else
+                                                                                {
+                                                                                    @line.NPQuantity
+                                                                                }
+                                                                            }
                                                                         }
-                                                                    }
+                                                                    </td>
+                                                                    <td class="text-center align-middle text-wrap"><input type="number" class="form-control my-auto" @bind-value="line.RequestQuantity" readonly="@(successUpload ? "readonly" : null)" /></td>
+                                                                    <td class="text-center align-middle text-wrap">@line.NPQuantity</td>
+                                                                    <td class="text-center align-middle text-wrap">@line.ItemUOM</td>
+                                                                    <td>
+                                                                        <InputSelect id="site_sender" @bind-Value="line.RequestToSite" class="form-select" disabled="@(successUpload)">
+                                                                            @if (checkLocation())
+                                                                            {
+                                                                                <option hidden disabled value="">Select Request Location</option>
+
+                                                                                <option value="Supplier">SUPPLIER</option>
+                                                                                @foreach (var location in ManagementService.locations)
+                                                                                {
+                                                                                    <option value="@location.locationId">@location.locationId - @location.locationName</option>
+                                                                                }
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                <option disabled value="BLANK">Location Empty</option>
+                                                                            }
+                                                                        </InputSelect>
+                                                                    </td>
+                                                                    <td class="text-center align-middle text-wrap"><input type="text" class="form-control my-auto" @bind-value="line.Remarks" readonly="@(successUpload ? "readonly" : null)" /></td>
                                                                 }
-                                                            </td>
-                                                            <td><input type="number" class="form-control my-auto" @bind-value="line.RequestQuantity" readonly="@(successUpload ? "readonly" : null)" /></td>
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            <td class="text-center align-middle text-wrap"><button type="button" class="btn btn-sm btn-danger h-100 w-100" @onclick="(() => pomfLines.Remove(line))" disabled="@(successUpload ? "disabled" : null)"><i class="oi oi-delete"></i></button></td>
+
+                                                            <td class="text-center align-middle text-wrap">@line.ItemCode</td>
+                                                            <td class="text-center align-middle text-wrap">@line.ItemDescription</td>
+                                                            <td class="text-center align-middle text-wrap"><input type="number" class="form-control my-auto" @bind-value="line.RequestQuantity" readonly="@(successUpload ? "readonly" : null)" /></td>
                                                             <td class="text-center align-middle text-wrap">@line.NPQuantity</td>
                                                             <td class="text-center align-middle text-wrap">@line.ItemUOM</td>
-                                                            <td>
+                                                            <td class="text-center align-middle text-wrap">
                                                                 <InputSelect id="site_sender" @bind-Value="line.RequestToSite" class="form-select" disabled="@(successUpload)">
                                                                     @if (checkLocation())
                                                                     {
                                                                         <option hidden disabled value="">Select Request Location</option>
 
+                                                                        <option value="Supplier">SUPPLIER</option>
                                                                         @foreach (var location in ManagementService.locations)
                                                                         {
                                                                             <option value="@location.locationId">@location.locationId - @location.locationName</option>
@@ -218,21 +423,23 @@ else
                                                                     }
                                                                 </InputSelect>
                                                             </td>
+                                                            <td class="text-center align-middle text-wrap"><input type="text" class="form-control my-auto" @bind-value="line.Remarks" readonly="@(successUpload ? "readonly" : null)" /></td>
                                                         }
-                                                    }
-                                                </tr>
-                                            }
-                                        </tbody>
-                                    </table>
-                                }
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    }
 
-                                <div class="row my-2">
-                                    <div class="col">
-                                        <button type="button" title="Reset Data" class="btn btn-dark fw-bold" disabled="@(successUpload ? "disabled" : null)" @onclick="resetForm">Reset</button>
-                                        <button type="submit" title="Submit Data" class="btn btn-primary-cus fw-bold" disabled="@(successUpload ? "disabled" : null)" @onclick="createPOMFDocument">Create POMF</button>
+                                    <div class="row my-2">
+                                        <div class="col">
+                                            <button type="button" title="Reset Data" class="btn btn-dark fw-bold" disabled="@(successUpload ? "disabled" : null)" @onclick="resetForm">Reset</button>
+                                            <button type="submit" title="Submit Data" class="btn btn-primary-cus fw-bold" disabled="@(successUpload ? "disabled" : null)" @onclick="createPOMFDocument">Create POMF</button>
+                                        </div>
                                     </div>
-                                </div>
-                            </EditForm>
+                                </EditForm>
+                            }
+                            
 
                         </div>
                     </div>

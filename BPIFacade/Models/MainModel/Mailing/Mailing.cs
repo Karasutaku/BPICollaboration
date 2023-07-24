@@ -12,4 +12,27 @@
         public string MailFooter { get; set; } = string.Empty;
         public string MailNote { get; set; } = string.Empty;
     }
+
+    public class EmailLine
+    {
+        public int LineNo { get; set; } = 0;
+        public string userEmail { get; set; } = string.Empty;
+    }
+
+    public class CustomMailing
+    {
+        public string moduleName { get; set; } = string.Empty;
+        public string actionName { get; set; } = string.Empty;
+        public string locationId { get; set; } = string.Empty;
+
+        public string from { get; set; } = string.Empty;
+        public List<EmailLine> to { get; set; } = new();
+        public List<EmailLine> cc { get; set; } = new();
+        public string Subject { get; set; } = string.Empty;
+        public string Body { get; set; } = string.Empty;
+
+        public string OtherString { get; set; } = string.Empty;
+        public DateTime OtherDate { get; set; } = DateTime.Now;
+        public List<string> OtherListString { get; set; } = new();
+    }
 }

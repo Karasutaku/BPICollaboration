@@ -28,3 +28,7 @@
 .dis-paging-style {
     user-select: none;
 }
+
+.dropdown-menu {
+    width: 600px !important;
+}

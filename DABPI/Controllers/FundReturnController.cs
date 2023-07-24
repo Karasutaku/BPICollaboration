@@ -328,7 +328,6 @@ namespace BPIDA.Controllers
 
                 foreach (var removedCol in new[] {
                     "RequestDate",
-                    "LocationID",
                     "CommercialType",
                     "CustomerName",
                     "CustomerType",
@@ -475,9 +474,11 @@ namespace BPIDA.Controllers
 
                 DataTable tableParam = new("Param");
                 tableParam.Columns.Add(new DataColumn("DocumentID", typeof(string)));
+                tableParam.Columns.Add(new DataColumn("LocationID", typeof(string)));
 
                 DataRow tableRowParam = tableParam.NewRow();
                 tableRowParam["DocumentID"] = temp[1];
+                tableRowParam["LocationID"] = temp[0];
                 tableParam.Rows.Add(tableRowParam);
 
                 dtAttachment = da.getFundReturnAttachmentData(temp[0], tableParam);

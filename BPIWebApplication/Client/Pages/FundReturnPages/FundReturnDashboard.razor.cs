@@ -1,6 +1,8 @@
 ﻿using BPILibrary;
 using BPIWebApplication.Client.Services.EPKRSServices;
 using BPIWebApplication.Client.Services.FundReturnServices;
+using BPIWebApplication.Client.Services.POMFServices;
+using BPIWebApplication.Shared.DbModel;
 using BPIWebApplication.Shared.MainModel;
 using BPIWebApplication.Shared.MainModel.FundReturn;
 using BPIWebApplication.Shared.MainModel.Login;
@@ -20,9 +22,13 @@ namespace BPIWebApplication.Client.Pages.FundReturnPages
         private Location paramGetCompanyLocation = new();
 
         private FundReturnDocument previewRefundDocument = new();
+        private FundReturnApproval previewRefundDocumentApproval = new();
 
         private int fundReturnNumberofPage = 0;
         private int fundReturnPageActive = 0;
+
+        private string previousDocumentID = string.Empty;
+        private string previousDocumentLocation = string.Empty;
 
         private string fundReturnDocumentFilterType { get; set; } = string.Empty;
         private string fundReturnDocumentFilterValue { get; set; } = string.Empty;
@@ -144,6 +150,8 @@ namespace BPIWebApplication.Client.Pages.FundReturnPages
         private async Task setRefundDocument(FundReturnDocument data)
         {
             previewRefundDocument = data;
+            previousDocumentID = data.dataHeader.DocumentID;
+            previousDocumentLocation = data.dataHeader.LocationID;
             FundReturnService.fileStreams.Clear();
 
             #pragma warning disable CS4014
@@ -153,6 +161,16 @@ namespace BPIWebApplication.Client.Pages.FundReturnPages
                 StateHasChanged();
             });
             #pragma warning restore CS4014
+
+            StateHasChanged();
+        }
+
+        private void setFundReturnApproval(string approveType)
+        {
+            previewRefundDocumentApproval.DocumentID = previousDocumentID;
+            previewRefundDocumentApproval.ApprovalAction = approveType;
+            previewRefundDocumentApproval.Approver = activeUser.userName;
+            previewRefundDocumentApproval.ApproveDate = DateTime.Now;
 
             StateHasChanged();
         }
@@ -176,6 +194,94 @@ namespace BPIWebApplication.Client.Pages.FundReturnPages
 
             isLoading = false;
             StateHasChanged();
+        }
+
+        private async Task createDocumentApprove(string approveType)
+        {
+            try
+            {
+                isLoading = true;
+
+                QueryModel<FundReturnApprovalStream> uploadData = new();
+                uploadData.Data = new();
+                uploadData.Data.Data = new();
+
+                uploadData.Data.LocationID = previousDocumentLocation;
+                uploadData.Data.Data = previewRefundDocumentApproval;
+                uploadData.Data.Data.ApproveDate = DateTime.Now;
+                uploadData.userEmail = activeUser.userName;
+                uploadData.userAction = "I";
+                uploadData.userActionDate = DateTime.Now;
+
+                var res = await FundReturnService.createFundReturnApproval(uploadData);
+
+                if (res.isSuccess)
+                {
+                    string param = approveType.Equals("Verify") ? "Verified" : approveType.Equals("Confirm") ? "Confirmed" : approveType.Equals("Release") ? "Released" : approveType.Equals("Transfer") ? "Transfered" : "NAN";
+
+                    previewRefundDocument.dataHeader.DocumentStatus = param;
+                    previewRefundDocument.dataApproval.Add(res.Data.Data.Data);
+                    FundReturnService.fundReturns.SingleOrDefault(x => x.dataHeader.DocumentID.Equals(previewRefundDocument.dataHeader.DocumentID)).dataHeader.DocumentStatus = param;
+
+                    var dt = FundReturnService.fundReturns.SingleOrDefault(x => x.dataHeader.DocumentID.Equals(previewRefundDocument.dataHeader.DocumentID));
+
+                    await _jsModule.InvokeVoidAsync("showAlert", "Update Status Success !");
+                }
+                else
+                {
+                    await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
+                }
+
+                isLoading = false;
+                StateHasChanged();
+
+            }
+            catch (Exception ex)
+            {
+                isLoading = false;
+                StateHasChanged();
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} from {ex.Source} {ex.InnerException} !");
+            }
+        }
+
+        private async Task deleteDocument()
+        {
+            try
+            {
+                isLoading = true;
+
+                QueryModel<string> paramData = new();
+
+                string temp = previewRefundDocument.dataHeader.DocumentID + "!_!" + previewRefundDocument.dataHeader.LocationID;
+
+                paramData.Data = CommonLibrary.Base64Encode(temp);
+                paramData.userEmail = activeUser.userName;
+                paramData.userAction = "D";
+                paramData.userActionDate = DateTime.Now;
+
+                var res = await FundReturnService.deleteFundReturnDocument(paramData);
+
+                if (res.isSuccess)
+                {
+                    previewRefundDocument.dataHeader.DocumentStatus = "DELETED";
+                    FundReturnService.fundReturns.SingleOrDefault(x => x.dataHeader.DocumentID.Equals(previewRefundDocument.dataHeader.DocumentID)).dataHeader.DocumentStatus = "DELETED";
+
+                    await _jsModule.InvokeVoidAsync("showAlert", "Delete Document Success, Please REFRESH Your Page !");
+                }
+                else
+                {
+                    await _jsModule.InvokeVoidAsync("showAlert", $"Failed : {res.ErrorCode} - {res.ErrorMessage} !");
+                }
+
+                isLoading = false;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                isLoading = false;
+                StateHasChanged();
+                await _jsModule.InvokeVoidAsync("showAlert", $"Error : {ex.Message} from {ex.Source} {ex.InnerException} !");
+            }
         }
 
         private bool checkFundReturnDocument()

@@ -2,6 +2,7 @@
 using BPIWebApplication.Shared.MainModel;
 using BPIWebApplication.Shared.MainModel.EPKRS;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Http.Json;
 
 namespace BPIWebApplication.Server.Controllers
 {
@@ -10,7 +11,7 @@ namespace BPIWebApplication.Server.Controllers
     public class EPKRSController : ControllerBase
     {
         private readonly HttpClient _http;
-        private readonly int _maxFileSize;
+        private readonly int _maxFileSize, _maxStatRow;
         private readonly IConfiguration _configuration;
 
         public EPKRSController(HttpClient http, IConfiguration config)
@@ -19,6 +20,7 @@ namespace BPIWebApplication.Server.Controllers
             _configuration = config;
             _http.BaseAddress = new Uri(_configuration.GetValue<string>("ConnectionStrings:BpiFacade"));
             _maxFileSize = config.GetValue<int>("File:EPKRS:MaxUpload");
+            _maxStatRow = config.GetValue<int>("File:EPKRS:MaxStatisticsRow");
         }
 
         [HttpPost("createEPKRSItemCaseDocument")]
@@ -727,33 +729,48 @@ namespace BPIWebApplication.Server.Controllers
             return actionResult;
         }
 
-        [HttpGet("getEPKRSItemCase/{param}")]
-        public async Task<IActionResult> getEPKRSItemCaseData(string param)
+        [HttpPost("getEPKRSItemCase")]
+        public async Task<IActionResult> getEPKRSItemCaseData(QueryModel<string> param)
         {
             ResultModel<List<EPKRSUploadItemCase>> res = new ResultModel<List<EPKRSUploadItemCase>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSUploadItemCase>>>($"api/Facade/EPKRS/getEPKRSItemCase/{param}");
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/Facade/EPKRS/getEPKRSItemCase", param);
 
-                if (result.isSuccess)
+                if (result.IsSuccessStatusCode)
                 {
-                    res.Data = result.Data;
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSUploadItemCase>>>();
 
-                    res.isSuccess = result.isSuccess;
-                    res.ErrorCode = result.ErrorCode;
-                    res.ErrorMessage = result.ErrorMessage;
+                    if (respBody.isSuccess)
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
 
-                    actionResult = Ok(res);
+                        actionResult = Ok(res);
+                    }
+                    else
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
                 }
                 else
                 {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSUploadItemCase>>>();
+
                     res.Data = null;
 
-                    res.isSuccess = result.isSuccess;
-                    res.ErrorCode = result.ErrorCode;
-                    res.ErrorMessage = result.ErrorMessage;
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
 
                     actionResult = Ok(res);
                 }
@@ -771,33 +788,48 @@ namespace BPIWebApplication.Server.Controllers
             return actionResult;
         }
 
-        [HttpGet("getEPKRSIncidentAccident/{param}")]
-        public async Task<IActionResult> getEPKRSIncidentAccidentData(string param)
+        [HttpPost("getEPKRSIncidentAccident")]
+        public async Task<IActionResult> getEPKRSIncidentAccidentData(QueryModel<string> param)
         {
             ResultModel<List<EPKRSUploadIncidentAccident>> res = new ResultModel<List<EPKRSUploadIncidentAccident>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSUploadIncidentAccident>>>($"api/Facade/EPKRS/getEPKRSIncidentAccident/{param}");
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/Facade/EPKRS/getEPKRSIncidentAccident", param);
 
-                if (result.isSuccess)
+                if (result.IsSuccessStatusCode)
                 {
-                    res.Data = result.Data;
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSUploadIncidentAccident>>>();
 
-                    res.isSuccess = result.isSuccess;
-                    res.ErrorCode = result.ErrorCode;
-                    res.ErrorMessage = result.ErrorMessage;
+                    if (respBody.isSuccess)
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
 
-                    actionResult = Ok(res);
+                        actionResult = Ok(res);
+                    }
+                    else
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
                 }
                 else
                 {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSUploadIncidentAccident>>>();
+
                     res.Data = null;
 
-                    res.isSuccess = result.isSuccess;
-                    res.ErrorCode = result.ErrorCode;
-                    res.ErrorMessage = result.ErrorMessage;
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
 
                     actionResult = Ok(res);
                 }
@@ -1049,33 +1081,137 @@ namespace BPIWebApplication.Server.Controllers
             return actionResult;
         }
 
-        [HttpGet("getEPKRSGeneralStatistics/{param}")]
-        public async Task<IActionResult> getEPKRSGeneralStatistics(string param)
+        [HttpGet("getEPKRSMaxStatisticsRow")]
+        public async Task<IActionResult> getEPKRSMaxStatisticsRow()
+        {
+            ResultModel<int> res = new ResultModel<int>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                res.Data = _maxStatRow;
+
+                res.isSuccess = true;
+                res.ErrorCode = "00";
+                res.ErrorMessage = "";
+
+                actionResult = Ok(res);
+
+            }
+            catch (Exception ex)
+            {
+                res.Data = 0;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpPost("getEPKRSGeneralStatistics")]
+        public async Task<IActionResult> getEPKRSGeneralStatistics(QueryModel<string> param)
         {
             ResultModel<List<EPKRSDocumentStatistics>> res = new ResultModel<List<EPKRSDocumentStatistics>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSDocumentStatistics>>>($"api/Facade/EPKRS/getEPKRSGeneralStatistics/{param}");
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/Facade/EPKRS/getEPKRSGeneralStatistics", param);
 
-                if (result.isSuccess)
+                if (result.IsSuccessStatusCode)
                 {
-                    res.Data = result.Data;
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSDocumentStatistics>>>();
 
-                    res.isSuccess = result.isSuccess;
-                    res.ErrorCode = result.ErrorCode;
-                    res.ErrorMessage = result.ErrorMessage;
+                    if (respBody.isSuccess)
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
 
-                    actionResult = Ok(res);
+                        actionResult = Ok(res);
+                    }
+                    else
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
                 }
                 else
                 {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSDocumentStatistics>>>();
+
                     res.Data = null;
 
-                    res.isSuccess = result.isSuccess;
-                    res.ErrorCode = result.ErrorCode;
-                    res.ErrorMessage = result.ErrorMessage;
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
+        [HttpPost("getEPKRSIncidentAccidentDataforStatistics")]
+        public async Task<IActionResult> getEPKRSIncidentAccidentDataforStatistics(QueryModel<string> param)
+        {
+            ResultModel<List<EPKRSIncidentAccidentforStats>> res = new ResultModel<List<EPKRSIncidentAccidentforStats>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/Facade/EPKRS/getEPKRSIncidentAccidentDataforStatistics", param);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSIncidentAccidentforStats>>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                    else
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSIncidentAccidentforStats>>>();
+
+                    res.Data = null;
+
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
 
                     actionResult = Ok(res);
                 }
@@ -1152,33 +1288,48 @@ namespace BPIWebApplication.Server.Controllers
             return actionResult;
         }
 
-        [HttpGet("getEPKRSItemCaseCategoryStatistics/{param}")]
-        public async Task<IActionResult> getEPKRSItemCaseCategoryStatistics(string param)
+        [HttpPost("getEPKRSItemCaseCategoryStatistics")]
+        public async Task<IActionResult> getEPKRSItemCaseCategoryStatistics(QueryModel<string> param)
         {
             ResultModel<List<EPKRSItemCaseCategoryStatistics>> res = new ResultModel<List<EPKRSItemCaseCategoryStatistics>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSItemCaseCategoryStatistics>>>($"api/Facade/EPKRS/getEPKRSItemCaseCategoryStatistics/{param}");
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/Facade/EPKRS/getEPKRSItemCaseCategoryStatistics", param);
 
-                if (result.isSuccess)
+                if (result.IsSuccessStatusCode)
                 {
-                    res.Data = result.Data;
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSItemCaseCategoryStatistics>>>();
 
-                    res.isSuccess = result.isSuccess;
-                    res.ErrorCode = result.ErrorCode;
-                    res.ErrorMessage = result.ErrorMessage;
+                    if (respBody.isSuccess)
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
 
-                    actionResult = Ok(res);
+                        actionResult = Ok(res);
+                    }
+                    else
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
                 }
                 else
                 {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSItemCaseCategoryStatistics>>>();
+
                     res.Data = null;
 
-                    res.isSuccess = result.isSuccess;
-                    res.ErrorCode = result.ErrorCode;
-                    res.ErrorMessage = result.ErrorMessage;
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
 
                     actionResult = Ok(res);
                 }
@@ -1196,33 +1347,48 @@ namespace BPIWebApplication.Server.Controllers
             return actionResult;
         }
 
-        [HttpGet("getEPKRSTopLocationReportStatistics/{param}")]
-        public async Task<IActionResult> getEPKRSTopLocationReportStatistics(string param)
+        [HttpPost("getEPKRSTopLocationReportStatistics")]
+        public async Task<IActionResult> getEPKRSTopLocationReportStatistics(QueryModel<string> param)
         {
             ResultModel<List<EPKRSTopLocationReportStatistics>> res = new ResultModel<List<EPKRSTopLocationReportStatistics>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSTopLocationReportStatistics>>>($"api/Facade/EPKRS/getEPKRSTopLocationReportStatistics/{param}");
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/Facade/EPKRS/getEPKRSTopLocationReportStatistics", param);
 
-                if (result.isSuccess)
+                if (result.IsSuccessStatusCode)
                 {
-                    res.Data = result.Data;
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSTopLocationReportStatistics>>>();
 
-                    res.isSuccess = result.isSuccess;
-                    res.ErrorCode = result.ErrorCode;
-                    res.ErrorMessage = result.ErrorMessage;
+                    if (respBody.isSuccess)
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
 
-                    actionResult = Ok(res);
+                        actionResult = Ok(res);
+                    }
+                    else
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
                 }
                 else
                 {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSTopLocationReportStatistics>>>();
+
                     res.Data = null;
 
-                    res.isSuccess = result.isSuccess;
-                    res.ErrorCode = result.ErrorCode;
-                    res.ErrorMessage = result.ErrorMessage;
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
 
                     actionResult = Ok(res);
                 }
@@ -1240,33 +1406,48 @@ namespace BPIWebApplication.Server.Controllers
             return actionResult;
         }
 
-        [HttpGet("getEPKRSItemCategoriesStatistics/{param}")]
-        public async Task<IActionResult> getEPKRSItemCategoriesStatistics(string param)
+        [HttpPost("getEPKRSItemCategoriesStatistics")]
+        public async Task<IActionResult> getEPKRSItemCategoriesStatistics(QueryModel<string> param)
         {
             ResultModel<List<EPKRSItemCaseItemCategoryStatistics>> res = new ResultModel<List<EPKRSItemCaseItemCategoryStatistics>>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<List<EPKRSItemCaseItemCategoryStatistics>>>($"api/Facade/EPKRS/getEPKRSItemCategoriesStatistics/{param}");
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/Facade/EPKRS/getEPKRSItemCategoriesStatistics", param);
 
-                if (result.isSuccess)
+                if (result.IsSuccessStatusCode)
                 {
-                    res.Data = result.Data;
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSItemCaseItemCategoryStatistics>>>();
 
-                    res.isSuccess = result.isSuccess;
-                    res.ErrorCode = result.ErrorCode;
-                    res.ErrorMessage = result.ErrorMessage;
+                    if (respBody.isSuccess)
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
 
-                    actionResult = Ok(res);
+                        actionResult = Ok(res);
+                    }
+                    else
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
                 }
                 else
                 {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSItemCaseItemCategoryStatistics>>>();
+
                     res.Data = null;
 
-                    res.isSuccess = result.isSuccess;
-                    res.ErrorCode = result.ErrorCode;
-                    res.ErrorMessage = result.ErrorMessage;
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
 
                     actionResult = Ok(res);
                 }
@@ -1461,6 +1642,65 @@ namespace BPIWebApplication.Server.Controllers
             return actionResult;
         }
 
+        [HttpPost("getEPKRSIncidentAccidentLocationStatistics")]
+        public async Task<IActionResult> getEPKRSIncidentAccidentLocationStatistics(QueryModel<string> param)
+        {
+            ResultModel<List<EPKRSIncidentAccidentLocationStatistics>> res = new ResultModel<List<EPKRSIncidentAccidentLocationStatistics>>();
+            IActionResult actionResult = null;
+
+            try
+            {
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/Facade/EPKRS/getEPKRSIncidentAccidentLocationStatistics", param);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSIncidentAccidentLocationStatistics>>>();
+
+                    if (respBody.isSuccess)
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                    else
+                    {
+                        res.Data = respBody.Data;
+                        res.isSuccess = respBody.isSuccess;
+                        res.ErrorCode = respBody.ErrorCode;
+                        res.ErrorMessage = respBody.ErrorMessage;
+
+                        actionResult = Ok(res);
+                    }
+                }
+                else
+                {
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<List<EPKRSIncidentAccidentLocationStatistics>>>();
+
+                    res.Data = null;
+
+                    res.isSuccess = result.IsSuccessStatusCode;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
+
+                    actionResult = Ok(res);
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Data = null;
+                res.isSuccess = false;
+                res.ErrorCode = "99";
+                res.ErrorMessage = ex.Message;
+
+                actionResult = BadRequest(res);
+            }
+
+            return actionResult;
+        }
+
         [HttpPost("getEPKRSIncidentAccidentReport")]
         public async Task<IActionResult> getEPKRSIncidentAccidentReport(QueryModel<string> param)
         {
@@ -1579,33 +1819,35 @@ namespace BPIWebApplication.Server.Controllers
             return actionResult;
         }
 
-        [HttpGet("getEPKRSModuleNumberOfPage/{param}")]
-        public async Task<IActionResult> getEPKRSModuleNumberOfPage(string param)
+        [HttpPost("getEPKRSModuleNumberOfPage")]
+        public async Task<IActionResult> getEPKRSModuleNumberOfPage(QueryModel<string> param)
         {
             ResultModel<int> res = new ResultModel<int>();
             IActionResult actionResult = null;
 
             try
             {
-                var result = await _http.GetFromJsonAsync<ResultModel<int>>($"api/Facade/EPKRS/getEPKRSModuleNumberOfPage/{param}");
+                var result = await _http.PostAsJsonAsync<QueryModel<string>>("api/Facade/EPKRS/getEPKRSModuleNumberOfPage", param);
 
-                if (result.isSuccess)
+                if (result.IsSuccessStatusCode)
                 {
-                    res.Data = result.Data;
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<int>>();
 
-                    res.isSuccess = result.isSuccess;
-                    res.ErrorCode = result.ErrorCode;
-                    res.ErrorMessage = result.ErrorMessage;
+                    res.Data = respBody.Data;
+                    res.isSuccess = respBody.isSuccess;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
 
                     actionResult = Ok(res);
                 }
                 else
                 {
-                    res.Data = 0;
+                    var respBody = await result.Content.ReadFromJsonAsync<ResultModel<int>>();
 
-                    res.isSuccess = result.isSuccess;
-                    res.ErrorCode = result.ErrorCode;
-                    res.ErrorMessage = result.ErrorMessage;
+                    res.Data = 0;
+                    res.isSuccess = respBody.isSuccess;
+                    res.ErrorCode = respBody.ErrorCode;
+                    res.ErrorMessage = respBody.ErrorMessage;
 
                     actionResult = Ok(res);
                 }
